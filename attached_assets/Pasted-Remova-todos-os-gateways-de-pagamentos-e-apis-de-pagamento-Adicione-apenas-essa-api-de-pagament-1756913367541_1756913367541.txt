@@ -1,0 +1,412 @@
+Remova todos os gateways de pagamentos e apis de pagamento. 
+
+Adicione apenas essa api de pagamento PIX:
+
+Chave API: f1d8b8ec4c093e3dfdf25e45056262e57ad01c6ecf895ca53d0c2e0e47d4febf
+
+
+
+Introdução
+Bem-vindo à documentação oficial da API OrinPay! Aqui você encontra tudo para integrar pagamentos via PIX e Cartão, consultar transações e configurar webhooks.
+
+Base URL: https://www.orinpay.com.br/api/
+Formato: JSON
+Como usar
+Para começar, obtenha seu token de API no painel do usuário. Todas as requisições exigem autenticação via Token:
+
+Headers da requisição
+Authorization: SEU_TOKEN
+Content-Type: application/json
+Ambos devem ser enviados nos headers da requisição.
+Exemplo de requisição autenticada:
+
+curl -X POST https://orinpay.com.br/api/v1/transactions/pix \
+  -H "Authorization:  SEU_TOKEN"
+Limite: O valor máximo permitido para uma venda é de R$ 999,99 (unitPrice: 99999).
+
+
+Transactions
+POST /pix - Criar Transação (Order)
+Cria uma nova transação Pix. O pagamento será processado e retornará o QR Code para o cliente.
+
+Endpoint
+Endpoint e Headers
+POST https://orinpay.com.br/api/v1/transactions/pix
+Authorization: abc123456token ← SEU TOKEN
+Content-Type: application/json
+Envie esses valores nos headers da chamada.
+Endpoint e Headers (alternativo /aut)
+POST https://orinpay.com.br/api/v1/transactions/aut/pix
+client_id: SEU ID
+client_secret: SEU TOKEN
+Content-Type: application/json
+Envie client_id e Secrety nos headers. Alternativamente, use client_secret no lugar de Secrety. Também aceitamos client-id/client-secret ou x-client-id/x-client-secret como aliases.
+Todos os campos abaixo são obrigatórios.
+
+Parâmetros obrigatórios
+{
+  "paymentMethod": "pix",
+  "reference": "PEDIDO-XYZ-987",  // <-- Aqui você adiciona
+  "customer": {
+    "name": "João da Silva",
+    "email": "joao@email.com",
+    "phone": "11999999999",
+    "document": {
+      "number": "12345678900",
+      "type": "cpf"
+    }
+  },
+  "shipping": {
+    "fee": 0,
+    "address": {
+      "street": "Rua Exemplo",
+      "streetNumber": "123",
+      "zipCode": "12345678",
+      "neighborhood": "Centro",
+      "city": "São Paulo",
+      "state": "SP",
+      "country": "Brasil",
+      "complement": "Apto 101"
+    }
+  },
+  "items": [
+    {
+      "title": "Curso Online",
+      "description": "Curso completo de programação",
+      "unitPrice": 1000,
+      "quantity": 1,
+      "tangible": false
+    }
+  ],
+  "isInfoProducts": true,
+  "utms": {
+    "sck": "opcional",
+    "utm_source": "opcional",
+    "utm_medium": "opcional",
+    "utm_campaign": "opcional",
+    "utm_id": "opcional",
+    "utm_term": "opcional",
+  "utm_content": "opcional"
+  }
+}
+
+
+Observação: O campo utms é totalmente opcional. Se não for enviado, a API continuará funcionando normalmente. Use apenas se quiser rastrear dados de origem (UTM/SCK) na transação.
+Resposta 200 OK
+{
+  "id": 701,
+  "orderId": 701,
+  "status": "pending",
+  "isInfoProducts": true,
+  "card": [],
+  "customer": {
+    "name": "João da Silva",
+    "email": "joao@email.com",
+    "phone": "11999999999",
+    "document": {
+      "number": "48056325485",
+      "type": "cpf"
+    }
+  },
+  "paymentMethod": "pix",
+  "installmentFee": 0,
+  "items": [
+    {
+      "id": 701,
+      "quantity": 1,
+      "title": "Curso Online",
+      "amount": 1000,
+      "created_at": "2025-08-16 10:52:12"
+    }
+  ],
+  "storeId": 598,
+  "metadata": [],
+  "pix": {
+    "encodedImage": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix.sejaefi.com.br/v2/2eda2db59d0e4f508e70e9fdb9e36c345204000053039865802BR5905EFISA6008SAOPAULO62070503***63044295",
+    "payload": "00020101021226830014BR.GOV.BCB.PIX2561qrcodespix.sejaefi.com.br/v2/2eda2db59d0e4f508e70e9fdb9e36c345204000053039865802BR5905EFISA6008SAOPAULO62070503***63044295"
+  },
+  "transaction_db_id": 701,
+  "reference": "PEDIDO-XYZ-987"
+}
+Possíveis erros - Erro 500 Internal Server Error - 400 Bad Request
+{
+  "erro": "Token ausente"
+}
+{
+  "erro": "Token inválido"
+}
+{
+    "erro": "Erro ao criar a transação. Verifique se todos os campos foram preenchidos corretamente, se o CPF e o telefone são válidos e se o valor é menor que R$999,99."
+}
+
+Erro 500 Internal Server Error: Quando a API retorna esse erro, significa que houve uma falha interna ao processar a transação. Verifique os dados enviados e tente novamente.
+Observação: O campo unitPrice é em centavos (ex: 1000 = R$10,00).
+
+
+Saques
+POST /withdrawals - Solicitar Saque
+Permite solicitar um saque via API, integrado ao padrão Witetec. O saque será criado e processado automaticamente, e o status será atualizado via webhook.
+
+Endpoint
+Endpoint e Headers
+POST https://orinpay.com.br/api/withdrawals
+x-api-key: SEU_TOKEN
+Content-Type: application/json
+Envie seu token no header x-api-key e o corpo em JSON.
+Exemplo de requisição
+{
+  "amount": 2000,
+  "pixKey": "48014372623",
+  "pixKeyType": "CPF",
+  "method": "PIX",
+  "metadata": {
+    "sellerExternalRef": "abc123"
+  }
+}
+Parâmetros obrigatórios
+amount: integer (em centavos)
+pixKey: string (CPF ou CNPJ, apenas números)
+pixKeyType: string (CPF ou CNPJ, detectado automaticamente)
+method: string (PIX)
+metadata.sellerExternalRef: string (referência única do saque)
+Atenção: Só aceitamos chaves do tipo CPF ou CNPJ (apenas números).
+Resposta 201 OK
+{
+  "status": true,
+  "data": {
+    "id": "241",
+    "amount": 10000,
+    "method": "PIX",
+    "pixKey": "48013483726",
+    "pixKeyType": "CPF",
+    "status": "PENDING",
+    "withdrawalType": "MANUAL",
+    "createdAt": "2025-08-11T18:46:11-03:00",
+    "fee": "3",
+    "netAmount": 9700,
+    "metadata": "{\"sellerExternalRef\":\"abc123\"}"
+  }
+}
+Exemplo - Saque Falhou (Excede Saldo / Saldo Insuficiente)
+{
+  "eventType": "WITHDRAWAL_FAILED",
+  "status": true,
+  "data": {
+    "id": "0",
+    "amount": 1000000000,
+    "method": "PIX",
+    "pixKey": "48013483726",
+    "pixKeyType": "CPF",
+    "status": "FAILED",
+    "withdrawalType": "MANUAL",
+    "createdAt": "2025-08-11T18:47:24-03:00",
+    "fee": "3",
+    "netAmount": 999999700,
+    "metadata": "{\"sellerExternalRef\":\"abc123\"}"
+  },
+  "message": "O valor do saque excede o saldo disponível."
+}
+Exemplo - Saque Falhou (Valor Mínimo)
+{
+  "eventType": "WITHDRAWAL_FAILED",
+  "status": true,
+  "data": {
+    "id": "0",
+    "amount": 100,
+    "method": "PIX",
+    "pixKey": "48013483726",
+    "pixKeyType": "CPF",
+    "status": "FAILED",
+    "withdrawalType": "MANUAL",
+    "createdAt": "2025-08-11T18:48:17-03:00",
+    "fee": "3",
+    "netAmount": 0,
+    "metadata": "{\"sellerExternalRef\":\"abc123\"}"
+  },
+  "message": "O valor mínimo para saque é de R$ 20,00."
+}
+Observações:
+• O campo amount é em centavos (ex: 2000 = R$20,00).
+• fee é a taxa de saque aplicada (em reais, string).
+• netAmount = amount - (fee * 100).
+• Em rejeição por valor mínimo, não é criado registro (id = "0").
+
+
+Webhook
+O Webhook permite que sua aplicação seja notificada automaticamente sobre eventos importantes das transações e saques. Basta cadastrar a URL do seu webhook no painel do usuário.
+
+ 
+Como funciona?
+Quando um evento ocorre (ex: Pix gerado, compra aprovada), a OrinPay envia uma requisição HTTP POST para a URL cadastrada.
+O payload é enviado em formato JSON, contendo os dados essenciais da transação.
+Você pode cadastrar diferentes URLs para diferentes eventos (ex: pix_gerado, compra_aprovada).
+Exemplo de payload - Pix Gerado
+{
+  "event": "pix_gerado",
+  "id": 586,
+  "orderId": 586,
+  "status": "pending",
+  "isInfoProducts": true,
+  "card": [],
+  "customer": {
+    "name": "João da Silva",
+    "email": "joao@email.com",
+    "phone": "11999999999",
+    "document": {
+      "number": "12345678900",
+      "type": "cpf"
+    }
+  },
+  "paymentMethod": "pix",
+  "installmentFee": 0,
+  "items": [
+    {
+      "id": 586,
+      "title": "Curso Online",
+      "amount": 1000,
+      "quantity": 1,
+      "created_at": "2025-08-01 10:48:29"
+    }
+  ],
+  "storeId": 2,
+  "metadata": [],
+  "transaction_db_id": 586,
+  "reference": "PEDIDO-XYZ-987",
+  "pix": {
+    "encodedImage": "00020126860014br.gov.bcb.pix...",
+    "payload": "00020126860014br.gov.bcb.pix..."
+  }
+}
+Exemplo de payload - Compra Aprovada
+{
+  "event": "compra_aprovada",
+  "id": 586,
+  "orderId": 586,
+  "status": "approved",
+  "isInfoProducts": true,
+  "card": [],
+  "customer": {
+    "name": "João da Silva",
+    "email": "joao@email.com",
+    "phone": "11999999999",
+    "document": {
+      "number": "12345678900",
+      "type": "cpf"
+    }
+  },
+  "paymentMethod": "pix",
+  "installmentFee": 0,
+  "items": [
+    {
+      "id": 586,
+      "title": "Curso Online",
+      "amount": 1000,
+      "quantity": 1,
+      "created_at": "2025-08-01 10:48:29"
+    }
+  ],
+  "storeId": 2,
+  "metadata": [],
+  "transaction_db_id": 586,
+  "reference": "PEDIDO-XYZ-987",
+  "pix": {
+    "encodedImage": "00020126860014br.gov.bcb.pix...",
+    "payload": "00020126860014br.gov.bcb.pix..."
+  }
+}
+Campos enviados no webhook
+event: Tipo do evento (pix_gerado, compra_aprovada, etc)
+id: ID da transação no banco
+orderId: ID da ordem (mesmo valor do id)
+status: Status da transação (pending, approved, TRANSACTION_REFUNDED, etc)
+isInfoProducts: Indica se há informações de produtos
+customer: Dados do cliente (nome, email, telefone, documento)
+paymentMethod: Método de pagamento (pix, cartão, etc)
+items: Array com itens da transação
+storeId: ID da loja/usuário
+transaction_db_id: ID da transação no banco de dados
+reference: Referência customizada enviada pelo cliente
+pix: Dados do PIX (encodedImage, payload) - apenas para pagamentos PIX
+Eventos suportados no campo event
+'pix_gerado'       => status: 'pending'
+'compra_recusada'  => status: 'rejected'
+'compra_aprovada'  => status: 'approved'
+'reembolso'        => status: 'TRANSACTION_REFUNDED'
+'estorno'          => status: 'TRANSACTION_CHARGEDBACK'
+Observação: O campo event indica o tipo de evento que disparou o webhook. Cada evento pode ser disparado para diferentes status da transação, conforme o mapeamento acima.
+Dica: O webhook é disparado automaticamente para cada evento configurado. Certifique-se de que sua URL está acessível e pronta para receber requisições POST.
+
+
+Webhook
+O Webhook permite que sua aplicação seja notificada automaticamente sobre eventos importantes das transações e saques. Basta cadastrar a URL do seu webhook no painel do usuário.
+
+ 
+Webhooks de Saques
+Quando um saque é solicitado, o status é atualizado automaticamente via webhook conforme o processamento na instituição financeira. Veja abaixo os possíveis eventos e status:
+
+🧩 Status de Saques (Atuais)
+eventType	Status	Descrição
+WITHDRAWAL_APPROVED	APPROVED	Saque concluído com sucesso e valor enviado ao destinatário.
+WITHDRAWAL_REJECTED	REJECTED	Saque recusado por erro, saldo insuficiente ou análise.
+Exemplo de webhook - Saque Aprovado
+{
+  "eventType": "WITHDRAWAL_APPROVED",
+  "status": true,
+  "data": {
+    "id": "237",
+    "amount": 10000,
+    "method": "PIX",
+    "pixKey": "48038264737",
+    "pixKeyType": "CPF",
+    "status": "APPROVED",
+    "withdrawalType": "MANUAL",
+    "createdAt": "2025-08-11T18:01:44-03:00",
+    "fee": "3.00",
+    "netAmount": 9700,
+    "metadata": "{\"sellerExternalRef\":\"usm1jqhaes7sombi\"}"
+  }
+}
+Exemplo de webhook - Saque Rejeitado
+{
+  "eventType": "WITHDRAWAL_REJECTED",
+  "status": true,
+  "data": {
+    "id": "237",
+    "amount": 10000,
+    "method": "PIX",
+    "pixKey": "48038264737",
+    "pixKeyType": "CPF",
+    "status": "REJECTED",
+    "withdrawalType": "MANUAL",
+    "createdAt": "2025-08-11T18:01:44-03:00",
+    "fee": "3.00",
+    "netAmount": 9700,
+    "metadata": "{\"sellerExternalRef\":\"usm1jqhaes7sombi\"}"
+  }
+}
+
+Balance
+GET /seller-wallet/balance - Consultar Saldo do Seller
+Retorna o saldo disponível para saque e o saldo pendente.
+
+Endpoint
+Endpoint e Headers
+GET https://orinpay.com.br/api/seller-wallet/balance
+x-api-key: SEU_TOKEN_AQUI
+Envie seu token no header x-api-key.
+Exemplo de resposta
+{
+    "status": true,
+    "data": {
+        "sellerId": 123,
+        "balance": 1500.50,
+        "pendenteBalance": 0
+    }
+}
+Campos do retorno
+sellerId: Seu ID
+balance: Saldo disponível para saque
+pendenteBalance: Saldo pendente para saque (cartão)
+Observações:
+• O token deve ser enviado no header x-api-key.
+• O saldo é atualizado em tempo real conforme as vendas são aprovadas e os saques realizados.

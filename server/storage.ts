@@ -451,25 +451,26 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  // Game operations
+  // Game operations (deprecated - use gamePremios instead)
   async createGame(insertGame: InsertGame): Promise<Game> {
-    const [game] = await db.insert(games).values(insertGame).returning();
-    return game;
+    // This method is deprecated, returning a dummy game
+    // All game operations should use gamePremios table now
+    throw new Error("createGame is deprecated - use createGamePremio instead");
   }
 
   async getGamesByUser(userId: number): Promise<Game[]> {
     return await db
       .select()
-      .from(games)
-      .where(eq(games.userId, userId))
-      .orderBy(desc(games.playedAt));
+      .from(gamePremios)
+      .where(eq(gamePremios.userId, userId))
+      .orderBy(desc(gamePremios.playedAt));
   }
 
   async getGames(): Promise<Game[]> {
     return await db
       .select()
-      .from(games)
-      .orderBy(desc(games.playedAt));
+      .from(gamePremios)
+      .orderBy(desc(gamePremios.playedAt));
   }
 
 
@@ -662,9 +663,9 @@ export class DatabaseStorage implements IStorage {
       .from(users);
     
     const [activeResult] = await db
-      .select({ count: sql<number>`count(distinct ${games.userId})` })
-      .from(games)
-      .where(sql`${games.playedAt} > NOW() - INTERVAL '30 days'`);
+      .select({ count: sql<number>`count(distinct ${gamePremios.userId})` })
+      .from(gamePremios)
+      .where(sql`${gamePremios.playedAt} > NOW() - INTERVAL '30 days'`);
     
     return {
       totalUsers: totalResult.count,
@@ -674,13 +675,13 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueStats(): Promise<{ totalRevenue: string; todayRevenue: string }> {
     const [totalResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(${games.cost}), 0)` })
-      .from(games);
+      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
+      .from(gamePremios);
     
     const [todayResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(${games.cost}), 0)` })
-      .from(games)
-      .where(sql`DATE(${games.playedAt}) = CURRENT_DATE`);
+      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
+      .from(gamePremios)
+      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
     
     return {
       totalRevenue: totalResult.sum || "0.00",
@@ -691,12 +692,12 @@ export class DatabaseStorage implements IStorage {
   async getGameStats(): Promise<{ totalGames: number; todayGames: number }> {
     const [totalResult] = await db
       .select({ count: sql<number>`count(*)` })
-      .from(games);
+      .from(gamePremios);
     
     const [todayResult] = await db
       .select({ count: sql<number>`count(*)` })
-      .from(games)
-      .where(sql`DATE(${games.playedAt}) = CURRENT_DATE`);
+      .from(gamePremios)
+      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
     
     return {
       totalGames: totalResult.count,
@@ -2050,7 +2051,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(gamePremios).where(eq(gamePremios.userId, userId));
     
     // Delete games played by the user
-    await db.delete(games).where(eq(games.userId, userId));
+    await db.delete(gamePremios).where(eq(gamePremios.userId, userId));
     
     // Delete deposits
     await db.delete(deposits).where(eq(deposits.userId, userId));

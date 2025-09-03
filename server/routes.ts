@@ -8568,118 +8568,301 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin dashboard stats
+  // Admin dashboard stats with date filters and Brazil timezone support
   app.get("/api/admin/stats", authenticateAdmin, async (req, res) => {
     try {
+      // Extract date filters from query params
+      const { startDate, endDate, period } = req.query;
+      
+      // Helper function to convert to Brazil timezone (GMT-3)
+      const toBrazilTime = (date: Date) => {
+        const offset = -3 * 60; // Brazil is GMT-3
+        const utc = date.getTime() + (date.getTimezoneOffset() * 60000);
+        return new Date(utc + (offset * 60000));
+      };
+      
+      // Helper function to get start of day in Brazil timezone
+      const getStartOfDayBrazil = (date: Date) => {
+        const brazilDate = toBrazilTime(date);
+        brazilDate.setHours(0, 0, 0, 0);
+        return brazilDate;
+      };
+      
+      // Helper function to get end of day in Brazil timezone
+      const getEndOfDayBrazil = (date: Date) => {
+        const brazilDate = toBrazilTime(date);
+        brazilDate.setHours(23, 59, 59, 999);
+        return brazilDate;
+      };
+      
+      // Determine date range based on period or custom dates
+      let filterStartDate: Date;
+      let filterEndDate: Date;
+      let comparisonStartDate: Date | null = null;
+      let comparisonEndDate: Date | null = null;
+      
+      const now = new Date();
+      const todayBrazil = getStartOfDayBrazil(now);
+      
+      if (period === 'today') {
+        filterStartDate = todayBrazil;
+        filterEndDate = getEndOfDayBrazil(now);
+        // Comparison with yesterday
+        comparisonStartDate = new Date(todayBrazil.getTime() - 24 * 60 * 60 * 1000);
+        comparisonEndDate = new Date(filterEndDate.getTime() - 24 * 60 * 60 * 1000);
+      } else if (period === 'yesterday') {
+        filterStartDate = new Date(todayBrazil.getTime() - 24 * 60 * 60 * 1000);
+        filterEndDate = new Date(todayBrazil.getTime() - 1);
+      } else if (period === 'last7days') {
+        filterStartDate = new Date(todayBrazil.getTime() - 7 * 24 * 60 * 60 * 1000);
+        filterEndDate = getEndOfDayBrazil(now);
+        // Comparison with previous 7 days
+        comparisonStartDate = new Date(filterStartDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+        comparisonEndDate = new Date(filterStartDate.getTime() - 1);
+      } else if (period === 'last30days') {
+        filterStartDate = new Date(todayBrazil.getTime() - 30 * 24 * 60 * 60 * 1000);
+        filterEndDate = getEndOfDayBrazil(now);
+        // Comparison with previous 30 days
+        comparisonStartDate = new Date(filterStartDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+        comparisonEndDate = new Date(filterStartDate.getTime() - 1);
+      } else if (period === 'thisMonth') {
+        filterStartDate = getStartOfDayBrazil(new Date(now.getFullYear(), now.getMonth(), 1));
+        filterEndDate = getEndOfDayBrazil(now);
+        // Comparison with last month
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        comparisonStartDate = getStartOfDayBrazil(lastMonth);
+        comparisonEndDate = getEndOfDayBrazil(new Date(now.getFullYear(), now.getMonth(), 0));
+      } else if (period === 'lastMonth') {
+        const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        filterStartDate = getStartOfDayBrazil(lastMonth);
+        filterEndDate = getEndOfDayBrazil(new Date(now.getFullYear(), now.getMonth(), 0));
+      } else if (startDate && endDate) {
+        // Custom date range
+        filterStartDate = getStartOfDayBrazil(new Date(startDate as string));
+        filterEndDate = getEndOfDayBrazil(new Date(endDate as string));
+      } else {
+        // Default to today
+        filterStartDate = todayBrazil;
+        filterEndDate = getEndOfDayBrazil(now);
+      }
+      
+      console.log('Date filter range:', {
+        filterStartDate: filterStartDate.toISOString(),
+        filterEndDate: filterEndDate.toISOString(),
+        comparisonStartDate: comparisonStartDate?.toISOString(),
+        comparisonEndDate: comparisonEndDate?.toISOString()
+      });
       // Get all deposits
       const allDeposits = await storage.getDeposits();
-      const completedDeposits = allDeposits.filter(
+      
+      // Filter deposits by date range
+      const depositsInPeriod = allDeposits.filter(d => {
+        const depositDate = d.completedAt ? new Date(d.completedAt) : new Date(d.createdAt);
+        return depositDate >= filterStartDate && depositDate <= filterEndDate;
+      });
+      
+      const completedDepositsInPeriod = depositsInPeriod.filter(
         (d) => d.status === "completed",
       );
+      
+      // Get comparison period deposits if needed
+      let depositsInComparison = [];
+      let completedDepositsInComparison = [];
+      if (comparisonStartDate && comparisonEndDate) {
+        depositsInComparison = allDeposits.filter(d => {
+          const depositDate = d.completedAt ? new Date(d.completedAt) : new Date(d.createdAt);
+          return depositDate >= comparisonStartDate && depositDate <= comparisonEndDate;
+        });
+        completedDepositsInComparison = depositsInComparison.filter(
+          (d) => d.status === "completed"
+        );
+      }
 
       // Get all withdrawals
       const allWithdrawals = await storage.getWithdrawals();
-      const pendingWithdrawals = allWithdrawals.filter(
-        (w) => w.status === "pending",
+      
+      // Filter withdrawals by date range
+      const withdrawalsInPeriod = allWithdrawals.filter(w => {
+        const withdrawalDate = new Date(w.createdAt);
+        return withdrawalDate >= filterStartDate && withdrawalDate <= filterEndDate;
+      });
+      
+      const completedWithdrawalsInPeriod = withdrawalsInPeriod.filter(
+        (w) => w.status === "completed"
+      );
+      
+      const pendingWithdrawalsInPeriod = withdrawalsInPeriod.filter(
+        (w) => w.status === "pending"
+      ).length;
+      
+      // Global pending withdrawals (for notifications)
+      const globalPendingWithdrawals = allWithdrawals.filter(
+        (w) => w.status === "pending"
       ).length;
 
-      // Calculate totals - separate confirmed revenue from gross revenue
-      const totalConfirmedRevenue = completedDeposits.reduce(
+      // Calculate totals for period
+      const periodConfirmedRevenue = completedDepositsInPeriod.reduce(
         (sum, d) => sum + parseFloat(d.amount),
         0,
       );
       
-      // Calculate gross revenue (all deposits regardless of status)
-      const totalGrossRevenue = allDeposits.reduce(
+      const periodGrossRevenue = depositsInPeriod.reduce(
         (sum, d) => sum + parseFloat(d.amount),
         0,
       );
       
-      const totalWithdrawals = allWithdrawals
-        .filter((w) => w.status === "completed")
-        .reduce((sum, w) => sum + parseFloat(w.amount), 0);
-
-      // Get today's data
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
-      const todayDeposits = completedDeposits
-        .filter((d) => d.completedAt && new Date(d.completedAt) >= today)
-        .reduce((sum, d) => sum + parseFloat(d.amount), 0);
-
-      const todayWithdrawals = allWithdrawals
-        .filter(
-          (w) =>
-            w.status === "completed" &&
-            w.createdAt &&
-            new Date(w.createdAt) >= today,
-        )
-        .reduce((sum, w) => sum + parseFloat(w.amount), 0);
+      const periodWithdrawals = completedWithdrawalsInPeriod.reduce(
+        (sum, w) => sum + parseFloat(w.amount), 
+        0
+      );
+      
+      // Calculate comparison period totals if needed
+      let comparisonConfirmedRevenue = 0;
+      let comparisonGrossRevenue = 0;
+      let comparisonWithdrawals = 0;
+      
+      if (comparisonStartDate && comparisonEndDate) {
+        comparisonConfirmedRevenue = completedDepositsInComparison.reduce(
+          (sum, d) => sum + parseFloat(d.amount),
+          0,
+        );
+        comparisonGrossRevenue = depositsInComparison.reduce(
+          (sum, d) => sum + parseFloat(d.amount),
+          0,
+        );
+        const withdrawalsInComparison = allWithdrawals.filter(w => {
+          const withdrawalDate = new Date(w.createdAt);
+          return withdrawalDate >= comparisonStartDate && withdrawalDate <= comparisonEndDate;
+        }).filter(w => w.status === "completed");
+        
+        comparisonWithdrawals = withdrawalsInComparison.reduce(
+          (sum, w) => sum + parseFloat(w.amount),
+          0,
+        );
+      }
 
       // Get user stats
       const userStats = await storage.getUserStats();
+      
+      // Get new users in period
+      const allUsers = await db.select().from(users);
+      const newUsersInPeriod = allUsers.filter(u => {
+        const userDate = new Date(u.createdAt);
+        return userDate >= filterStartDate && userDate <= filterEndDate;
+      }).length;
+      
+      // Get comparison period new users
+      let newUsersInComparison = 0;
+      if (comparisonStartDate && comparisonEndDate) {
+        newUsersInComparison = allUsers.filter(u => {
+          const userDate = new Date(u.createdAt);
+          return userDate >= comparisonStartDate && userDate <= comparisonEndDate;
+        }).length;
+      }
 
       // Get scratch card stats - focus only on premio games
       const allScratchCards = await db.select().from(gamePremios);
-      const todayScratchCards = allScratchCards.filter(
-        (g) => g.playedAt && new Date(g.playedAt) >= today,
+      
+      // Filter scratch cards by period
+      const scratchCardsInPeriod = allScratchCards.filter(
+        (g) => g.playedAt && new Date(g.playedAt) >= filterStartDate && new Date(g.playedAt) <= filterEndDate,
       );
+      
+      // Get comparison period scratch cards
+      let scratchCardsInComparison: any[] = [];
+      if (comparisonStartDate && comparisonEndDate) {
+        scratchCardsInComparison = allScratchCards.filter(
+          (g) => g.playedAt && new Date(g.playedAt) >= comparisonStartDate && new Date(g.playedAt) <= comparisonEndDate,
+        );
+      }
 
-      // Calculate scratch card specific metrics
-      const pixGames = allScratchCards.filter(g => g.gameType === 'pix');
-      const meMimeiGames = allScratchCards.filter(g => g.gameType === 'me_mimei');
-      const eletronicosGames = allScratchCards.filter(g => g.gameType === 'eletronicos');
-      const superPremiosGames = allScratchCards.filter(g => g.gameType === 'super');
+      // Calculate scratch card specific metrics for period
+      const pixGames = scratchCardsInPeriod.filter(g => g.gameType === 'pix');
+      const meMimeiGames = scratchCardsInPeriod.filter(g => g.gameType === 'me_mimei');
+      const eletronicosGames = scratchCardsInPeriod.filter(g => g.gameType === 'eletronicos');
+      const superPremiosGames = scratchCardsInPeriod.filter(g => g.gameType === 'super');
 
-      // Calculate revenue and payouts
-      const scratchCardRevenue = allScratchCards.reduce(
+      // Calculate revenue and payouts for period
+      const scratchCardRevenue = scratchCardsInPeriod.reduce(
         (sum, g) => sum + parseFloat(g.cost),
         0,
       );
-      const scratchCardPayout = allScratchCards.reduce(
+      const scratchCardPayout = scratchCardsInPeriod.reduce(
         (sum, g) => sum + (g.won ? parseFloat(g.prize) : 0),
         0,
       );
+      
+      // Calculate comparison period metrics
+      let comparisonGames = 0;
+      let comparisonRevenue = 0;
+      let comparisonPayout = 0;
+      if (scratchCardsInComparison.length > 0) {
+        comparisonGames = scratchCardsInComparison.length;
+        comparisonRevenue = scratchCardsInComparison.reduce(
+          (sum, g) => sum + parseFloat(g.cost),
+          0,
+        );
+        comparisonPayout = scratchCardsInComparison.reduce(
+          (sum, g) => sum + (g.won ? parseFloat(g.prize) : 0),
+          0,
+        );
+      }
 
-      // Calculate win rate
-      const totalWins = allScratchCards.filter(g => g.won).length;
-      const winRate = allScratchCards.length > 0 ? (totalWins / allScratchCards.length) * 100 : 0;
+      // Calculate win rate for period
+      const totalWins = scratchCardsInPeriod.filter(g => g.won).length;
+      const winRate = scratchCardsInPeriod.length > 0 ? (totalWins / scratchCardsInPeriod.length) * 100 : 0;
 
-      // Calculate average deposit
-      const avgDeposit = completedDeposits.length > 0 
-        ? totalConfirmedRevenue / completedDeposits.length 
+      // Calculate average deposit for period
+      const avgDeposit = completedDepositsInPeriod.length > 0 
+        ? periodConfirmedRevenue / completedDepositsInPeriod.length 
         : 0;
 
-      // Calculate average scratch card value
-      const avgScratchValue = allScratchCards.length > 0 
-        ? scratchCardRevenue / allScratchCards.length 
+      // Calculate average scratch card value for period
+      const avgScratchValue = scratchCardsInPeriod.length > 0 
+        ? scratchCardRevenue / scratchCardsInPeriod.length 
         : 0;
 
-      // Calculate conversion rate (users who deposited / total users)
-      const depositorCount = new Set(completedDeposits.map(d => d.userId)).size;
-      const conversionRate = userStats.totalUsers > 0 
-        ? (depositorCount / userStats.totalUsers) * 100 
+      // Calculate conversion rate for period (users who deposited / total users)
+      const depositorCountInPeriod = new Set(completedDepositsInPeriod.map(d => d.userId)).size;
+      const conversionRate = newUsersInPeriod > 0 
+        ? (depositorCountInPeriod / newUsersInPeriod) * 100 
         : 0;
 
-      // Calculate retention rate (users who played in last 7 days / total users)
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const activePlayersLast7Days = new Set(
-        allScratchCards
-          .filter(g => g.playedAt && new Date(g.playedAt) >= sevenDaysAgo)
-          .map(g => g.userId)
+      // Calculate unique players in period
+      const uniquePlayersInPeriod = new Set(
+        scratchCardsInPeriod.map(g => g.userId)
       ).size;
-      const retentionRate = userStats.totalUsers > 0 
-        ? (activePlayersLast7Days / userStats.totalUsers) * 100 
+      
+      // Calculate retention rate for period
+      const retentionRate = newUsersInPeriod > 0 
+        ? (uniquePlayersInPeriod / newUsersInPeriod) * 100 
         : 0;
 
-      // Calculate total spent on games and total prizes
-      const totalSpent = scratchCardRevenue;
-      const totalPrizes = scratchCardPayout;
-
-      // Calculate profit
-      const totalProfit = totalConfirmedRevenue - totalWithdrawals - totalPrizes;
-      const todayProfit = todayDeposits - todayWithdrawals;
+      // Calculate profit for period
+      const periodProfit = periodConfirmedRevenue - periodWithdrawals - scratchCardPayout;
+      
+      // Calculate comparison profit
+      let comparisonProfit = 0;
+      if (comparisonStartDate && comparisonEndDate) {
+        comparisonProfit = comparisonConfirmedRevenue - comparisonWithdrawals - comparisonPayout;
+      }
+      
+      // Calculate percentage changes
+      const revenueChange = comparisonConfirmedRevenue > 0 
+        ? ((periodConfirmedRevenue - comparisonConfirmedRevenue) / comparisonConfirmedRevenue) * 100
+        : periodConfirmedRevenue > 0 ? 100 : 0;
+        
+      const userChange = newUsersInComparison > 0
+        ? ((newUsersInPeriod - newUsersInComparison) / newUsersInComparison) * 100
+        : newUsersInPeriod > 0 ? 100 : 0;
+        
+      const gameChange = comparisonGames > 0
+        ? ((scratchCardsInPeriod.length - comparisonGames) / comparisonGames) * 100
+        : scratchCardsInPeriod.length > 0 ? 100 : 0;
+        
+      const profitChange = Math.abs(comparisonProfit) > 0
+        ? ((periodProfit - comparisonProfit) / Math.abs(comparisonProfit)) * 100
+        : periodProfit !== 0 ? 100 : 0;
 
       // Calculate rewards distributed (level and chest rewards)
       // This is a placeholder - in a real system you'd track this in the database
@@ -8692,26 +8875,109 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .where(eq(affiliates.isActive, true));
       const activeAffiliatesCount = activeAffiliates[0]?.count || 0;
 
+      // Build daily revenue chart data for last 7 days
+      const dailyRevenueData = [];
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(todayBrazil.getTime() - i * 24 * 60 * 60 * 1000);
+        const dayStart = getStartOfDayBrazil(date);
+        const dayEnd = getEndOfDayBrazil(date);
+        
+        const dayDeposits = completedDeposits.filter(d => {
+          const depositDate = d.completedAt ? new Date(d.completedAt) : new Date(d.createdAt);
+          return depositDate >= dayStart && depositDate <= dayEnd;
+        });
+        
+        const dayRevenue = dayDeposits.reduce((sum, d) => sum + parseFloat(d.amount), 0);
+        
+        dailyRevenueData.push({
+          date: date.toISOString().split('T')[0],
+          revenue: dayRevenue,
+          deposits: dayDeposits.length
+        });
+      }
+
       res.json({
+        // Date filter info
+        period: {
+          start: filterStartDate.toISOString(),
+          end: filterEndDate.toISOString(),
+          type: period || 'custom'
+        },
+        
+        // Main metrics for period
+        metrics: {
+          revenue: {
+            confirmed: periodConfirmedRevenue.toFixed(2),
+            gross: periodGrossRevenue.toFixed(2),
+            change: revenueChange.toFixed(1),
+            comparison: comparisonConfirmedRevenue.toFixed(2)
+          },
+          users: {
+            total: userStats.totalUsers,
+            newInPeriod: newUsersInPeriod,
+            active: userStats.activeUsers,
+            change: userChange.toFixed(1),
+            comparison: newUsersInComparison
+          },
+          games: {
+            total: scratchCardsInPeriod.length,
+            revenue: scratchCardRevenue.toFixed(2),
+            payout: scratchCardPayout.toFixed(2),
+            change: gameChange.toFixed(1),
+            comparison: comparisonGames
+          },
+          withdrawals: {
+            total: periodWithdrawals.toFixed(2),
+            pending: pendingWithdrawalsInPeriod,
+            globalPending: globalPendingWithdrawals
+          },
+          profit: {
+            amount: periodProfit.toFixed(2),
+            change: profitChange.toFixed(1),
+            comparison: comparisonProfit.toFixed(2)
+          }
+        },
+        
+        // Game distribution
+        gameDistribution: {
+          pix: pixGames.length,
+          meMimei: meMimeiGames.length,
+          eletronicos: eletronicosGames.length,
+          superPremios: superPremiosGames.length
+        },
+        
+        // Key Performance Indicators
+        kpis: {
+          avgDeposit: avgDeposit.toFixed(2),
+          avgScratchValue: avgScratchValue.toFixed(2),
+          winRate: winRate.toFixed(2),
+          conversionRate: conversionRate.toFixed(2),
+          retentionRate: retentionRate.toFixed(2),
+          uniquePlayers: uniquePlayersInPeriod
+        },
+        
+        // Chart data
+        charts: {
+          dailyRevenue: dailyRevenueData
+        },
+        
+        // Legacy fields for compatibility
         totalUsers: userStats.totalUsers,
         activeUsers: userStats.activeUsers,
         activeAffiliates: activeAffiliatesCount,
-        // Receita confirmada (apenas depósitos completed) - valor principal
-        totalDeposits: totalConfirmedRevenue.toFixed(2),
-        // Faturamento bruto (todos os depósitos) - valor adicional
-        grossRevenue: totalGrossRevenue.toFixed(2),
-        totalWithdrawals: totalWithdrawals.toFixed(2),
-        totalProfit: totalProfit.toFixed(2),
-        todayDeposits: todayDeposits.toFixed(2),
-        todayWithdrawals: todayWithdrawals.toFixed(2),
-        todayProfit: todayProfit.toFixed(2),
-        pendingWithdrawals,
-        totalGames: allScratchCards.length,
-        todayGames: todayScratchCards.length,
+        totalDeposits: periodConfirmedRevenue.toFixed(2),
+        grossRevenue: periodGrossRevenue.toFixed(2),
+        totalWithdrawals: periodWithdrawals.toFixed(2),
+        totalProfit: periodProfit.toFixed(2),
+        todayDeposits: periodConfirmedRevenue.toFixed(2),
+        todayWithdrawals: periodWithdrawals.toFixed(2),
+        todayProfit: periodProfit.toFixed(2),
+        pendingWithdrawals: globalPendingWithdrawals,
+        totalGames: scratchCardsInPeriod.length,
+        todayGames: scratchCardsInPeriod.length,
         totalRewards,
-        // Scratch card specific stats
-        totalScratchCards: allScratchCards.length,
-        todayScratchCards: todayScratchCards.length,
+        totalScratchCards: scratchCardsInPeriod.length,
+        todayScratchCards: scratchCardsInPeriod.length,
         scratchCardRevenue: scratchCardRevenue.toFixed(2),
         scratchCardPayout: scratchCardPayout.toFixed(2),
         pixGames: pixGames.length,

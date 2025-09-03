@@ -52,7 +52,7 @@ import WithdrawalsManagement from "@/components/admin/withdrawals-management";
 import SupportManagement from "@/components/admin/support-management";
 import GamesManagement from "@/components/admin/games-management";
 import DepositsManagement from "@/components/admin/deposits-management";
-import ModernDashboard from "@/components/admin/modern-dashboard";
+import EnhancedDashboard from "@/components/admin/enhanced-dashboard";
 import { PrizeProbabilityManagement } from "@/components/admin/prize-probability-management";
 import { ChestProbabilityManagement } from "@/components/admin/chest-probability-management";
 import { EsquiloProbabilityManagement } from "@/components/admin/esquilo-probability-management";
@@ -517,7 +517,7 @@ export default function AdminDashboard() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.3 }}
               >
-                {activeSection === "overview" && <ModernDashboard stats={stats} />}
+                {activeSection === "overview" && <EnhancedDashboard stats={stats} />}
                 {activeSection === "api" && <ApiManagement />}
                 {activeSection === "users" && <UsersManagement />}
                 {activeSection === "deposits" && <DepositsManagement />}

@@ -942,7 +942,7 @@ export default function WithdrawalsManagement() {
         </div>
       )}
 
-      {/* Simplified Secure Approval Dialog with Automatic HorsePay */}
+      {/* Simplified Secure Approval Dialog with Automatic OrinPay */}
       <Dialog open={isApproving} onOpenChange={(open) => {
         setIsApproving(open);
         if (!open) {
@@ -953,7 +953,7 @@ export default function WithdrawalsManagement() {
           <DialogHeader>
             <DialogTitle className="text-2xl font-bold text-[#00E880] flex items-center gap-2">
               <Send className="w-6 h-6" />
-              Pagar Saque via HorsePay
+              Pagar Saque via OrinPay
             </DialogTitle>
             <DialogDescription className="text-zinc-400 text-base mt-3" asChild>
               <div className="space-y-4">
@@ -975,12 +975,12 @@ export default function WithdrawalsManagement() {
                   </div>
                 </div>
 
-                {/* HorsePay Auto Info */}
+                {/* OrinPay Auto Info */}
                 <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Zap className="w-4 h-4 text-purple-400" />
                     <span className="text-sm text-purple-300 font-semibold">
-                      PIX será enviado automaticamente via HorsePay API
+                      PIX será enviado automaticamente via OrinPay API
                     </span>
                   </div>
                 </div>

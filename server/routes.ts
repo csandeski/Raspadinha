@@ -82,10 +82,6 @@ const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
 // OrinPay is now the only payment provider
 
-// Legacy function - no longer used
-async function getIronpayApiKey(): Promise<string> {
-  return "deprecated";
-}
 
 // Twilio configuration
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -269,86 +265,6 @@ const authenticateAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
-// Legacy HorsePay function - REMOVED
-const createHorsePayPixPayment_REMOVED = async (amount: number, customerData: any) => {
-  const clientKey = process.env.HORSEPAY_CLIENT_KEY || '93344dcd07348eef7425437dff7aedff4460ce2f96597cd5cd7805b94693391b';
-  const clientSecret = process.env.HORSEPAY_CLIENT_SECRET || 'ab815200a0c4a8a765aa5117a8d6f4a7bc6b675be2105c1f71b8f86518632d55';
-  const horsePayApiUrl = process.env.HORSEPAY_API_URL || 'https://api.horsepay.io';
-  
-  try {
-    const { default: fetch } = await import("node-fetch");
-    
-    // Step 1: Get access token
-    console.log("HorsePay: Getting access token...");
-    const authResponse = await fetch(`${horsePayApiUrl}/auth/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        client_key: clientKey,
-        client_secret: clientSecret
-      })
-    });
-    
-    if (!authResponse.ok) {
-      const errorText = await authResponse.text();
-      throw new Error(`HorsePay auth error: ${authResponse.status} - ${errorText}`);
-    }
-    
-    const authData = await authResponse.json();
-    const accessToken = authData.access_token;
-    console.log("HorsePay: Access token obtained");
-    
-    // Step 2: Create PIX payment order
-    const payload = {
-      payer_name: customerData.name || "Cliente",
-      amount: amount,
-      callback_url: `${process.env.APP_URL || 'https://mania-brasil.com'}/api/webhook/horsepay`
-    };
-    
-    console.log("HorsePay: Creating PIX payment with payload:", payload);
-    
-    const orderResponse = await fetch(`${horsePayApiUrl}/transaction/neworder`, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload)
-    });
-    
-    const orderText = await orderResponse.text();
-    console.log("HorsePay order response:", {
-      status: orderResponse.status,
-      body: orderText.substring(0, 500)
-    });
-    
-    if (!orderResponse.ok) {
-      throw new Error(`HorsePay order error: ${orderResponse.status} - ${orderText}`);
-    }
-    
-    const orderData = JSON.parse(orderText);
-    console.log("HorsePay PIX payment created successfully:", {
-      externalId: orderData.external_id,
-      status: orderData.status
-    });
-    
-    // Map HorsePay response to our expected format
-    return {
-      pixCode: orderData.copy_past || orderData.copy_paste,
-      transactionId: String(orderData.external_id),
-      qrCode: orderData.copy_past || orderData.copy_paste, // HorsePay returns the PIX code as copy_past
-      qrCodeImage: orderData.payment, // Base64 image
-      amount: amount,
-      provider: "horsepay"
-    };
-    
-  } catch (error) {
-    console.error("HorsePay PIX payment error:", error);
-    throw error;
-  }
-};
 
 // Legacy OrinPay function - REMOVED (now using new implementation from orinpay.ts)
 const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) => {
@@ -459,10 +375,6 @@ const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) =>
   }
 };
 
-// IronPay functions removed - using OrinPay only
-const createIronPayPixPayment_REMOVED = async (amount: number, customerData: any, utmData?: any) => {
-  throw new Error("IronPay has been removed. Use OrinPay instead.");
-};
 
 const createPixPayment = async (amount: number, customerData: any, depositId: number, utmData?: any) => {
   // Only use OrinPay as payment provider
@@ -6774,7 +6686,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.log("Headers:", req.headers);
       console.log("Body:", JSON.stringify(req.body, null, 2));
 
-      // IronPay sends different formats, so we need to handle multiple scenarios
+      // Payment webhook sends different formats, so we need to handle multiple scenarios
       const transactionId = req.body.transactionId || req.body.transaction_id || req.body.id;
       const status = req.body.status || req.body.payment_status;
       const amount = req.body.amount || req.body.value;
@@ -6786,7 +6698,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Transaction ID não fornecido" });
       }
 
-      // IronPay uses different status values
+      // Payment API uses different status values
       const isPaymentCompleted = 
         status === "completed" || 
         status === "paid" || 
@@ -6933,7 +6845,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             for (const code of affiliateCodes) {
               if (code.totalRegistrations > 0 && code.isActive) {
                 await storage.updateAffiliateCodeStats(code.code, 'totalDeposits');
-                console.log(`IronPay: Updated deposit stats for affiliate code ${code.code}`);
+                console.log(`Payment: Updated deposit stats for affiliate code ${code.code}`);
                 break; // Only update one code
               }
             }
@@ -7233,141 +7145,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // HorsePay webhook for deposit notifications
-  app.post("/api/webhook/horsepay", async (req, res) => {
-    try {
-      console.log("=== HORSEPAY WEBHOOK RECEIVED ===");
-      console.log("Headers:", req.headers);
-      console.log("Body:", JSON.stringify(req.body, null, 2));
-
-      const externalId = req.body.external_id;
-      const status = req.body.status;
-      const amount = req.body.amount;
-      
-      console.log(`Processing HorsePay webhook - External ID: ${externalId}, Status: ${status}, Amount: ${amount}`);
-
-      if (!externalId) {
-        console.error("HorsePay webhook error: No external ID provided");
-        return res.status(400).json({ message: "External ID não fornecido" });
-      }
-
-      // HorsePay status: 0 = pending, 1 = paid/completed
-      const isPaymentCompleted = status === 1 || status === "1" || status === "completed" || status === "paid";
-
-      if (isPaymentCompleted) {
-        // Find deposit by transaction ID
-        const deposit = await storage.getDepositByTransactionId(String(externalId));
-        
-        if (!deposit) {
-          console.error(`No deposit found for HorsePay external ID ${externalId}`);
-          // Still return success to avoid webhook retries
-          return res.json({ success: true });
-        }
-
-        if (deposit.status === "completed") {
-          console.log(`HorsePay deposit ${externalId} already completed, skipping`);
-          return res.json({ success: true });
-        }
-
-        // Update deposit status
-        await storage.updateDepositStatus(deposit.id, "completed");
-        console.log(`HorsePay deposit status updated to completed for ID ${deposit.id}`);
-
-        // Get user wallet
-        const wallet = await storage.getWallet(deposit.userId);
-        if (!wallet) {
-          console.error(`No wallet found for user ${deposit.userId}`);
-          return res.json({ success: true });
-        }
-
-        const currentBalance = parseFloat(wallet.balance || "0");
-        const currentScratchBonus = wallet.scratchBonus || 0;
-        const depositAmount = parseFloat(deposit.amount);
-
-        // Calculate tax (R$ 0.65 fixed tax for HorsePay)
-        const fixedTax = 0.65;
-        const netAmount = Math.max(0, depositAmount - fixedTax);
-
-        // Update wallet balance with net amount
-        const newBalance = currentBalance + netAmount;
-        await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));
-        console.log(`HorsePay: Updated wallet balance for user ${deposit.userId}: ${currentBalance} -> ${newBalance}`);
-
-        // Process coupon bonuses
-        let newScratchBonus = currentScratchBonus;
-        const user = await storage.getUser(deposit.userId);
-        
-        if (user?.currentCoupon) {
-          console.log(`HorsePay: Processing coupon ${user.currentCoupon} for user ${deposit.userId}`);
-          const coupon = await storage.getCoupon(user.currentCoupon);
-          
-          if (coupon && coupon.isActive && parseFloat(coupon.minDeposit) <= depositAmount) {
-            const couponBonus = parseFloat(coupon.bonusAmount || '0');
-            if (couponBonus > 0) {
-              newScratchBonus = currentScratchBonus + couponBonus;
-              await storage.updateWalletScratchBonus(deposit.userId, newScratchBonus);
-              console.log(`HorsePay: Applied coupon bonus of ${couponBonus} cards`);
-            }
-          }
-        }
-
-        // Process referral commission
-        if (user?.referredBy) {
-          try {
-            // Get the referrer by their referral code
-            const referrer = await storage.getUserByReferralCode(user.referredBy);
-            if (referrer) {
-              const referralConfig = await storage.getReferralConfig();
-              const referralEarnings = referralConfig?.referralEarnings || 12;
-              const paymentMode = referralConfig?.paymentMode || 'all_deposits';
-              
-              // Check if this is first deposit
-              const isFirstDeposit = !user.hasFirstDeposit;
-              
-              // Check if commission should be processed
-              const shouldProcessCommission = paymentMode === 'all_deposits' || 
-                (paymentMode === 'first_deposit_only' && isFirstDeposit);
-              
-              if (shouldProcessCommission) {
-                await storage.createReferralEarning({
-                  userId: referrer.id,
-                  referredUserId: deposit.userId,
-                  amount: referralEarnings.toString(),
-                  createdAt: new Date()
-                });
-                console.log(`HorsePay: Referral commission of R$ ${referralEarnings} added for user ${referrer.id}`);
-              }
-            }
-          } catch (error) {
-            console.error("HorsePay Error processing referral commission:", error);
-          }
-        }
-
-        // Process affiliate commission (auto-approved)
-        try {
-          await processAffiliateCommission(deposit.userId, deposit.amount);
-          console.log(`HorsePay Affiliate commission auto-approved for user ${deposit.userId}`);
-        } catch (error) {
-          console.error("HorsePay Error processing affiliate commission:", error);
-        }
-
-        console.log(`=== HORSEPAY WEBHOOK PROCESSING COMPLETED SUCCESSFULLY ===`);
-        console.log(`User ${deposit.userId}: Balance ${newBalance}, Scratch Bonus: ${newScratchBonus}`);
-      } else {
-        console.log(`HorsePay Payment status ${status} - no action needed`);
-      }
-
-      // Always return success to prevent webhook retries
-      res.json({ success: true, message: "HorsePay webhook processado com sucesso" });
-    } catch (error) {
-      console.error("=== HORSEPAY WEBHOOK ERROR ===");
-      console.error("Error details:", error);
-      console.error("Stack trace:", (error as any).stack);
-      
-      // Still return success to avoid infinite webhook retries
-      res.json({ success: true, message: "Erro processado" });
-    }
-  });
 
   // Fast payment status check endpoint (for real-time updates)
   app.get(
@@ -7669,7 +7446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Payment configuration endpoints
   app.get("/api/admin/payment-config", authenticateAdmin, async (req, res) => {
     try {
-      // Get IronPay API key from database
+      // Get payment API key from database
       const ironpayApiKey = await getIronpayApiKey();
       
       // Ensure IronPay is always the default provider for now
@@ -8773,64 +8550,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update payment provider configuration
   app.put("/api/admin/payment-config", authenticateAdmin, async (req, res) => {
     try {
-      const { activeProvider, orinpay, horsepay, ironpay, primaryProvider, secondaryProvider } = req.body;
-      
-      // Update primary provider if specified
-      if (activeProvider || primaryProvider) {
-        const providerToSetAsPrimary = activeProvider || primaryProvider;
-        console.log(`Setting ${providerToSetAsPrimary} as primary provider`);
-        
-        // First, set all providers to secondary
-        await db.update(paymentProviderConfig)
-          .set({ isPrimary: false, updatedAt: new Date() });
-        
-        // Then set the selected provider as primary
-        await db.update(paymentProviderConfig)
-          .set({ isPrimary: true, updatedAt: new Date() })
-          .where(eq(paymentProviderConfig.provider, providerToSetAsPrimary));
-        
-        console.log(`Successfully set ${providerToSetAsPrimary} as primary`);
-      }
+      const { orinpay } = req.body;
       
       // Update OrinPay configuration if specified
       if (orinpay) {
         await storage.updateOrinpayConfig(orinpay.token);
-      }
-      
-      // Update HorsePay configuration if specified
-      if (horsepay) {
-        const { clientKey, clientSecret } = horsepay;
-        
-        // Update HorsePay credentials in database
-        await db.update(paymentProviderConfig)
-          .set({ 
-            clientKey: clientKey,
-            clientSecret: clientSecret,
-            updatedAt: new Date() 
-          })
-          .where(eq(paymentProviderConfig.provider, 'horsepay'));
-        
-        console.log("HorsePay credentials updated successfully");
-      }
-      
-      // Update IronPay configuration if specified
-      if (ironpay) {
-        const { apiKey } = ironpay;
-        
-        // Update IronPay API key in database
-        await db.update(paymentProviderConfig)
-          .set({ 
-            apiKey: apiKey,
-            updatedAt: new Date() 
-          })
-          .where(eq(paymentProviderConfig.provider, 'ironpay'));
-        
-        console.log("IronPay API key updated successfully");
+        console.log("OrinPay configuration updated successfully");
       }
       
       res.json({ 
         success: true,
-        message: "Configuração atualizada com sucesso"
+        message: "Configuração OrinPay atualizada com sucesso"
       });
     } catch (error) {
       console.error("Error updating payment config:", error);
@@ -9185,7 +8915,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Approve withdrawal with automatic HorsePay integration
+  // Approve withdrawal with automatic OrinPay integration
   app.post(
     "/api/admin/withdrawals/:withdrawalId/approve",
     authenticateAdmin,
@@ -15517,99 +15247,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Saque não encontrado" });
       }
       
-      // If approving, process via HorsePay first
+      // If approving, process via OrinPay
       let endToEndId = null;
       if (action === 'approve') {
         try {
-          console.log(`[HORSEPAY] Processing affiliate withdrawal #${withdrawalId}`);
+          console.log(`[ORINPAY] Processing affiliate withdrawal #${withdrawalId}`);
           
-          // Get HorsePay credentials from database
-          const [horsepayConfig] = await db.select()
-            .from(paymentProviderConfig)
-            .where(eq(paymentProviderConfig.provider, 'horsepay'));
-          
-          if (!horsepayConfig || !horsepayConfig.clientKey || !horsepayConfig.clientSecret) {
-            throw new Error("HorsePay não está configurado. Configure as credenciais no painel admin.");
-          }
-          
-          const clientKey = horsepayConfig.clientKey;
-          const clientSecret = horsepayConfig.clientSecret;
-          
-          const { default: fetch } = await import("node-fetch");
-          
-          const authResponse = await fetch("https://api.horsepay.io/auth/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              client_key: clientKey,
-              client_secret: clientSecret
-            })
-          });
-
-          if (!authResponse.ok) {
-            const errorText = await authResponse.text();
-            console.error(`[HORSEPAY] Auth failed:`, errorText);
-            throw new Error(`HorsePay auth failed: ${errorText}`);
-          }
-
-          const authData = await authResponse.json() as any;
-          const accessToken = authData.access_token;
-          console.log(`[HORSEPAY] Auth successful for affiliate withdrawal`);
-
-          // Determine PIX key type
-          let pixType = "CPF";
-          const pixKey = withdrawal.pixKey;
-          
-          if (pixKey.includes("@")) {
-            pixType = "EMAIL";
-          } else if (pixKey.replace(/[^0-9]/g, "").length === 11) {
-            if (pixKey.startsWith("+55") || pixKey.match(/^\d{2}9?\d{8}$/)) {
-              pixType = "PHONE";
-            } else {
-              pixType = "CPF";
-            }
-          } else if (pixKey.replace(/[^0-9]/g, "").length === 14) {
-            pixType = "CNPJ";
-          } else if (pixKey.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            pixType = "EVP";
-          }
-
-          // Create withdrawal via HorsePay
-          const withdrawPayload = {
-            amount: parseFloat(withdrawal.amount),
-            pix_key: pixKey,
-            pix_type: pixType,
-            callback_url: `${process.env.APP_URL || 'https://mania-brasil.com'}/api/webhook/horsepay-affiliate-withdrawal`
-          };
-
-          console.log(`[HORSEPAY] Sending affiliate withdrawal request:`, withdrawPayload);
-
-          const withdrawResponse = await fetch("https://api.horsepay.io/transaction/withdraw", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(withdrawPayload)
-          });
-
-          const withdrawText = await withdrawResponse.text();
-          console.log(`[HORSEPAY] Affiliate withdrawal response: ${withdrawResponse.status}`);
-
-          if (!withdrawResponse.ok) {
-            console.error(`[HORSEPAY] Affiliate withdrawal failed:`, withdrawText);
-            throw new Error(`HorsePay withdrawal failed: ${withdrawText}`);
-          }
-
-          const withdrawData = JSON.parse(withdrawText);
-          endToEndId = withdrawData.end_to_end_id || withdrawData.endToEndId;
-
-          console.log(`[HORSEPAY] Affiliate withdrawal created successfully`);
-          console.log(`[HORSEPAY] End-to-End ID: ${endToEndId}`);
-        } catch (horsePayError: any) {
-          console.error(`[HORSEPAY] Error processing affiliate withdrawal:`, horsePayError);
+          // For now, we'll mark as approved and the actual PIX will be processed manually
+          // TODO: Integrate OrinPay withdrawal API when available
+          console.log(`[ORINPAY] Affiliate withdrawal #${withdrawalId} marked as approved for manual processing`);
+        } catch (error: any) {
+          console.error(`[ORINPAY] Error processing affiliate withdrawal:`, error);
           return res.status(500).json({ 
-            error: `Erro ao processar PIX via HorsePay: ${horsePayError.message}`
+            error: `Erro ao processar PIX via OrinPay: ${error.message}`
           });
         }
       }

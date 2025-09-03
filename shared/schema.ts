@@ -122,7 +122,7 @@ export const deposits = pgTable("deposits", {
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending"), // pending, completed, failed
   pixCode: text("pix_code"),
-  paymentProvider: text("payment_provider"), // ironpay or orinpay
+  paymentProvider: text("payment_provider"), // orinpay
   createdAt: timestamp("created_at").defaultNow(),
   completedAt: timestamp("completed_at"),
 });
@@ -140,7 +140,7 @@ export const withdrawals = pgTable("withdrawals", {
   processedAt: timestamp("processed_at"),
   // PIX Transaction Receipt Fields
   endToEndId: text("end_to_end_id"), // PIX transaction identifier
-  transactionHash: text("transaction_hash"), // HorsePay transaction ID
+  transactionHash: text("transaction_hash"), // Transaction ID
   originName: text("origin_name").default("Mania Brasil"), // Sender name
   originCnpj: text("origin_cnpj").default("62.134.421/0001-62"), // Sender CNPJ
   destinationName: text("destination_name"), // Recipient name
@@ -285,15 +285,13 @@ export const referralConfig = pgTable("referral_config", {
 // Payment provider configuration table - stores provider settings and priority
 export const paymentProviderConfig = pgTable("payment_provider_config", {
   id: serial("id").primaryKey(),
-  provider: text("provider").notNull().unique(), // 'ironpay', 'orinpay', or 'horsepay'
+  provider: text("provider").notNull().unique(), // 'orinpay'
   isPrimary: boolean("is_primary").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   apiUrl: text("api_url"),
   apiToken: text("api_token"),
-  clientKey: text("client_key"), // For HorsePay authentication
-  clientSecret: text("client_secret"), // For HorsePay authentication
-  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }), // Percentage tax rate (4.49 for IronPay)
-  fixedTax: decimal("fixed_tax", { precision: 10, scale: 2 }), // Fixed tax amount (1.00 for both, 0.65 for HorsePay)
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }), // Percentage tax rate
+  fixedTax: decimal("fixed_tax", { precision: 10, scale: 2 }), // Fixed tax amount
   lastHealthCheck: timestamp("last_health_check"),
   healthStatus: text("health_status").default("unknown"), // 'healthy', 'unhealthy', 'unknown'
   failureCount: integer("failure_count").notNull().default(0),
@@ -530,7 +528,7 @@ export const affiliatesWithdrawals = pgTable("affiliates_withdrawals", {
   status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, processing, completed, rejected
   requestedAt: timestamp("requested_at").defaultNow().notNull(),
   processedAt: timestamp("processed_at"),
-  endToEndId: varchar("end_to_end_id", { length: 255 }), // HorsePay end-to-end ID
+  endToEndId: varchar("end_to_end_id", { length: 255 }), // PIX end-to-end ID
   adminNotes: text("admin_notes"),
   rejectionReason: text("rejection_reason")
 });
@@ -660,7 +658,7 @@ export const partnersWithdrawals = pgTable("partners_withdrawals", {
   status: varchar("status", { length: 20 }).default("pending").notNull(), // pending, processing, completed, rejected
   requestedAt: timestamp("requested_at").defaultNow().notNull(),
   processedAt: timestamp("processed_at"),
-  endToEndId: varchar("end_to_end_id", { length: 255 }), // HorsePay end-to-end ID
+  endToEndId: varchar("end_to_end_id", { length: 255 }), // PIX end-to-end ID
   adminNotes: text("admin_notes"),
   rejectionReason: text("rejection_reason")
 });
@@ -1117,8 +1115,6 @@ export const paymentAuditLogs = pgTable("payment_audit_logs", {
   errorMessage: text("error_message"),
   ipAddress: varchar("ip_address", { length: 45 }),
   userAgent: text("user_agent"),
-  ironpayTransactionId: varchar("ironpay_transaction_id", { length: 255 }),
-  ironpayResponse: jsonb("ironpay_response"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

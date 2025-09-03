@@ -577,7 +577,7 @@ export default function DepositsManagement() {
                                 : 'border-purple-500 text-purple-500'
                             }`}
                           >
-                            {deposit.paymentProvider === 'orinpay' ? 'OrinPay' : 'IronPay'}
+                            {deposit.paymentProvider === 'orinpay' ? 'OrinPay' : 'OrinPay'}
                           </Badge>
                         ) : (
                           <span className="text-zinc-500">-</span>

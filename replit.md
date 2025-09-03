@@ -17,6 +17,13 @@ Mobile panel headers: Affiliate and partner panels show user avatar on left and 
 Mobile menu design: Both affiliate and partner panels have identical mobile menu structure with user profile section at bottom including avatar, email, and action buttons (help, settings, logout)
 
 ## Recent Changes (2025-09-03)
+- **Migração Completa para OrinPay**: Sistema de pagamentos totalmente migrado para usar apenas OrinPay
+  - Removidos todos gateways antigos (IronPay, HorsePay, OrinPay antiga)
+  - Nova implementação OrinPay com API key atualizada
+  - Depósitos PIX funcionando com novo endpoint da OrinPay
+  - Sistema de saques integrado com OrinPay
+  - Webhooks configurados em /api/webhook/orinpay
+  - Integração testada e validada com sucesso
 - **Migração para Novo Supabase**: Migrado com sucesso para novo projeto Supabase (ID: upxximikhoshaxbmshee)
   - Todas as 27 tabelas criadas e configuradas
   - Dados iniciais migrados (admin, probabilidades, configurações)
@@ -93,6 +100,7 @@ Mobile menu design: Both affiliate and partner panels have identical mobile menu
 - **API Design**: RESTful API.
 - **Authentication**: JWT tokens for user sessions, separate admin session management with database-stored credentials.
 - **Security**: bcrypt for password hashing, Zod for input validation, secure database authentication for admin panel. Rate limiting is handled externally (e.g., Cloudflare).
+- **Payment Gateway**: OrinPay API for PIX deposits and withdrawals (unified single provider).
 
 ### Database
 - **Database**: PostgreSQL (Supabase).
@@ -101,7 +109,7 @@ Mobile menu design: Both affiliate and partner panels have identical mobile menu
 
 ### Key Features
 - **Authentication**: Email/phone and password registration/login with JWT-based sessions, and separate admin authentication. Password recovery via SMS with cooldown. Supports user referral codes and affiliate promotional codes. Affiliate login includes "remember me" functionality.
-- **Payments**: Triple PIX payment provider system with automatic failover (IronPay, OrinPay, HorsePay) ensuring seamless processing. User-initiated withdrawals with admin approval, and automatic withdrawal approval via HorsePay API. Includes a configurable referral commission system (fixed amount, pay on first deposit or all deposits). Comprehensive payment provider tracking.
+- **Payments**: OrinPay PIX payment system for secure processing. User-initiated withdrawals with admin approval. Includes a configurable referral commission system (fixed amount, pay on first deposit or all deposits). Comprehensive payment tracking with webhook support.
 - **Coupon System**: Coupons persist after deposits, applying bonuses on qualifying deposits based on a tier-based bonus system.
 - **Affiliate Commission System**: Professional tracking with historical rate preservation, calculated as a percentage of deposit value, requiring admin approval.
 - **Game Engine**: Interactive 3x3 raspadinhas with configurable odds, multipliers, and prize pools, focused on specific premio games (PIX, Me Mimei, Eletrônicos, Super Prêmios).
@@ -115,9 +123,7 @@ Mobile menu design: Both affiliate and partner panels have identical mobile menu
 
 ## External Dependencies
 
--   **IronPay API**: Primary PIX payment processor.
--   **OrinPay API**: Alternative PIX payment processor.
--   **HorsePay API**: Third PIX payment processor, also used for automatic withdrawals.
+-   **OrinPay API**: Unified PIX payment processor for deposits and withdrawals.
 -   **Supabase**: PostgreSQL database hosting.
 -   **JWT**: JSON Web Tokens for authentication.
 -   **bcrypt**: Password hashing library.

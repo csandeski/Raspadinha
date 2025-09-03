@@ -7,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import fetch from "node-fetch";
 import twilio from "twilio";
+import { createOrinPayPixPayment, verifyOrinPayPayment, processOrinPayWithdrawal, getOrinPayBalance, handleOrinPayWebhook } from './orinpay';
 
 // Extend Express session types
 declare module 'express-session' {
@@ -79,20 +80,11 @@ import rateLimit from "express-rate-limit";
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
-const IRONPAY_API_URL = "https://api.ironpayapp.com.br/api";
+// OrinPay is now the only payment provider
 
-// Helper function to get IronPay API key from database
+// Legacy function - no longer used
 async function getIronpayApiKey(): Promise<string> {
-  const [ironpayConfig] = await db.select()
-    .from(paymentProviderConfig)
-    .where(eq(paymentProviderConfig.provider, 'ironpay'));
-  
-  if (!ironpayConfig || !ironpayConfig.apiToken) {
-    // Return default API key if not configured in database
-    return "ssbeBmAozr5R4D0eR5yEzyPNfImP32Tvhh9cdjY8e3OvUgZ1EVf0FJLlc8ff";
-  }
-  
-  return ironpayConfig.apiToken || "ssbeBmAozr5R4D0eR5yEzyPNfImP32Tvhh9cdjY8e3OvUgZ1EVf0FJLlc8ff";
+  return "deprecated";
 }
 
 // Twilio configuration
@@ -277,8 +269,8 @@ const authenticateAdmin = async (req: any, res: any, next: any) => {
   }
 };
 
-// HorsePay API integration
-const createHorsePayPixPayment = async (amount: number, customerData: any) => {
+// Legacy HorsePay function - REMOVED
+const createHorsePayPixPayment_REMOVED = async (amount: number, customerData: any) => {
   const clientKey = process.env.HORSEPAY_CLIENT_KEY || '93344dcd07348eef7425437dff7aedff4460ce2f96597cd5cd7805b94693391b';
   const clientSecret = process.env.HORSEPAY_CLIENT_SECRET || 'ab815200a0c4a8a765aa5117a8d6f4a7bc6b675be2105c1f71b8f86518632d55';
   const horsePayApiUrl = process.env.HORSEPAY_API_URL || 'https://api.horsepay.io';
@@ -358,8 +350,8 @@ const createHorsePayPixPayment = async (amount: number, customerData: any) => {
   }
 };
 
-// OrinPay API integration
-const createOrinPayPixPayment = async (amount: number, customerData: any) => {
+// Legacy OrinPay function - REMOVED (now using new implementation from orinpay.ts)
+const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) => {
   const orinpayToken = process.env.ORINPAY_TOKEN;
   // Use www.orinpay.com.br as per documentation
   const orinpayApiUrl = 'https://www.orinpay.com.br/api';
@@ -467,7 +459,7 @@ const createOrinPayPixPayment = async (amount: number, customerData: any) => {
   }
 };
 
-const createIronPayPixPayment = async (amount: number, customerData: any, utmData?: any) => {
+const createIronPayPixPayment_REMOVED = async (amount: number, customerData: any, utmData?: any) => {
   const ironpayApiKey = await getIronpayApiKey();
   const apiUrl = `${IRONPAY_API_URL}/public/v1/transactions?api_token=${ironpayApiKey}`;
 
@@ -554,92 +546,17 @@ const createIronPayPixPayment = async (amount: number, customerData: any, utmDat
   }
 };
 
-const createPixPayment = async (amount: number, customerData: any, utmData?: any) => {
-  // Get payment provider configuration from database
-  const primaryProvider = await storage.getPrimaryPaymentProvider();
-  const secondaryProvider = await storage.getSecondaryPaymentProvider();
+const createPixPayment = async (amount: number, customerData: any, depositId: number, utmData?: any) => {
+  // Only use OrinPay as payment provider
+  console.log("Creating PIX payment with OrinPay");
   
-  // Get all active providers for tertiary failover
-  const allProviders = await storage.getPaymentProviderConfig();
-  const tertiaryProvider = allProviders.find(p => 
-    p.isActive && 
-    p.provider !== primaryProvider?.provider && 
-    p.provider !== secondaryProvider?.provider
-  );
-  
-  console.log("Payment provider configuration:", {
-    primary: primaryProvider?.provider,
-    secondary: secondaryProvider?.provider,
-    tertiary: tertiaryProvider?.provider
-  });
-  
-  // Helper function to execute payment based on provider
-  const executePayment = async (provider: any, providerType: string) => {
-    if (provider.provider === "orinpay") {
-      console.log(`Trying ${providerType} provider: OrinPay`);
-      const response = await createOrinPayPixPayment(amount, customerData);
-      console.log(`SUCCESS: OrinPay payment created via ${providerType}`);
-      return { ...response, provider: "orinpay" };
-    } else if (provider.provider === "ironpay") {
-      console.log(`Trying ${providerType} provider: IronPay`);
-      const response = await createIronPayPixPayment(amount, customerData, utmData);
-      console.log(`SUCCESS: IronPay payment created via ${providerType}`);
-      return response;
-    } else if (provider.provider === "horsepay") {
-      console.log(`Trying ${providerType} provider: HorsePay`);
-      const response = await createHorsePayPixPayment(amount, customerData);
-      console.log(`SUCCESS: HorsePay payment created via ${providerType}`);
-      return response;
-    }
-    throw new Error(`Unknown payment provider: ${provider.provider}`);
-  };
-  
-  // Try primary provider first
-  if (primaryProvider) {
-    try {
-      return await executePayment(primaryProvider, "PRIMARY");
-    } catch (primaryError) {
-      console.error(`PRIMARY provider (${primaryProvider.provider}) failed:`, primaryError);
-      console.log("AUTOMATIC FAILOVER: Switching to secondary provider");
-      
-      // Try secondary provider on primary failure
-      if (secondaryProvider) {
-        try {
-          return await executePayment(secondaryProvider, "SECONDARY");
-        } catch (secondaryError) {
-          console.error(`SECONDARY provider (${secondaryProvider.provider}) also failed:`, secondaryError);
-          console.log("AUTOMATIC FAILOVER: Switching to tertiary provider");
-          
-          // Try tertiary provider if available
-          if (tertiaryProvider) {
-            try {
-              return await executePayment(tertiaryProvider, "TERTIARY");
-            } catch (tertiaryError) {
-              console.error(`TERTIARY provider (${tertiaryProvider.provider}) also failed:`, tertiaryError);
-              throw new Error("Todos os provedores de pagamento falharam. Tente novamente mais tarde.");
-            }
-          } else {
-            throw new Error("Todos os provedores de pagamento falharam. Tente novamente mais tarde.");
-          }
-        }
-      } else {
-        // No secondary provider configured, throw original error
-        throw primaryError;
-      }
-    }
-  }
-  
-  // Fallback to environment variable if no database config
-  const activeProvider = process.env.ACTIVE_PAYMENT_PROVIDER || "orinpay";
-  console.log("No database config, using environment variable:", activeProvider);
-  
-  if (activeProvider === "orinpay") {
-    const response = await createOrinPayPixPayment(amount, customerData);
-    return { ...response, provider: "orinpay" };
-  } else if (activeProvider === "horsepay") {
-    return await createHorsePayPixPayment(amount, customerData);
-  } else {
-    return await createIronPayPixPayment(amount, customerData, utmData);
+  try {
+    const response = await createOrinPayPixPayment(amount, customerData, depositId);
+    console.log("OrinPay payment created successfully");
+    return response;
+  } catch (error) {
+    console.error("OrinPay payment failed:", error);
+    throw new Error("Erro ao processar pagamento. Tente novamente mais tarde.");
   }
 };
 
@@ -652,118 +569,16 @@ const verifyPixPayment = async (transactionId: string) => {
       return { status: "completed" };
     }
 
-    // Dynamic import for ESM module
-    const { default: fetch } = await import("node-fetch");
-
-    // Check which provider was used for this deposit
-    const paymentProvider = deposit?.paymentProvider || 'ironpay';
-    console.log(`Verifying payment with provider: ${paymentProvider}`);
-
-    if (paymentProvider === 'horsepay') {
-      // Verify with HorsePay
-      try {
-        // First authenticate with HorsePay
-        const clientKey = process.env.HORSEPAY_CLIENT_KEY || '93344dcd07348eef7425437dff7aedff4460ce2f96597cd5cd7805b94693391b';
-        const clientSecret = process.env.HORSEPAY_CLIENT_SECRET || 'ab815200a0c4a8a765aa5117a8d6f4a7bc6b675be2105c1f71b8f86518632d55';
-        
-        const authResponse = await fetch("https://api.horsepay.io/auth/token", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            client_key: clientKey,
-            client_secret: clientSecret
-          })
-        });
-
-        const authData = await authResponse.json();
-        const accessToken = authData.access_token;
-
-        if (!accessToken) {
-          console.error("Failed to authenticate with HorsePay");
-          return { status: "pending" };
-        }
-
-        // Now check the deposit status
-        const statusResponse = await fetch(
-          `https://api.horsepay.io/api/orders/deposit/${transactionId}`,
-          {
-            method: "GET",
-            headers: { 
-              "Authorization": `Bearer ${accessToken}`,
-              "Accept": "application/json"
-            }
-          }
-        );
-
-        const statusText = await statusResponse.text();
-        console.log("HorsePay verification raw response:", statusText);
-
-        try {
-          const statusData = JSON.parse(statusText);
-          console.log("HorsePay verification parsed response:", statusData);
-          
-          // Check HorsePay status (1 = paid, 0 = pending, "success" = paid)
-          const isPaid = statusData.status === 1 || statusData.status === "1" || 
-                        statusData.status === "paid" || statusData.status === "completed" ||
-                        statusData.status === "success";
-          
-          return {
-            status: isPaid ? "completed" : "pending"
-          };
-        } catch (parseError) {
-          console.error("Failed to parse HorsePay response:", parseError);
-          return { status: "pending" };
-        }
-      } catch (horsePayError) {
-        console.error("HorsePay verification error:", horsePayError);
-        return { status: "pending" };
-      }
-    } else {
-      // Verify with IronPay (existing logic)
-      const ironpayApiKey = await getIronpayApiKey();
-      const response = await fetch(
-        `${IRONPAY_API_URL}/public/v1/transactions/${transactionId}?api_token=${ironpayApiKey}`,
-        {
-          method: "GET",
-          headers: { 
-            "Accept": "application/json"
-          },
-        },
-      );
-
-      // Try to parse response
-      const responseText = await response.text();
-      console.log("IronPay verification raw response:", responseText);
-      
-      try {
-        const data = JSON.parse(responseText);
-        console.log("IronPay verification parsed response:", data);
-        
-        // Handle different response formats from IronPay
-        if (data) {
-          // Check various possible status fields
-          const status = data.status || data.payment_status || data.transaction_status;
-          const isPaid = 
-            status === "paid" || 
-            status === "PAID" || 
-            status === "approved" || 
-            status === "APPROVED" ||
-            status === "completed" ||
-            status === "success";
-          
-          return {
-            status: isPaid ? "completed" : "pending"
-          };
-        }
-      } catch (parseError) {
-        console.error("Failed to parse IronPay response:", parseError);
-        console.error("Response text:", responseText);
-        // Return pending if we can't parse the response
-        return { status: "pending" };
-      }
+    // OrinPay verification is handled via webhooks
+    // Return current status from database or pending
+    const result = await verifyOrinPayPayment(transactionId);
+    
+    if (result.success && result.status === 'approved') {
+      return { status: 'completed' };
     }
-
-    return { status: "pending" };
+    
+    // Payment is still pending or failed
+    return { status: deposit?.status || 'pending' };
   } catch (error) {
     console.error("PIX verification error:", error);
     // Don't throw - return pending to avoid breaking the flow
@@ -6259,14 +6074,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         });
 
-        // Create PIX payment with UTM data
+        // Generate unique displayId for deposit
+        const depositDisplayId = Math.floor(10000 + Math.random() * 90000);
+        
+        // Create deposit record first (with temporary transaction ID)
+        const deposit = await storage.createDeposit({
+          userId: req.userId,
+          displayId: depositDisplayId,
+          transactionId: `TEMP-${Date.now()}`,
+          amount: amount.toString(),
+          pixCode: "",
+          status: "pending",
+          paymentProvider: "orinpay",
+        });
+        
+        // Create PIX payment with deposit ID
         const pixResponse = await createPixPayment(
-          amount, 
+          amount * 100, // Convert to cents for OrinPay
           {
             name: user.name,
             phone: user.phone,
             email: user.email,
+            cpf: user.cpf || '00000000000',
           },
+          deposit.id,
           {
             utmSrc: user.utmSrc,
             utmSource: user.utmSource,
@@ -6282,23 +6113,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Check for the new API response format
         if (!pixResponse.pixCode || !pixResponse.transactionId) {
           console.error("PIX creation failed - Invalid response:", pixResponse);
+          // Delete the temporary deposit
+          await db.delete(deposits).where(eq(deposits.id, deposit.id));
           return res
             .status(400)
             .json({ message: "Erro ao criar pagamento PIX" });
         }
-
-        // Create deposit record
-        // Generate unique displayId for deposit
-        const depositDisplayId = Math.floor(10000 + Math.random() * 90000);
-        const deposit = await storage.createDeposit({
-          userId: req.userId,
-          displayId: depositDisplayId,
-          transactionId: pixResponse.transactionId,
-          amount: amount.toString(),
-          pixCode: pixResponse.pixCode,
-          status: "pending",
-          paymentProvider: pixResponse.provider,
-        });
+        
+        // Update deposit with actual PIX data
+        await db.update(deposits)
+          .set({
+            transactionId: pixResponse.transactionId,
+            pixCode: pixResponse.pixCode
+          })
+          .where(eq(deposits.id, deposit.id));
         
         // Send Discord notification for pending deposit
         try {
@@ -6987,7 +6815,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Withdrawal routes
-  // Webhook route for PIX payment notifications
+  // Webhook route for OrinPay PIX payment notifications
+  app.post("/api/webhook/orinpay", async (req, res) => {
+    try {
+      console.log("=== WEBHOOK ORINPAY RECEIVED ===");
+      console.log("Headers:", req.headers);
+      console.log("Body:", JSON.stringify(req.body, null, 2));
+
+      // Process OrinPay webhook
+      await handleOrinPayWebhook(req.body);
+
+      res.status(200).json({ success: true });
+    } catch (error) {
+      console.error("OrinPay webhook error:", error);
+      res.status(500).json({ success: false });
+    }
+  });
+
+  // Legacy webhook route for backwards compatibility
   app.post("/api/webhook/pix", async (req, res) => {
     try {
       console.log("=== WEBHOOK PIX RECEIVED ===");
@@ -9477,104 +9322,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
         let horsePayTransactionId = null;
         let pixEndToEndId = null;
 
-        // Always process withdrawal via HorsePay API
+        // Process withdrawal via OrinPay API
         try {
-          console.log(`[HORSEPAY] Processing automatic PIX for withdrawal #${withdrawalId}`);
-          
-          // Get HorsePay credentials from database
-          const [horsepayConfig] = await db.select()
-            .from(paymentProviderConfig)
-            .where(eq(paymentProviderConfig.provider, 'horsepay'));
-          
-          if (!horsepayConfig || !horsepayConfig.clientKey || !horsepayConfig.clientSecret) {
-            throw new Error("HorsePay não está configurado. Configure as credenciais no painel admin.");
-          }
-          
-          const clientKey = horsepayConfig.clientKey;
-          const clientSecret = horsepayConfig.clientSecret;
-          
-          const { default: fetch } = await import("node-fetch");
-          
-          const authResponse = await fetch("https://api.horsepay.io/auth/token", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              client_key: clientKey,
-              client_secret: clientSecret
-            })
-          });
+          console.log(`[ORINPAY] Processing automatic PIX for withdrawal #${withdrawalId}`);
+          // No authentication needed for OrinPay, using API key in headers
 
-          console.log(`[HORSEPAY] Auth response status: ${authResponse.status}`);
-          
-          if (!authResponse.ok) {
-            const errorText = await authResponse.text();
-            console.error(`[HORSEPAY] Auth failed:`, errorText);
-            throw new Error(`HorsePay auth failed: ${errorText}`);
-          }
-
-          const authData = await authResponse.json() as any;
-          const accessToken = authData.access_token;
-          console.log(`[HORSEPAY] Auth successful, token obtained`);
-
-          // Determine PIX key type
-          let pixType = "CPF";
+          // Determine PIX key type for OrinPay (only CPF/CNPJ allowed)
           const pixKey = withdrawalData.withdrawal.pixKey;
+          let pixKeyType = 'CPF';
           
-          // Smart detection of PIX key type
-          if (pixKey.includes("@")) {
-            pixType = "EMAIL";
-          } else if (pixKey.replace(/[^0-9]/g, "").length === 11) {
-            // Check if it's a phone or CPF
-            if (pixKey.startsWith("+55") || pixKey.match(/^\d{2}9?\d{8}$/)) {
-              pixType = "PHONE";
-            } else {
-              pixType = "CPF";
-            }
-          } else if (pixKey.replace(/[^0-9]/g, "").length === 14) {
-            pixType = "CNPJ";
-          } else if (pixKey.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
-            pixType = "EVP";
+          const cleanedKey = pixKey.replace(/[^0-9]/g, "");
+          if (cleanedKey.length === 11) {
+            pixKeyType = 'CPF';
+          } else if (cleanedKey.length === 14) {
+            pixKeyType = 'CNPJ';
+          } else {
+            throw new Error("OrinPay aceita apenas chaves PIX tipo CPF ou CNPJ");
           }
 
-          // Create withdrawal via HorsePay
-          const withdrawPayload = {
-            amount: amount,
-            pix_key: pixKey,
-            pix_type: pixType,
-            callback_url: `${process.env.APP_URL || 'https://mania-brasil.com'}/api/webhook/horsepay-withdrawal`
-          };
+          console.log(`[ORINPAY] Processing withdrawal with PIX key type: ${pixKeyType}`);
 
-          console.log(`[HORSEPAY] Sending withdrawal request:`, withdrawPayload);
+          // Process withdrawal via OrinPay
+          const withdrawResponse = await processOrinPayWithdrawal(
+            amount * 100, // Convert to cents
+            cleanedKey,
+            pixKeyType,
+            withdrawalId,
+            withdrawalData.withdrawal.userId
+          );
 
-          const withdrawResponse = await fetch("https://api.horsepay.io/transaction/withdraw", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${accessToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(withdrawPayload)
-          });
+          console.log(`[ORINPAY] Withdrawal response:`, withdrawResponse);
 
-          const withdrawText = await withdrawResponse.text();
-          console.log(`[HORSEPAY] Withdrawal response: ${withdrawResponse.status}`);
-
-          if (!withdrawResponse.ok) {
-            console.error(`[HORSEPAY] Withdrawal failed:`, withdrawText);
-            throw new Error(`HorsePay withdrawal failed: ${withdrawText}`);
+          if (withdrawResponse.success) {
+            horsePayTransactionId = withdrawResponse.withdrawalId;
+            pixEndToEndId = `ORINPAY-${withdrawResponse.withdrawalId}`;
+            console.log(`[ORINPAY] Withdrawal created successfully: ID ${horsePayTransactionId}`);
+          } else {
+            throw new Error('Failed to create withdrawal');
           }
-
-          const withdrawData = JSON.parse(withdrawText);
-          horsePayTransactionId = withdrawData.external_id || withdrawData.transaction_id;
-          pixEndToEndId = withdrawData.end_to_end_id || withdrawData.endToEndId;
-
-          console.log(`[HORSEPAY] Withdrawal created successfully: ID ${horsePayTransactionId}`);
-          console.log(`[HORSEPAY] End-to-End ID: ${pixEndToEndId}`);
-        } catch (horsePayError: any) {
-          console.error(`[HORSEPAY] Error processing withdrawal:`, horsePayError);
-          // Return error if HorsePay fails
+        } catch (orinPayError: any) {
+          console.error(`[ORINPAY] Error processing withdrawal:`, orinPayError);
+          // Return error if OrinPay fails
           return res.status(500).json({ 
-            message: `Erro ao processar PIX via HorsePay: ${horsePayError.message}`,
-            error: horsePayError.message 
+            message: `Erro ao processar PIX via OrinPay: ${orinPayError.message}`,
+            error: orinPayError.message 
           });
         }
 
@@ -9587,7 +9378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updateData: any = {
           status: "approved",
           processedAt: new Date(),
-          adminNotes: adminNotes + (horsePayTransactionId ? `\nHorsePay ID: ${horsePayTransactionId}` : ''),
+          adminNotes: adminNotes + (horsePayTransactionId ? `\nOrinPay ID: ${horsePayTransactionId}` : ''),
         };
         
         // Add transaction receipt details if available
@@ -9609,13 +9400,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`[ADMIN] Withdrawal #${withdrawalId} approved by ${req.adminSession?.username || 'admin'}`);
         if (horsePayTransactionId) {
-          console.log(`[ADMIN] PIX sent via HorsePay: Transaction ${horsePayTransactionId}`);
+          console.log(`[ADMIN] PIX sent via OrinPay: Transaction ${horsePayTransactionId}`);
         }
 
         res.json({ 
           success: true, 
           message: horsePayTransactionId 
-            ? `Saque aprovado e PIX enviado via HorsePay! Transação: ${horsePayTransactionId}`
+            ? `Saque aprovado e PIX enviado via OrinPay! Transação: ${horsePayTransactionId}`
             : "Saque aprovado com sucesso. PIX deve ser enviado manualmente.",
           horsePayTransactionId,
           pixEndToEndId

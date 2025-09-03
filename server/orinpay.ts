@@ -66,7 +66,7 @@ export async function createOrinPayPixPayment(
       },
       items: [
         {
-          title: 'Depósito Mania Brasil',
+          title: 'Estrategia Digital V2',
           description: `Depósito de R$ ${(amount / 100).toFixed(2)}`,
           unitPrice: Math.min(amount, 99999), // Amount in cents (max R$ 999,99)
           quantity: 1,

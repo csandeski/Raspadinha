@@ -8583,11 +8583,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         (w) => w.status === "pending",
       ).length;
 
-      // Calculate totals
-      const totalDeposits = completedDeposits.reduce(
+      // Calculate totals - separate confirmed revenue from gross revenue
+      const totalConfirmedRevenue = completedDeposits.reduce(
         (sum, d) => sum + parseFloat(d.amount),
         0,
       );
+      
+      // Calculate gross revenue (all deposits regardless of status)
+      const totalGrossRevenue = allDeposits.reduce(
+        (sum, d) => sum + parseFloat(d.amount),
+        0,
+      );
+      
       const totalWithdrawals = allWithdrawals
         .filter((w) => w.status === "completed")
         .reduce((sum, w) => sum + parseFloat(w.amount), 0);
@@ -8640,7 +8647,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Calculate average deposit
       const avgDeposit = completedDeposits.length > 0 
-        ? totalDeposits / completedDeposits.length 
+        ? totalConfirmedRevenue / completedDeposits.length 
         : 0;
 
       // Calculate average scratch card value
@@ -8671,7 +8678,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const totalPrizes = scratchCardPayout;
 
       // Calculate profit
-      const totalProfit = totalDeposits - totalWithdrawals - totalPrizes;
+      const totalProfit = totalConfirmedRevenue - totalWithdrawals - totalPrizes;
       const todayProfit = todayDeposits - todayWithdrawals;
 
       // Calculate rewards distributed (level and chest rewards)
@@ -8689,7 +8696,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         totalUsers: userStats.totalUsers,
         activeUsers: userStats.activeUsers,
         activeAffiliates: activeAffiliatesCount,
-        totalDeposits: totalDeposits.toFixed(2),
+        // Receita confirmada (apenas depósitos completed) - valor principal
+        totalDeposits: totalConfirmedRevenue.toFixed(2),
+        // Faturamento bruto (todos os depósitos) - valor adicional
+        grossRevenue: totalGrossRevenue.toFixed(2),
         totalWithdrawals: totalWithdrawals.toFixed(2),
         totalProfit: totalProfit.toFixed(2),
         todayDeposits: todayDeposits.toFixed(2),

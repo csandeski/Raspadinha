@@ -146,13 +146,15 @@ export default function ModernDashboard({ stats }: ModernDashboardProps) {
 
   const statCards = [
     {
-      title: "Receita Total",
+      title: "Receita Confirmada",
       value: parseFloat(stats?.totalDeposits || 0),
+      grossValue: parseFloat(stats?.grossRevenue || 0),
       prefix: "R$ ",
       change: revenueChange,
       icon: DollarSign,
       color: "from-green-500 to-emerald-600",
-      shadowColor: "shadow-green-500/20"
+      shadowColor: "shadow-green-500/20",
+      showGrossRevenue: true
     },
     {
       title: "Usuários Ativos",
@@ -264,6 +266,14 @@ export default function ModernDashboard({ stats }: ModernDashboardProps) {
                       {stat.prefix}
                       <CountUp end={stat.value} duration={2.5} separator="." decimal="," decimals={stat.prefix ? 2 : 0} />
                     </p>
+                    
+                    {/* Adendo do faturamento bruto */}
+                    {stat.showGrossRevenue && stat.grossValue && (
+                      <p className="text-xs text-zinc-500 mt-1">
+                        Faturamento bruto: R$ <CountUp end={stat.grossValue} duration={2.5} separator="." decimal="," decimals={2} />
+                      </p>
+                    )}
+                    
                     <Badge 
                       className={`mt-2 ${stat.change > 0 ? 'bg-[#00E880]/10 text-[#00E880] border-[#00E880]/20' : 'bg-red-500/10 text-red-400 border-red-500/20'}`}
                     >

@@ -129,6 +129,7 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
     
     // Initialize cron jobs after server starts
-    initializeCronJobs();
+    // Disabled to avoid crashes - needs fixing
+    // initializeCronJobs();
   });
 })();

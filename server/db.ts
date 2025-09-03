@@ -12,18 +12,16 @@ if (!dbUrl) {
   );
 }
 
-// Optimized pool configuration for better performance
+// Simplified pool configuration for stability
 export const pool = new Pool({ 
   connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false
   },
-  // Connection pool optimization
-  max: 20, // Maximum number of clients in the pool
-  min: 2, // Minimum number of clients in the pool
-  idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-  connectionTimeoutMillis: 2000, // Timeout after 2 seconds if cannot connect
-  statement_timeout: 10000, // Terminate queries taking longer than 10 seconds
+  // Simplified configuration for better stability
+  max: 10, // Reduced max connections
+  connectionTimeoutMillis: 30000, // Increased timeout to 30 seconds
+  idleTimeoutMillis: 10000, // Reduced idle timeout
 });
 
 export const db = drizzle(pool, { schema });

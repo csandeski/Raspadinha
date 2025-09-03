@@ -327,15 +327,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser & { affiliateId?: number | null; partnerId?: number | null }): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    
-    // Create wallet for new user
-    await db.insert(wallets).values({
-      userId: user.id,
-      balance: "0.00",
-    });
-    
-    return user;
+    try {
+      console.log("[createUser] Attempting to insert user with data:", {
+        ...insertUser,
+        password: "[HIDDEN]"
+      });
+      
+      const [user] = await db.insert(users).values(insertUser).returning();
+      
+      console.log("[createUser] User inserted successfully with ID:", user.id);
+      
+      // Create wallet for new user
+      try {
+        await db.insert(wallets).values({
+          userId: user.id,
+          balance: "0.00",
+        });
+        console.log("[createUser] Wallet created for user:", user.id);
+      } catch (walletError) {
+        console.error("[createUser] Error creating wallet:", walletError);
+        // Continue even if wallet creation fails
+      }
+      
+      return user;
+    } catch (error) {
+      console.error("[createUser] Error inserting user into database:", error);
+      throw error;
+    }
   }
 
   async updateUser(id: number, user: Partial<InsertUser>): Promise<User | undefined> {

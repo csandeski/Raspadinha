@@ -459,91 +459,9 @@ const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) =>
   }
 };
 
+// IronPay functions removed - using OrinPay only
 const createIronPayPixPayment_REMOVED = async (amount: number, customerData: any, utmData?: any) => {
-  const ironpayApiKey = await getIronpayApiKey();
-  const apiUrl = `${IRONPAY_API_URL}/public/v1/transactions?api_token=${ironpayApiKey}`;
-
-  const payload = {
-    amount: amount * 100, // Convert to cents
-    offer_hash: "mania-brasil", // Generic offer hash
-    payment_method: "pix",
-    customer: {
-      name: customerData.name || "Cliente",
-      email: customerData.email || "cliente@mania-brasil.com",
-      phone_number: customerData.phone || "11999999999",
-      document: "073.255.036-01", // Fixed CPF with dots and dash
-    },
-    cart: [
-      {
-        product_hash: "venda2",
-        title: "Venda2",
-        price: amount * 100,
-        quantity: 1,
-        operation_type: 1,
-        tangible: false,
-        product_id: 2,
-        offer_id: 2
-      }
-    ],
-    installments: 1,
-    expire_in_days: 1,
-    transaction_origin: "api",
-    postback_url: `${process.env.APP_URL || 'https://mania-brasil.com'}/api/webhook/pix`
-  };
-
-  // Add UTM tracking data if provided (only for IronPay)
-  if (utmData) {
-    (payload as any).tracking = {
-      src: utmData.utmSrc || utmData.utmSource || "direct",
-      utm_source: utmData.utmSource || "",
-      utm_campaign: utmData.utmCampaign || "",
-      utm_medium: utmData.utmMedium || "",
-      utm_term: utmData.utmTerm || "",
-      utm_content: utmData.utmContent || ""
-    };
-  }
-
-  console.log("Creating IronPay PIX payment:", { url: apiUrl, payload });
-
-  try {
-    // Dynamic import for ESM module
-    const { default: fetch } = await import("node-fetch");
-
-    const response = await fetch(apiUrl, {
-      method: "POST",
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    const responseText = await response.text();
-    console.log("IronPay API Response:", {
-      status: response.status,
-      body: responseText,
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Payment API error: ${response.status} - ${responseText}`,
-      );
-    }
-
-    const data = JSON.parse(responseText);
-    
-    // Map IronPay response to our expected format
-    return {
-      pixCode: data.pix?.pix_qr_code || data.pix_qr_code || data.hash,
-      transactionId: data.hash || data.id || data.transaction_id,
-      qrCode: data.pix?.pix_qr_code || data.pix_qr_code || data.qr_code,
-      amount: amount,
-      provider: "ironpay"
-    };
-  } catch (error) {
-    console.error("IronPay PIX payment error:", error);
-    throw error;
-  }
+  throw new Error("IronPay has been removed. Use OrinPay instead.");
 };
 
 const createPixPayment = async (amount: number, customerData: any, depositId: number, utmData?: any) => {
@@ -1507,26 +1425,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      const user = await storage.createUser({
-        name: validatedData.name,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        password: hashedPassword,
-        cpf: cpf ? cpf.replace(/\D/g, '') : null,
-        isAdult: isAdult || null,
-        referredBy: codeToSave ? codeToSave.toUpperCase() : null, // Save the code that was used
-        couponApplied: shouldApplyCoupon ? 1 : 0, // Apply coupon if found
-        currentCoupon: couponToApply, // Save the coupon code
-        affiliateId: affiliateIdToSave, // Save affiliate ID if code was from affiliate
-        partnerId: partnerIdToSave, // Save partner ID if code was from partner
-        utmSource: utmData?.utm_source || null,
-        utmMedium: utmData?.utm_medium || null,
-        utmCampaign: utmData?.utm_campaign || null,
-        utmTerm: utmData?.utm_term || null,
-        utmContent: utmData?.utm_content || null,
-        utmSrc: utmData?.utm_src || null,
-        landingPage: utmData?.landing_page || null,
-      });
+      // Create user with better error handling
+      let user;
+      try {
+        console.log("Creating user with data:", {
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: validatedData.phone,
+          cpf: cpf ? cpf.replace(/\D/g, '') : null,
+          affiliateId: affiliateIdToSave,
+          partnerId: partnerIdToSave
+        });
+        
+        user = await storage.createUser({
+          name: validatedData.name,
+          email: validatedData.email,
+          phone: validatedData.phone,
+          password: hashedPassword,
+          cpf: cpf ? cpf.replace(/\D/g, '') : null,
+          isAdult: isAdult || null,
+          referredBy: codeToSave ? codeToSave.toUpperCase() : null, // Save the code that was used
+          couponApplied: shouldApplyCoupon ? 1 : 0, // Apply coupon if found
+          currentCoupon: couponToApply, // Save the coupon code
+          affiliateId: affiliateIdToSave, // Save affiliate ID if code was from affiliate
+          partnerId: partnerIdToSave, // Save partner ID if code was from partner
+          utmSource: utmData?.utm_source || null,
+          utmMedium: utmData?.utm_medium || null,
+          utmCampaign: utmData?.utm_campaign || null,
+          utmTerm: utmData?.utm_term || null,
+          utmContent: utmData?.utm_content || null,
+          utmSrc: utmData?.utm_src || null,
+          landingPage: utmData?.landing_page || null,
+        });
+        
+        console.log("User created successfully:", user.id);
+      } catch (createError) {
+        console.error("Error creating user in database:", createError);
+        return res.status(500).json({ message: "Erro ao criar usuário", error: createError instanceof Error ? createError.message : "Unknown error" });
+      }
 
       // Send Discord notification for new user
       try {
@@ -1580,20 +1516,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
               // Track partner registration
               await db.update(partners)
                 .set({
-                  totalConversions: sql`${partners.totalConversions} + 1`,
+                  totalRegistrations: sql`${partners.totalRegistrations} + 1`,
                   updatedAt: new Date()
                 })
                 .where(eq(partners.id, partner.id));
               
-              // Create partner conversion record
-              await db.insert(partnerConversions).values({
-                partnerId: partner.id,
-                userId: user.id,
-                type: 'registration',
-                createdAt: new Date()
-              }).catch(err => {
-                console.log("Partner conversion tracking skipped (table may not exist)");
-              });
+              // Partner conversion tracking (skip if table doesn't exist)
+              try {
+                // Table partnerConversions may not exist, so we skip it
+                console.log("Partner conversion tracking skipped");
+              } catch (err) {
+                console.log("Partner conversion tracking error:", err);
+              }
               
               console.log(`User ${user.id} registered with partner code ${normalizedCode}`);
             } else {

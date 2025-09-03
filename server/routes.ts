@@ -1356,22 +1356,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const validatedData = registerSchema.parse(req.body);
       const { referralCode, couponCode, utmData, cpf, isAdult, affiliateCode } = req.body; // Get referral, coupon codes, UTM data, CPF, isAdult and affiliate code from request
 
-      // Check if user already exists by email
-      const existingUserByEmail = await storage.getUserByEmail(validatedData.email);
+      // Import direct database functions for stability
+      const { getUserByEmailDirect, getUserByPhoneDirect, getUserByCPFDirect, createUserDirect } = await import('./db-direct');
+
+      // Check if user already exists by email using direct DB
+      const existingUserByEmail = await getUserByEmailDirect(validatedData.email);
       if (existingUserByEmail) {
         return res.status(400).json({ message: "Email já cadastrado" });
       }
 
-      // Check if user already exists by phone
-      const existingUserByPhone = await storage.getUserByPhone(validatedData.phone);
+      // Check if user already exists by phone using direct DB
+      const existingUserByPhone = await getUserByPhoneDirect(validatedData.phone);
       if (existingUserByPhone) {
         return res.status(400).json({ message: "Telefone já cadastrado" });
       }
       
-      // Check if CPF already exists (if provided)
+      // Check if CPF already exists (if provided) using direct DB
       if (cpf) {
         const cleanCPF = cpf.replace(/\D/g, '');
-        const existingUserByCPF = await storage.getUserByCPF(cleanCPF);
+        const existingUserByCPF = await getUserByCPFDirect(cleanCPF);
         if (existingUserByCPF) {
           return res.status(400).json({ message: "CPF já cadastrado" });
         }
@@ -1425,7 +1428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Create user with better error handling
+      // Create user with better error handling using direct database function
       let user;
       try {
         console.log("Creating user with data:", {
@@ -1437,7 +1440,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           partnerId: partnerIdToSave
         });
         
-        user = await storage.createUser({
+        // Use direct database function for stability
+        user = await createUserDirect({
           name: validatedData.name,
           email: validatedData.email,
           phone: validatedData.phone,

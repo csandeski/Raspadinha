@@ -333,25 +333,58 @@ export class DatabaseStorage implements IStorage {
         password: "[HIDDEN]"
       });
       
-      const [user] = await db.insert(users).values(insertUser).returning();
+      // Generate referral code if not provided
+      const userDataWithReferralCode = {
+        ...insertUser,
+        referralCode: insertUser.referralCode || `RAS${Date.now()}${Math.floor(Math.random() * 1000)}`,
+        hasFirstDeposit: insertUser.hasFirstDeposit ?? false,
+      };
+      
+      console.log("[createUser] Data to insert (with defaults):", {
+        ...userDataWithReferralCode,
+        password: "[HIDDEN]"
+      });
+      
+      const [user] = await db.insert(users).values(userDataWithReferralCode).returning();
       
       console.log("[createUser] User inserted successfully with ID:", user.id);
       
-      // Create wallet for new user
+      // Create wallet for new user with more detailed error handling
       try {
-        await db.insert(wallets).values({
+        const walletData = {
           userId: user.id,
           balance: "0.00",
-        });
+          bonusBalance: "0.00",
+          scratchBonus: 3,
+          totalDeposited: "0.00",
+          totalWithdrawn: "0.00",
+          totalWagered: "0.00",
+        };
+        
+        console.log("[createUser] Creating wallet with data:", walletData);
+        
+        await db.insert(wallets).values(walletData);
         console.log("[createUser] Wallet created for user:", user.id);
-      } catch (walletError) {
-        console.error("[createUser] Error creating wallet:", walletError);
+      } catch (walletError: any) {
+        console.error("[createUser] Error creating wallet - Details:", {
+          message: walletError.message,
+          code: walletError.code,
+          detail: walletError.detail,
+          stack: walletError.stack
+        });
         // Continue even if wallet creation fails
       }
       
       return user;
-    } catch (error) {
-      console.error("[createUser] Error inserting user into database:", error);
+    } catch (error: any) {
+      console.error("[createUser] Error inserting user into database - Full details:", {
+        message: error.message,
+        code: error.code, 
+        detail: error.detail,
+        constraint: error.constraint,
+        table: error.table,
+        stack: error.stack
+      });
       throw error;
     }
   }

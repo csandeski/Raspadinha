@@ -2,15 +2,18 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-if (!process.env.DATABASE_URL) {
+// Por enquanto usar banco local - Supabase tem problemas de IPv6/DNS no Replit
+const dbUrl = process.env.DATABASE_URL;
+
+if (!dbUrl) {
   throw new Error(
-    "DATABASE_URL must be set. Did you forget to provision a database?",
+    "SUPABASE_DATABASE_URL or DATABASE_URL must be set",
   );
 }
 
 // Optimized pool configuration for better performance
 export const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
+  connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false
   },

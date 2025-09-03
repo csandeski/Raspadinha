@@ -12,17 +12,32 @@ if (!dbUrl) {
   );
 }
 
-// Ultra-stable pool configuration
+// Ultra-stable pool configuration with error handling
 export const pool = new Pool({ 
   connectionString: dbUrl,
   ssl: {
     rejectUnauthorized: false
   },
-  // Ultra-stable configuration to prevent crashes
-  max: 5, // Very limited connections to avoid overload
-  connectionTimeoutMillis: 60000, // 60 second timeout
-  idleTimeoutMillis: 30000, // 30 second idle timeout
+  // Minimal configuration for maximum stability
+  max: 2, // Minimal connections
+  min: 0, // Allow zero connections when idle
+  connectionTimeoutMillis: 10000, // 10 second timeout
+  idleTimeoutMillis: 1000, // 1 second idle timeout
   allowExitOnIdle: false, // Prevent process from exiting on idle
+});
+
+// Add error handling to prevent crashes
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client:', err);
+  // Don't crash on pool errors
+});
+
+pool.on('connect', () => {
+  console.log('Database pool: client connected');
+});
+
+pool.on('remove', () => {
+  console.log('Database pool: client removed');
 });
 
 export const db = drizzle(pool, { schema });

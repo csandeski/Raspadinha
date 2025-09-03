@@ -2,12 +2,13 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Por enquanto usar banco local - Supabase tem problemas de IPv6/DNS no Replit
+// Usar banco local por padrão (mais estável no Replit)
+// Para usar Supabase: configurar SUPABASE_POOLER_URL com a URL do pooler
 const dbUrl = process.env.DATABASE_URL;
 
 if (!dbUrl) {
   throw new Error(
-    "SUPABASE_DATABASE_URL or DATABASE_URL must be set",
+    "Database URL must be set",
   );
 }
 

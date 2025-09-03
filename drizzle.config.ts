@@ -1,10 +1,10 @@
 import { defineConfig } from "drizzle-kit";
 
-// Usar apenas DATABASE_URL local por enquanto
+// Usar banco local
 const dbUrl = process.env.DATABASE_URL;
 
 if (!dbUrl) {
-  throw new Error("DATABASE_URL required");
+  throw new Error("Database URL required");
 }
 
 export default defineConfig({

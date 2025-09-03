@@ -68,7 +68,7 @@ export async function createOrinPayPixPayment(
         {
           title: 'Depósito Mania Brasil',
           description: `Depósito de R$ ${(amount / 100).toFixed(2)}`,
-          unitPrice: amount, // Amount in cents
+          unitPrice: Math.min(amount, 99999), // Amount in cents (max R$ 999,99)
           quantity: 1,
           tangible: false
         }
@@ -179,7 +179,7 @@ export async function processOrinPayWithdrawal(
     const response = await fetch(`${ORINPAY_BASE_URL}/withdrawals`, {
       method: 'POST',
       headers: {
-        'x-api-key': ORINPAY_API_KEY,
+        'Authorization': ORINPAY_API_KEY,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(payload)
@@ -231,7 +231,8 @@ export async function getOrinPayBalance() {
     const response = await fetch(`${ORINPAY_BASE_URL}/seller-wallet/balance`, {
       method: 'GET',
       headers: {
-        'x-api-key': ORINPAY_API_KEY
+        'x-api-key': ORINPAY_API_KEY,
+        'Content-Type': 'application/json'
       }
     });
 

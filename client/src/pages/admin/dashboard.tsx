@@ -91,6 +91,7 @@ function AdminDashboardContent() {
   const { theme, toggleTheme } = useAdminTheme();
   const [activeSection, setActiveSection] = useState("overview");
   const [showNotifications, setShowNotifications] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
 
   // Check admin authentication
@@ -217,15 +218,28 @@ function AdminDashboardContent() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/5 rounded-full blur-3xl animate-pulse" />
       </div>
 
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 md:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Modern Sidebar - Responsive */}
       <motion.aside
         initial={{ x: -320 }}
-        animate={{ x: 0 }}
+        animate={{ x: mobileMenuOpen ? 0 : -320 }}
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`fixed left-0 top-0 h-screen w-20 md:w-80 backdrop-blur-xl z-40 flex flex-col transition-colors duration-300 ${
+        className={`fixed left-0 top-0 h-screen w-72 backdrop-blur-xl z-50 flex flex-col transition-colors duration-300 md:translate-x-0 md:w-80 ${
           theme === 'dark'
-            ? 'bg-zinc-900/90 border-r border-zinc-800/50'
-            : 'bg-white/90 border-r border-gray-200'
+            ? 'bg-zinc-900/95 border-r border-zinc-800/50'
+            : 'bg-white/95 border-r border-gray-200'
         }`}
       >
             {/* Logo Section - Fixed at top */}
@@ -283,14 +297,14 @@ function AdminDashboardContent() {
                         }`}>
                           <item.icon className="w-5 h-5 !text-[#00E880]" />
                         </div>
-                        {/* Mobile badge indicator */}
+                        {/* Badge indicator */}
                         {item.badge !== null && item.badge !== undefined && (
-                          <span className="md:hidden absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#00E880] text-black text-[10px] font-bold rounded-full flex items-center justify-center px-1">
+                          <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#00E880] text-black text-[10px] font-bold rounded-full flex items-center justify-center px-1">
                             {item.badge > 99 ? '99+' : item.badge}
                           </span>
                         )}
                       </div>
-                      <span className={`hidden md:block font-medium ${
+                      <span className={`font-medium ${
                         activeSection === item.id 
                           ? "!text-[#00E880]" 
                           : theme === 'dark' ? "!text-white" : "!text-gray-700"
@@ -313,22 +327,83 @@ function AdminDashboardContent() {
             </div>
 
             {/* Logout Button - Fixed at bottom */}
-            <div className="flex-shrink-0 p-4 md:p-6 border-t border-zinc-800/50">
+            <div className={`flex-shrink-0 p-4 md:p-6 border-t ${
+              theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
+            }`}>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center md:justify-start gap-3 p-3 md:p-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-300"
+                className="w-full flex items-center justify-start gap-3 p-3 md:p-4 rounded-2xl bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 transition-all duration-300"
               >
                 <LogOut className="w-5 h-5" />
-                <span className="hidden md:block font-medium">Sair</span>
+                <span className="font-medium">Sair</span>
               </motion.button>
             </div>
 
       </motion.aside>
 
+      {/* Mobile Bottom Navigation */}
+      <motion.div 
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        className={`fixed bottom-0 left-0 right-0 z-30 md:hidden backdrop-blur-xl border-t ${
+          theme === 'dark'
+            ? 'bg-zinc-900/95 border-zinc-800/50'
+            : 'bg-white/95 border-gray-200'
+        }`}
+      >
+        <div className="grid grid-cols-5 py-2">
+          <button
+            onClick={() => setActiveSection('overview')}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              activeSection === 'overview' ? 'text-[#00E880]' : theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] mt-1">Início</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('users')}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              activeSection === 'users' ? 'text-[#00E880]' : theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+            }`}
+          >
+            <Users className="w-5 h-5" />
+            <span className="text-[10px] mt-1">Usuários</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('deposits')}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              activeSection === 'deposits' ? 'text-[#00E880]' : theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+            }`}
+          >
+            <CreditCard className="w-5 h-5" />
+            <span className="text-[10px] mt-1">Depósitos</span>
+          </button>
+          <button
+            onClick={() => setActiveSection('games')}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              activeSection === 'games' ? 'text-[#00E880]' : theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+            }`}
+          >
+            <Trophy className="w-5 h-5" />
+            <span className="text-[10px] mt-1">Jogos</span>
+          </button>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className={`flex flex-col items-center justify-center py-2 px-1 ${
+              theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'
+            }`}
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] mt-1">Menu</span>
+          </button>
+        </div>
+      </motion.div>
+
       {/* Main Content Area - Responsive */}
-      <main className="transition-all duration-300 ml-20 md:ml-80">
+      <main className="transition-all duration-300 md:ml-80 pb-20 md:pb-0">
         {/* Modern Top Bar */}
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
@@ -339,10 +414,19 @@ function AdminDashboardContent() {
               : 'bg-white/80 border-gray-200'
           }`}
         >
-          <div className="flex items-center justify-between px-8 py-4">
-            <div className="flex items-center gap-4">
+          <div className="flex items-center justify-between px-4 md:px-8 py-3 md:py-4">
+            <div className="flex items-center gap-2 md:gap-4">
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className={`md:hidden p-2 rounded-lg ${
+                  theme === 'dark' ? 'hover:bg-zinc-800' : 'hover:bg-gray-100'
+                }`}
+              >
+                <Menu className="w-5 h-5" />
+              </button>
               <div>
-                <h2 className={`text-2xl font-bold flex items-center gap-2 ${
+                <h2 className={`text-lg md:text-2xl font-bold flex items-center gap-2 ${
                   theme === 'dark' ? 'text-white' : 'text-gray-900'
                 }`}>
                   {menuItems.find(item => item.id === activeSection)?.label || "Dashboard"}
@@ -353,7 +437,7 @@ function AdminDashboardContent() {
                     </Badge>
                   )}
                 </h2>
-                <p className={`text-sm ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
+                <p className={`text-xs md:text-sm ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'} hidden sm:block`}>
                   {new Date().toLocaleDateString('pt-BR', { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -364,11 +448,11 @@ function AdminDashboardContent() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Live Stats */}
+            <div className="flex items-center gap-2 md:gap-3">
+              {/* Live Stats - Hidden on small mobile */}
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-colors duration-300 ${
+                className={`hidden sm:flex items-center gap-2 md:gap-3 px-3 md:px-5 py-2 md:py-3 rounded-xl md:rounded-2xl border transition-colors duration-300 ${
                   theme === 'dark'
                     ? 'bg-gradient-to-r from-zinc-900/50 to-zinc-900/30 border-zinc-800/50'
                     : 'bg-gradient-to-r from-gray-50 to-white border-gray-200'
@@ -376,14 +460,14 @@ function AdminDashboardContent() {
               >
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#00E880] rounded-full animate-pulse" />
-                  <span className="text-sm text-zinc-300">
+                  <span className={`text-xs md:text-sm ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>
                     <span className="text-[#00E880] font-semibold">{stats?.activeUsers || 0}</span> online
                   </span>
                 </div>
                 <div className="h-4 w-px bg-zinc-700" />
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-zinc-400" />
-                  <span className="text-sm text-zinc-300">
+                  <Clock className={`w-3 md:w-4 h-3 md:h-4 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`} />
+                  <span className={`text-xs md:text-sm ${theme === 'dark' ? 'text-zinc-300' : 'text-gray-700'}`}>
                     {new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -400,9 +484,13 @@ function AdminDashboardContent() {
                     description: "Os dados estão sendo recarregados",
                   });
                 }}
-                className="p-3 bg-zinc-900/50 dark:bg-zinc-900/50 bg-white/80 rounded-2xl border border-zinc-800/50 dark:border-zinc-800/50 border-gray-200 hover:bg-zinc-900/70 dark:hover:bg-zinc-900/70 hover:bg-gray-100 transition-colors"
+                className={`p-2 md:p-3 rounded-xl md:rounded-2xl border transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900/70'
+                    : 'bg-white/80 border-gray-200 hover:bg-gray-100'
+                }`}
               >
-                <RefreshCw className="w-5 h-5 text-zinc-400 dark:text-zinc-400 text-gray-600" />
+                <RefreshCw className={`w-4 md:w-5 h-4 md:h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`} />
               </motion.button>
               
               {/* Theme Toggle Button */}
@@ -410,13 +498,17 @@ function AdminDashboardContent() {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={toggleTheme}
-                className="p-3 bg-zinc-900/50 dark:bg-zinc-900/50 bg-white/80 rounded-2xl border border-zinc-800/50 dark:border-zinc-800/50 border-gray-200 hover:bg-zinc-900/70 dark:hover:bg-zinc-900/70 hover:bg-gray-100 transition-colors"
+                className={`p-2 md:p-3 rounded-xl md:rounded-2xl border transition-colors ${
+                  theme === 'dark'
+                    ? 'bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900/70'
+                    : 'bg-white/80 border-gray-200 hover:bg-gray-100'
+                }`}
                 title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
               >
                 {theme === "dark" ? (
-                  <Sun className="w-5 h-5 text-amber-400" />
+                  <Sun className="w-4 md:w-5 h-4 md:h-5 text-amber-400" />
                 ) : (
-                  <Moon className="w-5 h-5 text-blue-600" />
+                  <Moon className="w-4 md:w-5 h-4 md:h-5 text-blue-600" />
                 )}
               </motion.button>
               
@@ -426,9 +518,13 @@ function AdminDashboardContent() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={() => setShowNotifications(!showNotifications)}
-                  className="relative p-3 bg-zinc-900/50 rounded-2xl border border-zinc-800/50 hover:bg-zinc-900/70 transition-colors"
+                  className={`relative p-2 md:p-3 rounded-xl md:rounded-2xl border transition-colors hidden sm:block ${
+                    theme === 'dark'
+                      ? 'bg-zinc-900/50 border-zinc-800/50 hover:bg-zinc-900/70'
+                      : 'bg-white/80 border-gray-200 hover:bg-gray-100'
+                  }`}
                 >
-                  <Bell className="w-5 h-5 text-zinc-400" />
+                  <Bell className={`w-4 md:w-5 h-4 md:h-5 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`} />
                   {(stats?.pendingWithdrawals || 0) > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
                       {stats.pendingWithdrawals}
@@ -542,7 +638,7 @@ function AdminDashboardContent() {
         </motion.div>
 
         {/* Content Sections */}
-        <div className="p-8">
+        <div className="p-4 md:p-8">
           <AnimatePresence mode="wait">
             {isLoading ? (
               <motion.div 

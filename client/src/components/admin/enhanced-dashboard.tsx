@@ -352,7 +352,7 @@ export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashb
       </div>
       
       {/* Main KPIs */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
         {kpiCards.map((card, index) => (
           <motion.div
             key={card.title}
@@ -365,17 +365,17 @@ export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashb
                 ? 'bg-black/50 border-zinc-800 hover:border-zinc-700'
                 : 'bg-white border-gray-200 hover:border-gray-300 shadow-lg'
             }`}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardDescription className={theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}>{card.title}</CardDescription>
-                  <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color.split(' ')[1]} ${card.color.split(' ')[2]}/20`}>
-                    <card.icon className="w-5 h-5 text-[#00E880]" />
+              <CardHeader className="p-4 md:pb-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <CardDescription className={`text-xs md:text-sm ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>{card.title}</CardDescription>
+                  <div className={`p-1.5 md:p-2 rounded-lg md:rounded-xl bg-gradient-to-br ${card.color.split(' ')[1]} ${card.color.split(' ')[2]}/20 self-start sm:self-auto`}>
+                    <card.icon className="w-4 md:w-5 h-4 md:h-5 text-[#00E880]" />
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="p-4 pt-0 md:p-6 md:pt-0 space-y-2 md:space-y-3">
                 <div>
-                  <p className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  <p className={`text-xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     {typeof card.value === 'string' && card.value.includes('.') ? (
                       <CountUp 
                         end={parseFloat(card.value)} 

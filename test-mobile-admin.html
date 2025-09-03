@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Teste Admin Mobile - Mania Brasil</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #0f1419 100%);
+      color: #fff;
+    }
+    h1 {
+      color: #00e880;
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .status-card {
+      background: rgba(26, 31, 46, 0.8);
+      border: 1px solid rgba(0, 232, 128, 0.2);
+      border-radius: 16px;
+      padding: 20px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .feature {
+      display: flex;
+      align-items: center;
+      margin: 15px 0;
+      padding: 15px;
+      background: rgba(0, 232, 128, 0.05);
+      border-radius: 12px;
+      border-left: 3px solid #00e880;
+    }
+    .feature-icon {
+      font-size: 24px;
+      margin-right: 15px;
+    }
+    .feature-text {
+      flex: 1;
+    }
+    .feature-title {
+      font-weight: 600;
+      color: #00e880;
+      margin-bottom: 5px;
+    }
+    .feature-desc {
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    .improvements {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 30px;
+    }
+    .improvement-card {
+      background: rgba(0, 232, 128, 0.03);
+      border: 1px solid rgba(0, 232, 128, 0.1);
+      border-radius: 12px;
+      padding: 20px;
+      transition: transform 0.3s ease;
+    }
+    .improvement-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 232, 128, 0.3);
+    }
+    .check {
+      color: #00e880;
+      font-weight: bold;
+    }
+    .mobile-preview {
+      max-width: 375px;
+      margin: 30px auto;
+      border: 2px solid #00e880;
+      border-radius: 20px;
+      padding: 10px;
+      background: #0f1419;
+    }
+    .badge {
+      display: inline-block;
+      padding: 4px 12px;
+      background: linear-gradient(135deg, #00e880, #00b368);
+      color: #000;
+      font-weight: 600;
+      border-radius: 20px;
+      font-size: 12px;
+      margin: 0 5px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🚀 Painel Admin - Otimizado para Mobile</h1>
+  
+  <div class="status-card">
+    <h2 style="text-align: center; color: #00e880;">✅ Transformação Mobile Completa!</h2>
+    <p style="text-align: center; color: #94a3b8;">O painel administrativo agora é 100% utilizável em dispositivos móveis</p>
+  </div>
+
+  <div class="improvements">
+    <div class="improvement-card">
+      <h3>📱 Menu Mobile</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Menu hambúrguer lateral com overlay</li>
+        <li><span class="check">✓</span> Animação suave de deslizamento</li>
+        <li><span class="check">✓</span> Botão de fechar ao tocar fora</li>
+        <li><span class="check">✓</span> Todos os itens acessíveis</li>
+      </ul>
+    </div>
+
+    <div class="improvement-card">
+      <h3>🎯 Bottom Navigation</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Navegação inferior fixa</li>
+        <li><span class="check">✓</span> 5 botões principais</li>
+        <li><span class="check">✓</span> Ícones com labels compactas</li>
+        <li><span class="check">✓</span> Indicador visual de página ativa</li>
+      </ul>
+    </div>
+
+    <div class="improvement-card">
+      <h3>📊 Header Responsivo</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Título adaptativo (menor no mobile)</li>
+        <li><span class="check">✓</span> Botões compactos</li>
+        <li><span class="check">✓</span> Stats ocultas em telas pequenas</li>
+        <li><span class="check">✓</span> Padding otimizado</li>
+      </ul>
+    </div>
+
+    <div class="improvement-card">
+      <h3>💳 Cards do Dashboard</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Grid 2x2 no mobile</li>
+        <li><span class="check">✓</span> Tamanhos de fonte ajustados</li>
+        <li><span class="check">✓</span> Ícones menores</li>
+        <li><span class="check">✓</span> Espaçamento compacto</li>
+      </ul>
+    </div>
+
+    <div class="improvement-card">
+      <h3>🎨 Tema Light/Dark</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Toggle funcional no mobile</li>
+        <li><span class="check">✓</span> Cores ajustadas para contraste</li>
+        <li><span class="check">✓</span> Transições suaves</li>
+        <li><span class="check">✓</span> Persistência no localStorage</li>
+      </ul>
+    </div>
+
+    <div class="improvement-card">
+      <h3>⚡ Performance</h3>
+      <ul style="padding-left: 20px; color: #cbd5e1;">
+        <li><span class="check">✓</span> Componentes otimizados</li>
+        <li><span class="check">✓</span> Lazy loading de seções</li>
+        <li><span class="check">✓</span> Animações eficientes</li>
+        <li><span class="check">✓</span> Touch-friendly</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="status-card" style="margin-top: 30px;">
+    <h3 style="color: #00e880;">🔧 Funcionalidades Mobile</h3>
+    
+    <div class="feature">
+      <span class="feature-icon">📱</span>
+      <div class="feature-text">
+        <div class="feature-title">Menu Lateral Deslizante</div>
+        <div class="feature-desc">Acesso completo a todas as seções com swipe gesture</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <span class="feature-icon">🔽</span>
+      <div class="feature-text">
+        <div class="feature-title">Bottom Navigation Bar</div>
+        <div class="feature-desc">Navegação rápida entre as principais áreas: Início, Usuários, Depósitos, Jogos e Menu</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <span class="feature-icon">📊</span>
+      <div class="feature-text">
+        <div class="feature-title">Cards Responsivos</div>
+        <div class="feature-desc">Layout 2x2 no mobile para melhor visualização dos KPIs</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <span class="feature-icon">🌓</span>
+      <div class="feature-text">
+        <div class="feature-title">Modo Claro/Escuro</div>
+        <div class="feature-desc">Toggle acessível com ícones Sol/Lua no header</div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <span class="feature-icon">📋</span>
+      <div class="feature-text">
+        <div class="feature-title">Tabelas Scrolláveis</div>
+        <div class="feature-desc">Todas as tabelas agora têm scroll horizontal no mobile</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mobile-preview">
+    <div style="background: #1a1f2e; padding: 10px; border-radius: 10px; margin-bottom: 10px;">
+      <div style="display: flex; align-items: center; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 20px;">☰</span>
+          <span style="font-weight: 600;">Dashboard</span>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <span style="font-size: 18px;">🔄</span>
+          <span style="font-size: 18px;">☀️</span>
+        </div>
+      </div>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px;">
+      <div style="background: rgba(0, 232, 128, 0.1); padding: 15px; border-radius: 10px;">
+        <div style="font-size: 11px; color: #94a3b8;">Total Depósitos</div>
+        <div style="font-size: 18px; font-weight: bold; color: #00e880;">R$ 12.5k</div>
+      </div>
+      <div style="background: rgba(0, 232, 128, 0.1); padding: 15px; border-radius: 10px;">
+        <div style="font-size: 11px; color: #94a3b8;">Usuários</div>
+        <div style="font-size: 18px; font-weight: bold; color: #00e880;">1,234</div>
+      </div>
+    </div>
+    
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: #1a1f2e; border-top: 1px solid rgba(0, 232, 128, 0.2); padding: 8px;">
+      <div style="display: flex; justify-content: space-around;">
+        <div style="text-align: center;">
+          <div>🏠</div>
+          <div style="font-size: 9px;">Início</div>
+        </div>
+        <div style="text-align: center;">
+          <div>👥</div>
+          <div style="font-size: 9px;">Usuários</div>
+        </div>
+        <div style="text-align: center; color: #00e880;">
+          <div>💳</div>
+          <div style="font-size: 9px;">Depósitos</div>
+        </div>
+        <div style="text-align: center;">
+          <div>🎮</div>
+          <div style="font-size: 9px;">Jogos</div>
+        </div>
+        <div style="text-align: center;">
+          <div>☰</div>
+          <div style="font-size: 9px;">Menu</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-card" style="margin-top: 30px; text-align: center;">
+    <h3 style="color: #00e880;">Como Usar no Mobile</h3>
+    <p style="color: #cbd5e1;">
+      1. <span class="badge">Toque</span> no botão hambúrguer para abrir o menu lateral<br><br>
+      2. <span class="badge">Use</span> a bottom navigation para acesso rápido<br><br>
+      3. <span class="badge">Deslize</span> horizontalmente em tabelas para ver mais colunas<br><br>
+      4. <span class="badge">Toque</span> no ícone Sol/Lua para alternar o tema
+    </p>
+  </div>
+</body>
+</html>

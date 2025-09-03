@@ -138,8 +138,11 @@ export default function Deposit() {
     pixData?: any;
   }>({
     queryKey: ['/api/payments/pending-pix'],
-    enabled: !!user && !pixData && !paymentSuccess,
-    refetchInterval: 2000, // Check every 2 seconds
+    enabled: !!user && !pixData && !paymentSuccess && !userCanceledPix,
+    refetchInterval: (data) => {
+      // Only refetch if there's actually a pending PIX
+      return data?.hasPending ? 2000 : false;
+    },
     retry: false, // Don't retry if it fails
     staleTime: 0, // Always fetch fresh data
   });
@@ -293,8 +296,8 @@ export default function Deposit() {
     />;
   }
 
-  // Only show loading state on initial load, not after cancellation
-  if (checkingPending && !userCanceledPix) {
+  // Only show loading state on initial load if user is authenticated
+  if (checkingPending && user && !userCanceledPix) {
     return (
       <MobileLayout>
         <div className="min-h-full bg-gradient-to-b from-[#0E1015] via-[#1a1b23] to-[#0E1015] flex items-center justify-center pt-20">

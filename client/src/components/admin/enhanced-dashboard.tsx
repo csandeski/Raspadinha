@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import CountUp from "react-countup";
+import { useAdminTheme } from "@/contexts/admin-theme-context";
 import { 
   Calendar,
   CalendarRange,
@@ -85,6 +86,7 @@ const dateRanges = [
 
 export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashboardProps) {
   const { toast } = useToast();
+  const { theme } = useAdminTheme();
   const [selectedPeriod, setSelectedPeriod] = useState("today");
   const [customDateRange, setCustomDateRange] = useState<{
     from: Date | undefined;
@@ -241,7 +243,11 @@ export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashb
   return (
     <div className="space-y-6">
       {/* Enhanced Header with Date Filter */}
-      <div className="bg-black/50 backdrop-blur-sm border border-zinc-800 rounded-2xl p-6">
+      <div className={`backdrop-blur-sm border rounded-2xl p-6 transition-colors duration-300 ${
+        theme === 'dark'
+          ? 'bg-black/50 border-zinc-800'
+          : 'bg-white/80 border-gray-200'
+      }`}>
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
             <motion.h1 
@@ -354,10 +360,14 @@ export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashb
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="bg-black/50 border-zinc-800 backdrop-blur-sm hover:border-zinc-700 transition-colors">
+            <Card className={`backdrop-blur-sm transition-all duration-300 ${
+              theme === 'dark'
+                ? 'bg-black/50 border-zinc-800 hover:border-zinc-700'
+                : 'bg-white border-gray-200 hover:border-gray-300 shadow-lg'
+            }`}>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardDescription className="text-zinc-400">{card.title}</CardDescription>
+                  <CardDescription className={theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}>{card.title}</CardDescription>
                   <div className={`p-2 rounded-xl bg-gradient-to-br ${card.color.split(' ')[1]} ${card.color.split(' ')[2]}/20`}>
                     <card.icon className="w-5 h-5 text-[#00E880]" />
                   </div>
@@ -365,7 +375,7 @@ export default function EnhancedDashboard({ stats: initialStats }: EnhancedDashb
               </CardHeader>
               <CardContent className="space-y-3">
                 <div>
-                  <p className="text-3xl font-bold text-white">
+                  <p className={`text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                     {typeof card.value === 'string' && card.value.includes('.') ? (
                       <CountUp 
                         end={parseFloat(card.value)} 

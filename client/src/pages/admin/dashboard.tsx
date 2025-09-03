@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
+import { AdminThemeProvider, useAdminTheme } from "@/contexts/admin-theme-context";
 import CountUp from "react-countup";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,9 @@ import {
   Gift,
   UserPlus,
   Share2,
-  Megaphone
+  Megaphone,
+  Sun,
+  Moon
 } from "lucide-react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
@@ -82,9 +85,10 @@ import {
   Cell
 } from "recharts";
 
-export default function AdminDashboard() {
+function AdminDashboardContent() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const { theme, toggleTheme } = useAdminTheme();
   const [activeSection, setActiveSection] = useState("overview");
   const [showNotifications, setShowNotifications] = useState(false);
   const notificationRef = useRef<HTMLDivElement>(null);
@@ -201,7 +205,11 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-zinc-900 via-zinc-950 to-black overflow-hidden">
+    <div className={`min-h-screen overflow-hidden transition-colors duration-300 ${
+      theme === 'dark' 
+        ? 'bg-gradient-to-br from-zinc-900 via-zinc-950 to-black' 
+        : 'bg-gradient-to-br from-gray-50 via-white to-gray-100'
+    }`}>
       {/* Animated Background Elements */}
       <div className="fixed inset-0 -z-10">
         <div className="absolute top-20 left-20 w-96 h-96 bg-[#00E880]/10 rounded-full blur-3xl animate-pulse" />
@@ -214,10 +222,16 @@ export default function AdminDashboard() {
         initial={{ x: -320 }}
         animate={{ x: 0 }}
         transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className="fixed left-0 top-0 h-screen w-20 md:w-80 bg-zinc-900/90 backdrop-blur-xl border-r border-zinc-800/50 z-40 flex flex-col"
+        className={`fixed left-0 top-0 h-screen w-20 md:w-80 backdrop-blur-xl z-40 flex flex-col transition-colors duration-300 ${
+          theme === 'dark'
+            ? 'bg-zinc-900/90 border-r border-zinc-800/50'
+            : 'bg-white/90 border-r border-gray-200'
+        }`}
       >
             {/* Logo Section - Fixed at top */}
-            <div className="flex-shrink-0 p-4 md:p-6 border-b border-zinc-800/50">
+            <div className={`flex-shrink-0 p-4 md:p-6 border-b transition-colors duration-300 ${
+              theme === 'dark' ? 'border-zinc-800/50' : 'border-gray-200'
+            }`}>
               <div className="flex items-center justify-center md:justify-start gap-3">
                 <motion.div 
                   whileHover={{ rotate: 360 }}
@@ -227,10 +241,12 @@ export default function AdminDashboard() {
                   <Zap className="w-6 md:w-7 h-6 md:h-7 text-black" />
                 </motion.div>
                 <div className="hidden md:block">
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-white to-zinc-400 bg-clip-text text-transparent">
+                  <h1 className={`text-2xl font-bold bg-gradient-to-r bg-clip-text text-transparent ${
+                    theme === 'dark' ? 'from-white to-zinc-400' : 'from-gray-900 to-gray-600'
+                  }`}>
                     Admin Panel
                   </h1>
-                  <p className="text-xs text-zinc-500">Mania Brasil v2.0</p>
+                  <p className={`text-xs ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>Mania Brasil v2.0</p>
                 </div>
               </div>
             </div>
@@ -250,8 +266,12 @@ export default function AdminDashboard() {
                     onClick={() => setActiveSection(item.id)}
                     className={`w-full flex items-center justify-center md:justify-between p-2 md:p-4 rounded-2xl transition-all duration-300 group ${
                       activeSection === item.id
-                        ? "bg-gradient-to-r from-[#00E880]/15 via-[#00E880]/10 to-transparent !text-[#00E880] shadow-lg shadow-[#00E880]/10"
-                        : "!text-white hover:!text-white hover:bg-white/10"
+                        ? theme === 'dark'
+                          ? "bg-gradient-to-r from-[#00E880]/15 via-[#00E880]/10 to-transparent !text-[#00E880] shadow-lg shadow-[#00E880]/10"
+                          : "bg-gradient-to-r from-[#00E880]/20 via-[#00E880]/15 to-transparent !text-[#00B368] shadow-lg shadow-[#00E880]/10"
+                        : theme === 'dark'
+                          ? "!text-white hover:!text-white hover:bg-white/10"
+                          : "!text-gray-700 hover:!text-gray-900 hover:bg-gray-100"
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -271,7 +291,9 @@ export default function AdminDashboard() {
                         )}
                       </div>
                       <span className={`hidden md:block font-medium ${
-                        activeSection === item.id ? "!text-[#00E880]" : "!text-white"
+                        activeSection === item.id 
+                          ? "!text-[#00E880]" 
+                          : theme === 'dark' ? "!text-white" : "!text-gray-700"
                       }`}>{item.label}</span>
                     </div>
                     <div className="hidden md:flex items-center gap-2">
@@ -311,12 +333,18 @@ export default function AdminDashboard() {
         <motion.div 
           initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="sticky top-0 bg-zinc-900/80 backdrop-blur-xl border-b border-zinc-800/50 z-30"
+          className={`sticky top-0 backdrop-blur-xl border-b z-30 transition-colors duration-300 ${
+            theme === 'dark'
+              ? 'bg-zinc-900/80 border-zinc-800/50'
+              : 'bg-white/80 border-gray-200'
+          }`}
         >
           <div className="flex items-center justify-between px-8 py-4">
             <div className="flex items-center gap-4">
               <div>
-                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                <h2 className={`text-2xl font-bold flex items-center gap-2 ${
+                  theme === 'dark' ? 'text-white' : 'text-gray-900'
+                }`}>
                   {menuItems.find(item => item.id === activeSection)?.label || "Dashboard"}
                   {activeSection === "overview" && (
                     <Badge className="bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-400 border-green-500/30">
@@ -325,7 +353,7 @@ export default function AdminDashboard() {
                     </Badge>
                   )}
                 </h2>
-                <p className="text-sm text-zinc-500">
+                <p className={`text-sm ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`}>
                   {new Date().toLocaleDateString('pt-BR', { 
                     weekday: 'long', 
                     year: 'numeric', 
@@ -340,7 +368,11 @@ export default function AdminDashboard() {
               {/* Live Stats */}
               <motion.div 
                 whileHover={{ scale: 1.05 }}
-                className="flex items-center gap-3 px-5 py-3 bg-gradient-to-r from-zinc-900/50 to-zinc-900/30 rounded-2xl border border-zinc-800/50"
+                className={`flex items-center gap-3 px-5 py-3 rounded-2xl border transition-colors duration-300 ${
+                  theme === 'dark'
+                    ? 'bg-gradient-to-r from-zinc-900/50 to-zinc-900/30 border-zinc-800/50'
+                    : 'bg-gradient-to-r from-gray-50 to-white border-gray-200'
+                }`}
               >
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-[#00E880] rounded-full animate-pulse" />
@@ -368,9 +400,24 @@ export default function AdminDashboard() {
                     description: "Os dados estão sendo recarregados",
                   });
                 }}
-                className="p-3 bg-zinc-900/50 rounded-2xl border border-zinc-800/50 hover:bg-zinc-900/70 transition-colors"
+                className="p-3 bg-zinc-900/50 dark:bg-zinc-900/50 bg-white/80 rounded-2xl border border-zinc-800/50 dark:border-zinc-800/50 border-gray-200 hover:bg-zinc-900/70 dark:hover:bg-zinc-900/70 hover:bg-gray-100 transition-colors"
               >
-                <RefreshCw className="w-5 h-5 text-zinc-400" />
+                <RefreshCw className="w-5 h-5 text-zinc-400 dark:text-zinc-400 text-gray-600" />
+              </motion.button>
+              
+              {/* Theme Toggle Button */}
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={toggleTheme}
+                className="p-3 bg-zinc-900/50 dark:bg-zinc-900/50 bg-white/80 rounded-2xl border border-zinc-800/50 dark:border-zinc-800/50 border-gray-200 hover:bg-zinc-900/70 dark:hover:bg-zinc-900/70 hover:bg-gray-100 transition-colors"
+                title={theme === "dark" ? "Mudar para modo claro" : "Mudar para modo escuro"}
+              >
+                {theme === "dark" ? (
+                  <Sun className="w-5 h-5 text-amber-400" />
+                ) : (
+                  <Moon className="w-5 h-5 text-blue-600" />
+                )}
               </motion.button>
               
               {/* Notifications */}
@@ -545,5 +592,14 @@ export default function AdminDashboard() {
         </div>
       </main>
     </div>
+  );
+}
+
+// Export wrapper with theme provider
+export default function AdminDashboard() {
+  return (
+    <AdminThemeProvider>
+      <AdminDashboardContent />
+    </AdminThemeProvider>
   );
 }

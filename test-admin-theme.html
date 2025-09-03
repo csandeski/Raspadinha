@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Teste de Tema Admin</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 40px;
+      max-width: 800px;
+      margin: 0 auto;
+      background: linear-gradient(to bottom right, #f9fafb, #f3f4f6);
+      color: #111827;
+    }
+    h1 {
+      color: #111827;
+      font-size: 2rem;
+      margin-bottom: 20px;
+    }
+    .status {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+    .success {
+      color: #059669;
+      font-weight: 600;
+    }
+    .feature-list {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    .feature-list h2 {
+      color: #374151;
+      font-size: 1.25rem;
+      margin-bottom: 15px;
+    }
+    .feature-list ul {
+      list-style: none;
+      padding: 0;
+    }
+    .feature-list li {
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+      color: #4b5563;
+    }
+    .feature-list li:last-child {
+      border-bottom: none;
+    }
+    .checkmark {
+      color: #00e880;
+      margin-right: 10px;
+    }
+    .icon-example {
+      display: inline-block;
+      padding: 8px 12px;
+      background: linear-gradient(135deg, #00e880 0%, #00b368 100%);
+      border-radius: 8px;
+      color: black;
+      font-weight: 600;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Teste do Toggle de Tema no Admin Panel</h1>
+  
+  <div class="status">
+    <p class="success">✓ Sistema de tema implementado com sucesso!</p>
+    <p>O toggle de tema foi adicionado ao painel administrativo do Mania Brasil.</p>
+  </div>
+  
+  <div class="feature-list">
+    <h2>Recursos Implementados:</h2>
+    <ul>
+      <li><span class="checkmark">✓</span> Contexto de tema com persistência no localStorage</li>
+      <li><span class="checkmark">✓</span> Botão toggle na barra superior (ícone Sol/Lua) <span class="icon-example">☀️ / 🌙</span></li>
+      <li><span class="checkmark">✓</span> Transições suaves entre temas (300ms)</li>
+      <li><span class="checkmark">✓</span> Modo escuro: Tema original (fundo escuro com verde #00E880)</li>
+      <li><span class="checkmark">✓</span> Modo claro: Novo tema (fundo claro com tons de cinza)</li>
+      <li><span class="checkmark">✓</span> Contraste adequado em ambos os modos</li>
+      <li><span class="checkmark">✓</span> Ícones e textos ajustados para cada tema</li>
+    </ul>
+  </div>
+  
+  <div class="feature-list" style="margin-top: 20px;">
+    <h2>Áreas Afetadas:</h2>
+    <ul>
+      <li><span class="checkmark">✓</span> Sidebar de navegação</li>
+      <li><span class="checkmark">✓</span> Barra superior com estatísticas</li>
+      <li><span class="checkmark">✓</span> Cards do dashboard principal</li>
+      <li><span class="checkmark">✓</span> Componente EnhancedDashboard</li>
+      <li><span class="checkmark">✓</span> Botões e textos em geral</li>
+    </ul>
+  </div>
+  
+  <div class="feature-list" style="margin-top: 20px;">
+    <h2>Como Usar:</h2>
+    <ul>
+      <li>1. Acesse o painel administrativo em <strong>/admin</strong></li>
+      <li>2. Faça login com suas credenciais</li>
+      <li>3. No canto superior direito, ao lado do botão de refresh, clique no ícone de Sol (modo claro) ou Lua (modo escuro)</li>
+      <li>4. O tema mudará instantaneamente com transição suave</li>
+      <li>5. Sua preferência será salva no navegador</li>
+    </ul>
+  </div>
+</body>
+</html>

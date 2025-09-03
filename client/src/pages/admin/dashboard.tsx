@@ -56,7 +56,7 @@ import SupportManagement from "@/components/admin/support-management";
 import GamesManagement from "@/components/admin/games-management";
 import DepositsManagement from "@/components/admin/deposits-management";
 import EnhancedDashboard from "@/components/admin/enhanced-dashboard";
-import { PrizeProbabilityManagement } from "@/components/admin/prize-probability-management";
+import { PrizeProbabilityEnhanced } from "@/components/admin/prize-probability-enhanced";
 import { ChestProbabilityManagement } from "@/components/admin/chest-probability-management";
 import { EsquiloProbabilityManagement } from "@/components/admin/esquilo-probability-management";
 import { EsquiloBonusManagement } from "@/components/admin/esquilo-bonus-management";
@@ -669,7 +669,7 @@ function AdminDashboardContent() {
                 {activeSection === "support" && <SupportManagement />}
                 {activeSection === "probabilities" && (
                   <div className="space-y-6">
-                    <PrizeProbabilityManagement />
+                    <PrizeProbabilityEnhanced />
                     <ChestProbabilityManagement />
                     <EsquiloProbabilityManagement />
                     <EsquiloBonusManagement />

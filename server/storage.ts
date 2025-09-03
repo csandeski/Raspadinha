@@ -1526,19 +1526,22 @@ export class DatabaseStorage implements IStorage {
 
   // Get full prize probabilities for admin panel
   async getFullPrizeProbabilities(gameType: string): Promise<any[]> {
-    const probabilities = await db.select()
-      .from(prizeProbabilities)
-      .where(eq(prizeProbabilities.gameType, gameType))
-      .orderBy(prizeProbabilities.order);
+    // Use raw SQL to avoid schema mismatches
+    const result = await db.execute(sql`
+      SELECT id, game_type, prize_value, prize_type as prize_name, probability, amount
+      FROM prize_probabilities
+      WHERE game_type = ${gameType}
+      ORDER BY CAST(prize_value AS DECIMAL)
+    `);
     
     // Return full objects for admin panel
-    return probabilities.map(p => ({
+    return result.rows.map((p: any) => ({
       id: p.id,
-      game_type: p.gameType,
-      prize_value: p.prizeValue,
-      prize_name: p.prizeName || '',
-      probability: p.probability,
-      order: p.order
+      game_type: p.game_type,
+      prize_value: p.prize_value,
+      prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value).toFixed(2)}`,
+      probability: parseFloat(p.probability || 0),
+      order: 0
     }));
   }
 
@@ -1596,23 +1599,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePrizeProbabilities(gameType: string, probabilities: any[]): Promise<void> {
-    // Delete existing probabilities for this game type
-    await db.delete(prizeProbabilities)
-      .where(eq(prizeProbabilities.gameType, gameType));
+    // Delete existing probabilities for this game type using raw SQL
+    await db.execute(sql`DELETE FROM prize_probabilities WHERE game_type = ${gameType}`);
     
-    // Insert new probabilities
+    // Insert new probabilities using raw SQL to match database structure
     if (probabilities.length > 0) {
-      const toInsert = probabilities.map((p, index) => ({
-        gameType,
-        prizeValue: p.prizeValue || p.prize_value,
-        prizeName: p.prizeName || null,
-        probability: p.probability,
-        order: index,
-        updatedAt: new Date(),
-        updatedBy: 'admin'
-      }));
-      
-      await db.insert(prizeProbabilities).values(toInsert);
+      for (const p of probabilities) {
+        const prizeValue = p.prizeValue || p.prize_value;
+        const prizeName = p.prizeName || `R$ ${parseFloat(prizeValue).toFixed(2)}`;
+        const probability = p.probability.toString();
+        
+        await db.execute(sql`
+          INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, amount, updated_at)
+          VALUES (${gameType}, ${prizeValue}, ${prizeName}, ${probability}, ${prizeValue}, NOW())
+        `);
+      }
     }
   }
 

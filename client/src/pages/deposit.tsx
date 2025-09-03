@@ -172,6 +172,12 @@ export default function Deposit() {
   const createPixMutation = useMutation({
     mutationFn: async (data: { amount: number }) => {
       console.log('Creating PIX payment:', data);
+      
+      // Check if user is authenticated
+      if (!user) {
+        throw new Error('Usuário não autenticado');
+      }
+      
       try {
         const result = await apiRequest('/api/payments/create-pix', 'POST', data);
         console.log('PIX creation success:', result);
@@ -184,13 +190,23 @@ export default function Deposit() {
     },
     onSuccess: (data) => {
       console.log('PIX mutation success:', data);
+      
+      // Check if data is valid
+      if (!data) {
+        console.error('PIX data is null');
+        toast({
+          description: "Erro interno - tente novamente"
+        });
+        return;
+      }
+      
       // Hide the pending PIX modal and show the new PIX payment
       setShowPendingPix(false);
       setUserCanceledPix(false);
       setPixData(data);
       
       // Fire Facebook Pixel InitiateCheckout event
-      if (typeof window !== 'undefined' && (window as any).fbq) {
+      if (typeof window !== 'undefined' && (window as any).fbq && data.amount) {
         (window as any).fbq('track', 'InitiateCheckout', {
           value: data.amount,
           currency: 'BRL',
@@ -201,8 +217,25 @@ export default function Deposit() {
     },
     onError: (error: any) => {
       console.error('PIX mutation error:', error);
+      
+      let errorMessage = "Não foi possível criar o pagamento PIX";
+      
+      if (error.message?.includes('não autenticado') || error.message?.includes('401')) {
+        errorMessage = "Faça login para continuar";
+        // Redirect to login after a short delay
+        setTimeout(() => {
+          setLocation('/login');
+        }, 2000);
+      } else if (error.message?.includes('Token')) {
+        errorMessage = "Sessão expirada - faça login novamente";
+        setTimeout(() => {
+          setLocation('/login');
+        }, 2000);
+      }
+      
       toast({
-        description: "Não foi possível criar o pagamento PIX"
+        description: errorMessage,
+        variant: "destructive"
       });
     },
   });

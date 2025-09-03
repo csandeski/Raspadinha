@@ -351,8 +351,6 @@ export const coupons = pgTable("coupons", {
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(), // Coupon code (e.g. "SORTE", "BONUS10")
   description: text("description"), // Description of the coupon
-  bonusType: text("bonus_type").notNull().default("scratchCards"), // Type of bonus (scratchCards, balance, percentage)
-  bonusAmount: decimal("bonus_amount", { precision: 10, scale: 2 }), // Amount or number of scratch cards
   minDeposit: decimal("min_deposit", { precision: 10, scale: 2 }).notNull().default("0"), // Minimum deposit required
   usageLimit: integer("usage_limit"), // Total usage limit (null = unlimited)
   usageCount: integer("usage_count").notNull().default(0), // Current usage count

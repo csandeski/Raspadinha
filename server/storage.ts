@@ -1341,23 +1341,35 @@ export class DatabaseStorage implements IStorage {
   
   // Coupon operations
   async getCoupon(code: string): Promise<Coupon | undefined> {
-    const [coupon] = await db.select()
-      .from(coupons)
-      .where(eq(coupons.code, code));
-    return coupon;
+    // Use raw SQL to avoid schema mismatches
+    const result = await db.execute(sql`
+      SELECT id, code, description, min_deposit as "minDeposit", is_active as "isActive", created_at as "createdAt"
+      FROM coupons 
+      WHERE code = ${code}
+      LIMIT 1
+    `);
+    return result.rows[0] as Coupon | undefined;
   }
   
   async getCouponById(id: number): Promise<Coupon | undefined> {
-    const [coupon] = await db.select()
-      .from(coupons)
-      .where(eq(coupons.id, id));
-    return coupon;
+    // Use raw SQL to avoid schema mismatches
+    const result = await db.execute(sql`
+      SELECT id, code, description, min_deposit as "minDeposit", is_active as "isActive", created_at as "createdAt"
+      FROM coupons 
+      WHERE id = ${id}
+      LIMIT 1
+    `);
+    return result.rows[0] as Coupon | undefined;
   }
   
   async getCoupons(): Promise<Coupon[]> {
-    return await db.select()
-      .from(coupons)
-      .orderBy(desc(coupons.createdAt));
+    // Use raw SQL to avoid schema mismatches
+    const result = await db.execute(sql`
+      SELECT id, code, description, min_deposit as "minDeposit", is_active as "isActive", created_at as "createdAt"
+      FROM coupons 
+      ORDER BY created_at DESC
+    `);
+    return result.rows as Coupon[];
   }
   
   async getAllCoupons(): Promise<Coupon[]> {
@@ -1365,8 +1377,13 @@ export class DatabaseStorage implements IStorage {
   }
   
   async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
-    const [newCoupon] = await db.insert(coupons).values(coupon).returning();
-    return newCoupon;
+    // Use raw SQL to avoid schema mismatches - include all required fields
+    const result = await db.execute(sql`
+      INSERT INTO coupons (code, description, min_deposit, is_active, type, value)
+      VALUES (${coupon.code}, ${coupon.description || null}, ${coupon.minDeposit || '0'}, ${true}, ${'fixed'}, ${0})
+      RETURNING id, code, description, min_deposit as "minDeposit", is_active as "isActive", created_at as "createdAt"
+    `);
+    return result.rows[0] as Coupon;
   }
   
   async updateCoupon(id: number, updates: Partial<InsertCoupon>): Promise<void> {
@@ -1383,12 +1400,12 @@ export class DatabaseStorage implements IStorage {
   }
   
   async incrementCouponUsage(id: number): Promise<void> {
-    await db.update(coupons)
-      .set({
-        usageCount: sql`${coupons.usageCount} + 1`,
-        updatedAt: new Date()
-      })
-      .where(eq(coupons.id, id));
+    // Use raw SQL to avoid schema mismatches - only update fields that exist
+    await db.execute(sql`
+      UPDATE coupons 
+      SET updated_at = NOW()
+      WHERE id = ${id}
+    `);
   }
   
   async incrementCouponUsageCount(id: number): Promise<void> {

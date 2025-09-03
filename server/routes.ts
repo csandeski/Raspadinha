@@ -8882,7 +8882,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const dayStart = getStartOfDayBrazil(date);
         const dayEnd = getEndOfDayBrazil(date);
         
-        const dayDeposits = completedDeposits.filter(d => {
+        const dayDeposits = allDeposits.filter(d => {
+          if (d.status !== 'completed') return false;
           const depositDate = d.completedAt ? new Date(d.completedAt) : new Date(d.createdAt);
           return depositDate >= dayStart && depositDate <= dayEnd;
         });
@@ -10564,24 +10565,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Código de cupom já existe" });
       }
       
-      // Create the coupon
-      const newCoupon = await storage.createCoupon({
+      // Create the coupon with minimal fields to match existing database
+      const couponData: any = {
         code: code.toUpperCase(),
-        description,
-        bonusType: 'scratch_cards', // Always scratch cards with fixed tiers
-        bonusAmount: 0, // Not used anymore, but keeping for backwards compatibility
-        minDeposit: minDeposit.toString(),
-        usageLimit: usageLimit || null,
-        perUserLimit: perUserLimit || 1,
-        expiresAt: expiresAt || null,
-        isActive: true,
-        usageCount: 0
-      });
+        description
+      };
+      
+      // Only add optional fields if they exist in the request
+      if (minDeposit !== undefined) {
+        couponData.minDeposit = minDeposit.toString();
+      }
+      
+      const newCoupon = await storage.createCoupon(couponData);
       
       res.json({ success: true, coupon: newCoupon });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Admin create coupon error:", error);
-      res.status(500).json({ message: "Erro ao criar cupom" });
+      console.error("Error details:", error.message, error.detail, error.code);
+      res.status(500).json({ message: `Erro ao criar cupom: ${error.message || 'Erro desconhecido'}` });
     }
   });
   

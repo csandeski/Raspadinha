@@ -486,6 +486,39 @@ export default function Deposit() {
     );
   }
 
+  // Show login message if user is not authenticated
+  if (!user) {
+    return (
+      <MobileLayout>
+        <div className="min-h-full bg-gradient-to-b from-[#0E1015] via-[#1a1b23] to-[#0E1015] flex items-center justify-center">
+          <div className="max-w-md w-full mx-auto px-4 text-center">
+            <div className="bg-gray-900/50 rounded-xl p-8 border border-gray-800">
+              <div className="w-16 h-16 bg-[#00E880]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Shield className="w-8 h-8 text-[#00E880]" />
+              </div>
+              <h2 className="text-xl font-bold text-white mb-3">Acesso Necessário</h2>
+              <p className="text-gray-400 mb-6">
+                Você precisa estar logado para realizar depósitos
+              </p>
+              <button
+                onClick={() => setLocation('/login')}
+                className="w-full bg-gradient-to-r from-[#00E880] to-[#00D470] hover:from-[#00D470] hover:to-[#00C560] text-black font-bold py-3 rounded-xl transition-all duration-300"
+              >
+                Fazer Login
+              </button>
+              <button
+                onClick={() => setLocation('/register')}
+                className="w-full mt-3 border border-gray-700 text-white py-3 rounded-xl hover:bg-gray-800 transition-colors"
+              >
+                Criar Conta
+              </button>
+            </div>
+          </div>
+        </div>
+      </MobileLayout>
+    );
+  }
+
   return (
     <MobileLayout>
       <div className="min-h-full bg-gradient-to-b from-[#0E1015] via-[#1a1b23] to-[#0E1015]">

@@ -16,6 +16,14 @@ Avatar selector: Mobile-optimized with smaller avatars (48x48px), 3-column grid,
 Mobile panel headers: Affiliate and partner panels show user avatar on left and logo on right in mobile view (no commission display)
 Mobile menu design: Both affiliate and partner panels have identical mobile menu structure with user profile section at bottom including avatar, email, and action buttons (help, settings, logout)
 
+## Recent Changes (2025-09-03)
+- **Migração para Novo Supabase**: Migrado com sucesso para novo projeto Supabase (ID: upxximikhoshaxbmshee)
+  - Todas as 27 tabelas criadas e configuradas
+  - Dados iniciais migrados (admin, probabilidades, configurações)
+  - Usando Pooler Connection para estabilidade (porta 5432)
+  - Admin: admin@maniabrasil.com / admin123
+  - Sistema 100% operacional com novo banco
+
 ## Recent Changes (2025-08-25)
 - **Mobile Panel Headers Unified**: Affiliate and partner panels now both display avatar + logo in mobile header instead of commission
   - Left side: Menu button + user avatar (clickable to change avatar)

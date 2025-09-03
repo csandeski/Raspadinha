@@ -1,7 +1,8 @@
 import { defineConfig } from "drizzle-kit";
 
-// Usar banco local
-const dbUrl = process.env.DATABASE_URL;
+// Usar novo Supabase via Pooler
+const SUPABASE_POOLER = 'postgresql://postgres.upxximikhoshaxbmshee:Faneco235***@aws-1-sa-east-1.pooler.supabase.com:5432/postgres';
+const dbUrl = SUPABASE_POOLER;
 
 if (!dbUrl) {
   throw new Error("Database URL required");

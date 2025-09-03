@@ -2,9 +2,9 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Usar banco local por padrão (mais estável no Replit)
-// Para usar Supabase: configurar SUPABASE_POOLER_URL com a URL do pooler
-const dbUrl = process.env.DATABASE_URL;
+// Usar novo Supabase via Pooler (Session Mode - porta 5432)
+const SUPABASE_POOLER = 'postgresql://postgres.upxximikhoshaxbmshee:Faneco235***@aws-1-sa-east-1.pooler.supabase.com:5432/postgres';
+const dbUrl = SUPABASE_POOLER;
 
 if (!dbUrl) {
   throw new Error(

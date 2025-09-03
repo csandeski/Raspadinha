@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Partner Login</title>
+</head>
+<body>
+    <h1>Test Partner Login</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Step 1: Login
+                const loginResponse = await fetch('http://localhost:5000/api/partner/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'partner1755810339358@test.com',
+                        password: 'Test123456'
+                    })
+                });
+                
+                const loginData = await loginResponse.json();
+                console.log('Login Response:', loginData);
+                
+                if (loginData.success) {
+                    // Store token
+                    localStorage.setItem('partnerToken', loginData.token);
+                    localStorage.setItem('partnerName', loginData.partner.name);
+                    localStorage.setItem('partnerEmail', loginData.partner.email);
+                    
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✓ Login successful!</p>
+                        <p>Token stored: ${loginData.token.substring(0, 20)}...</p>
+                        <p>Partner: ${loginData.partner.name}</p>
+                        <p><a href="/painel/parceiro">Go to Partner Panel</a></p>
+                    `;
+                    
+                    // Step 2: Test dashboard API
+                    const dashboardResponse = await fetch('http://localhost:5000/api/partner/dashboard', {
+                        method: 'GET',
+                        headers: {
+                            'Authorization': `Bearer ${loginData.token}`
+                        }
+                    });
+                    
+                    const dashboardData = await dashboardResponse.json();
+                    console.log('Dashboard Response:', dashboardData);
+                    
+                    resultDiv.innerHTML += `
+                        <p style="color: green;">✓ Dashboard API working!</p>
+                        <p>Total Earnings: R$ ${dashboardData.totalEarnings}</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<p style="color: red;">Login failed: ${loginData.error}</p>`;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+    </script>
+</body>
+</html>

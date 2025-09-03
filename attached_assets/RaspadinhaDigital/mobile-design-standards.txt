@@ -1,0 +1,233 @@
+====================================
+PADRÃO DE DESIGN MOBILE PROFISSIONAL
+PARA PAINÉIS AFILIADOS E PARCEIROS
+====================================
+
+Este arquivo contém os padrões de design responsivo implementados nos dashboards
+para garantir consistência em todas as páginas dos painéis.
+
+=====================================
+1. CARDS KPI (INDICADORES PRINCIPAIS)
+=====================================
+
+ESTRUTURA HTML:
+--------------
+<div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4 mb-4 md:mb-6">
+  <div className="group relative">
+    <!-- Blur de fundo com opacidade reduzida no mobile -->
+    <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 to-[#00E880] rounded-xl md:rounded-2xl blur-xl opacity-10 md:opacity-20 group-hover:opacity-30 transition-opacity" />
+    
+    <!-- Card principal com padding adaptativo -->
+    <div className="relative bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-xl md:rounded-2xl p-4 md:p-6 border border-gray-800 hover:border-[#00E880]/30 transition-all">
+      
+      <!-- Header com ícone -->
+      <div className="flex items-center justify-between mb-3 md:mb-4">
+        <div className="relative">
+          <div className="p-2.5 md:p-3 bg-gradient-to-br from-[#00E880]/20 to-[#00E880]/5 rounded-xl border border-[#00E880]/20">
+            <Icon className="w-5 h-5 md:w-6 md:h-6 text-[#00E880]" />
+          </div>
+        </div>
+      </div>
+      
+      <!-- Conteúdo -->
+      <div>
+        <p className="text-xs md:text-xs text-gray-400 uppercase tracking-wider font-semibold">Título</p>
+        <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-[#00E880] to-emerald-400 bg-clip-text text-transparent">
+          {value}
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+REGRAS DE TAMANHOS:
+------------------
+• Padding dos cards: p-4 (mobile) → md:p-6 (desktop)
+• Padding dos ícones: p-2.5 (mobile) → md:p-3 (desktop)
+• Tamanho dos ícones: w-5 h-5 (mobile) → md:w-6 md:h-6 (desktop)
+• Fontes dos valores: text-xl (mobile) → md:text-2xl (desktop)
+• Fontes dos títulos: text-xs (mobile) → md:text-xs (mantém)
+• Cor dos títulos: text-gray-400 (mais clara que gray-500)
+• Margens: mb-3 (mobile) → md:mb-4 (desktop)
+• Gaps: gap-3 (mobile) → md:gap-4 (desktop)
+• Opacidade blur: opacity-10 (mobile) → md:opacity-20 (desktop)
+
+=======================================
+2. CARD DE RESUMO (APENAS MOBILE)
+=======================================
+
+Este card aparece apenas em telas mobile para mostrar informações resumidas:
+
+<div className="md:hidden bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-2xl p-4 border border-gray-800 mb-4">
+  <h3 className="text-sm font-semibold text-gray-400 mb-3">Resumo do Período</h3>
+  <div className="grid grid-cols-2 gap-3">
+    <div className="bg-gray-800/30 rounded-xl p-3">
+      <p className="text-xs text-gray-500 mb-1">Label</p>
+      <p className="text-lg font-bold text-yellow-400">{value}</p>
+    </div>
+    <!-- Repetir para outros valores -->
+  </div>
+</div>
+
+=====================================
+3. SEÇÃO DE ANÁLISE E GRÁFICOS
+=====================================
+
+DESKTOP (gráficos complexos):
+-----------------------------
+<div className="hidden md:grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6">
+  <!-- Gráficos com ResponsiveContainer height={280} -->
+</div>
+
+MOBILE (cards simplificados):
+-----------------------------
+<div className="md:hidden grid grid-cols-1 gap-3">
+  
+  <!-- Card de Estatísticas Rápidas -->
+  <div className="bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-xl p-4 border border-gray-800">
+    <h3 className="text-sm font-semibold text-gray-400 mb-3">Estatísticas Rápidas</h3>
+    <div className="space-y-3">
+      <div className="flex items-center justify-between py-2 border-b border-gray-800/50">
+        <span className="text-xs text-gray-500">Label</span>
+        <span className="text-sm font-bold text-white">{value}</span>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Card de Performance com Progress Bars -->
+  <div className="bg-gradient-to-br from-gray-900/95 to-gray-950/95 backdrop-blur-xl rounded-xl p-4 border border-gray-800">
+    <h3 className="text-sm font-semibold text-gray-400 mb-3">Desempenho</h3>
+    <div className="space-y-3">
+      <div>
+        <div className="flex justify-between items-center mb-1">
+          <span className="text-xs text-gray-500">Aprovados</span>
+          <span className="text-xs font-semibold text-[#00E880]">{percentage}%</span>
+        </div>
+        <Progress value={value} className="h-1.5 bg-gray-800" />
+      </div>
+    </div>
+  </div>
+</div>
+
+=====================================
+4. SEÇÃO DE TUTORIAL/PASSOS
+=====================================
+
+<div className="mt-4 md:mt-8">
+  <h2 className="text-base md:text-xl font-bold text-white">Título</h2>
+  <p className="text-xs md:text-sm text-gray-400 mt-1 mb-3 md:mb-4">Subtítulo</p>
+  
+  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
+    <div className="p-3.5 md:p-4 bg-gray-800/30 rounded-xl border border-gray-700/50 hover:border-[#00E880]/30 transition-all">
+      <h3 className="text-sm md:text-base font-semibold text-white">Título do Card</h3>
+      <p className="text-xs md:text-sm text-gray-400 mb-3">Descrição</p>
+    </div>
+  </div>
+</div>
+
+=====================================
+5. PADRÕES DE CORES
+=====================================
+
+CORES PRINCIPAIS:
+• Verde principal: #00E880
+• Azul: from-blue-400 to-cyan-400
+• Roxo: from-purple-400 to-pink-400
+• Amarelo (pendente): text-yellow-400
+• Vermelho (erro): text-red-400
+
+BACKGROUNDS:
+• Cards principais: bg-gradient-to-br from-gray-900/95 to-gray-950/95
+• Cards secundários: bg-gray-800/30
+• Bordas: border-gray-800 ou border-gray-700/50
+
+=====================================
+6. REGRAS DE RESPONSIVIDADE
+=====================================
+
+BREAKPOINTS:
+• Mobile: padrão (sem prefixo)
+• Tablet: md: (768px+)
+• Desktop: lg: (1024px+)
+
+PADRÕES:
+• Ocultar no mobile: className="hidden md:block"
+• Mostrar apenas no mobile: className="md:hidden"
+• Grid responsivo: grid-cols-1 md:grid-cols-2 lg:grid-cols-3
+
+ESPAÇAMENTOS:
+• Padding: p-3 ou p-4 (mobile) → md:p-6 (desktop)
+• Margin: mb-3 ou mb-4 (mobile) → md:mb-6 (desktop)
+• Gap: gap-3 (mobile) → md:gap-4 ou md:gap-6 (desktop)
+• Space: space-y-3 (mobile) → md:space-y-6 (desktop)
+
+FONTES:
+• Títulos grandes: text-base ou text-lg (mobile) → md:text-xl (desktop)
+• Valores: text-xl (mobile) → md:text-2xl ou md:text-3xl (desktop)
+• Labels: text-xs (mobile) → md:text-sm (desktop)
+• Textos: text-xs ou text-sm (mobile) → md:text-sm ou md:text-base (desktop)
+
+=====================================
+7. EXEMPLO DE IMPLEMENTAÇÃO COMPLETA
+=====================================
+
+Para aplicar em uma nova página do painel:
+
+1. Importe os componentes necessários:
+import { Progress } from "@/components/ui/progress";
+import { motion } from "framer-motion";
+
+2. Use a estrutura base:
+<div className="space-y-3 md:space-y-6">
+  {/* Cards KPI no topo */}
+  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+    {/* Cards aqui */}
+  </div>
+  
+  {/* Card resumo mobile */}
+  <div className="md:hidden">
+    {/* Conteúdo mobile */}
+  </div>
+  
+  {/* Gráficos desktop / Cards mobile */}
+  <div className="hidden md:block">
+    {/* Conteúdo desktop */}
+  </div>
+  <div className="md:hidden">
+    {/* Conteúdo mobile simplificado */}
+  </div>
+</div>
+
+=====================================
+8. CHECKLIST DE VERIFICAÇÃO
+=====================================
+
+Ao implementar em uma nova página, verifique:
+
+✓ Todos os paddings são responsivos (p-4 md:p-6)
+✓ Todas as fontes têm tamanhos mobile e desktop
+✓ Gaps e spaces são responsivos
+✓ Gráficos complexos são ocultados no mobile
+✓ Cards de resumo aparecem apenas no mobile
+✓ Cores seguem o padrão (gray-400 para labels, não gray-500)
+✓ Opacidade do blur é menor no mobile (opacity-10)
+✓ Bordas arredondadas usam rounded-xl
+✓ Hover states estão implementados
+✓ Ícones têm tamanhos responsivos
+✓ Margens inferiores são responsivas (mb-3 md:mb-6)
+
+=====================================
+9. NOTAS IMPORTANTES
+=====================================
+
+• NUNCA use text-gray-500 para labels, sempre text-gray-400
+• SEMPRE use rounded-xl no mobile (não rounded-lg)
+• Valores principais devem ser text-xl no mobile (não text-lg)
+• Padding mínimo em cards mobile: p-4 (não p-3)
+• Para ícones em containers: p-2.5 (não p-2)
+• Use grid-cols-2 para resumos mobile (4 valores em 2x2)
+• Progress bars no mobile: h-1.5 (altura menor)
+• Mantenha consistência nas cores dos gradientes
+
+Este padrão garante uma experiência profissional e otimizada
+tanto em desktop quanto em dispositivos móveis!

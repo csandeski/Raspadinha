@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Affiliate Codes API</title>
+</head>
+<body>
+    <h1>Test Affiliate Codes API</h1>
+    <button onclick="testAPI()">Test API</button>
+    <div id="result"></div>
+
+    <script>
+    async function testAPI() {
+        const token = localStorage.getItem('affiliateToken');
+        if (!token) {
+            document.getElementById('result').innerHTML = 'No token found. Please login to affiliate panel first.';
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/affiliate/codes', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            const data = await response.json();
+            document.getElementById('result').innerHTML = `
+                <h2>API Response:</h2>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+                <p>Total codes: ${Array.isArray(data) ? data.length : 'N/A'}</p>
+            `;
+        } catch (error) {
+            document.getElementById('result').innerHTML = `Error: ${error.message}`;
+        }
+    }
+    </script>
+</body>
+</html>

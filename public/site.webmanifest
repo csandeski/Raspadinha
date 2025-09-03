@@ -1,0 +1,93 @@
+{
+  "name": "Mania Brasil - Raspadinhas Online",
+  "short_name": "Mania Brasil",
+  "description": "Jogue raspadinhas online e ganhe prêmios incríveis! PIX na hora, eletrônicos e muito mais.",
+  "theme_color": "#00E880",
+  "background_color": "#0E1015",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/?utm_source=pwa&utm_medium=homescreen",
+  "id": "com.maniabrasil.app",
+  "icons": [
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "/logos/logomania.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/home.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Página inicial do Mania Brasil"
+    },
+    {
+      "src": "/screenshots/games.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "label": "Jogos disponíveis"
+    }
+  ],
+  "categories": ["games", "entertainment"],
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "Jogar PIX",
+      "short_name": "PIX",
+      "description": "Jogue raspadinha PIX",
+      "url": "/game/premio-pix",
+      "icons": [
+        {
+          "src": "/icons/pix-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Depositar",
+      "short_name": "Depositar",
+      "description": "Faça um depósito",
+      "url": "/wallet",
+      "icons": [
+        {
+          "src": "/icons/wallet-96.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+id,game_type,prize_value,prize_name,probability,order,updated_at,updated_by
+499,premio-pix,0.50,"R$ 0,50",33.219324,0,2025-08-22 18:01:48.245,admin
+500,premio-pix,1.00,"R$ 1,00",6.609662,1,2025-08-22 18:01:48.245,admin
+501,premio-pix,2.00,"R$ 2,00",3.304831,2,2025-08-22 18:01:48.245,admin
+502,premio-pix,3.00,"R$ 3,00",2.203221,3,2025-08-22 18:01:48.245,admin
+503,premio-pix,4.00,"R$ 4,00",1.652416,4,2025-08-22 18:01:48.245,admin
+504,premio-pix,5.00,"R$ 5,00",1.321932,5,2025-08-22 18:01:48.245,admin
+505,premio-pix,10.00,"R$ 10,00",0.660966,6,2025-08-22 18:01:48.245,admin
+506,premio-pix,15.00,"R$ 15,00",0.440644,7,2025-08-22 18:01:48.245,admin
+507,premio-pix,20.00,"R$ 20,00",0.330483,8,2025-08-22 18:01:48.245,admin
+508,premio-pix,50.00,"R$ 50,00",0.132193,9,2025-08-22 18:01:48.245,admin
+509,premio-pix,100.00,"R$ 100,00",0.066097,10,2025-08-22 18:01:48.245,admin
+510,premio-pix,200.00,"R$ 200,00",0.033048,11,2025-08-22 18:01:48.245,admin
+511,premio-pix,500.00,"R$ 500,00",0.000000,12,2025-08-22 18:01:48.245,admin
+512,premio-pix,1000.00,"R$ 1.000,00",0.000000,13,2025-08-22 18:01:48.245,admin
+513,premio-pix,2000.00,"R$ 2.000,00",0.000000,14,2025-08-22 18:01:48.245,admin
+514,premio-pix,5000.00,"R$ 5.000,00",0.000000,15,2025-08-22 18:01:48.245,admin
+515,premio-pix,10000.00,"R$ 10.000,00",0.000000,16,2025-08-22 18:01:48.245,admin
+516,premio-pix,100000.00,"R$ 100.000,00",0.000000,17,2025-08-22 18:01:48.245,admin
+535,premio-eletronicos,0.50,50 centavos,33.219324,0,2025-08-22 18:02:05.489,admin
+536,premio-eletronicos,1.00,1 real,6.609662,1,2025-08-22 18:02:05.489,admin
+537,premio-eletronicos,2.00,2 reais,3.304831,2,2025-08-22 18:02:05.489,admin
+538,premio-eletronicos,3.00,3 reais,2.203221,3,2025-08-22 18:02:05.489,admin
+539,premio-eletronicos,4.00,4 reais,1.652416,4,2025-08-22 18:02:05.489,admin
+540,premio-eletronicos,5.00,5 reais,1.321932,5,2025-08-22 18:02:05.489,admin
+541,premio-eletronicos,10.00,Cabo USB,0.660966,6,2025-08-22 18:02:05.489,admin
+542,premio-eletronicos,15.00,Suporte de Celular,0.440644,7,2025-08-22 18:02:05.489,admin
+543,premio-eletronicos,20.00,Capinha de Celular,0.330483,8,2025-08-22 18:02:05.489,admin
+544,premio-eletronicos,50.00,Power Bank,0.132193,9,2025-08-22 18:02:05.489,admin
+545,premio-eletronicos,100.00,Fone sem Fio,0.066097,10,2025-08-22 18:02:05.489,admin
+546,premio-eletronicos,200.00,SmartWatch,0.033048,11,2025-08-22 18:02:05.489,admin
+547,premio-eletronicos,500.00,Air Fryer,0.000000,12,2025-08-22 18:02:05.489,admin
+548,premio-eletronicos,1000.00,Caixa de Som JBL,0.000000,13,2025-08-22 18:02:05.489,admin
+549,premio-eletronicos,2000.00,"Smart TV 55"" 4K",0.000000,14,2025-08-22 18:02:05.489,admin
+550,premio-eletronicos,5000.00,Notebook Dell G15,0.000000,15,2025-08-22 18:02:05.489,admin
+551,premio-eletronicos,10000.00,iPhone 16 Pro,0.000000,16,2025-08-22 18:02:05.489,admin
+552,premio-eletronicos,100000.00,Kit Completo Apple,0.000000,17,2025-08-22 18:02:05.489,admin
+553,premio-super-premios,10.00,"R$ 10,00",33.221276,0,2025-08-22 18:03:42.429,admin
+554,premio-super-premios,20.00,"R$ 20,00",6.610638,1,2025-08-22 18:03:42.429,admin
+555,premio-super-premios,40.00,"R$ 40,00",3.305319,2,2025-08-22 18:03:42.429,admin
+556,premio-super-premios,60.00,"R$ 60,00",2.203546,3,2025-08-22 18:03:42.429,admin
+557,premio-super-premios,80.00,"R$ 80,00",1.652659,4,2025-08-22 18:03:42.429,admin
+558,premio-super-premios,100.00,"R$ 100,00",1.322128,5,2025-08-22 18:03:42.429,admin
+559,premio-super-premios,200.00,Óculos,0.661064,6,2025-08-22 18:03:42.429,admin
+560,premio-super-premios,300.00,Capacete,0.440709,7,2025-08-22 18:03:42.429,admin
+561,premio-super-premios,400.00,Bicicleta,0.330560,8,2025-08-22 18:03:42.429,admin
+562,premio-super-premios,1000.00,HoverBoard,0.000000,9,2025-08-22 18:03:42.429,admin
+563,premio-super-premios,2000.00,Patinete Elétrico,0.000000,10,2025-08-22 18:03:42.429,admin
+564,premio-super-premios,4000.00,Scooter Elétrica,0.000000,11,2025-08-22 18:03:42.429,admin
+565,premio-super-premios,10000.00,Buggy,0.000000,12,2025-08-22 18:03:42.429,admin
+566,premio-super-premios,20000.00,Moto CG,0.000000,13,2025-08-22 18:03:42.429,admin
+567,premio-super-premios,200000.00,Jeep Compass,0.000000,14,2025-08-22 18:03:42.429,admin
+568,premio-super-premios,500000.00,Super Sorte,0.000000,15,2025-08-22 18:03:42.429,admin
+587,premio-me-mimei,0.50,50 centavos,33.219324,0,2025-08-25 22:34:57.265,admin
+588,premio-me-mimei,1.00,1 real,6.609662,1,2025-08-25 22:34:57.265,admin
+589,premio-me-mimei,2.00,2 reais,3.304831,2,2025-08-25 22:34:57.265,admin
+590,premio-me-mimei,3.00,3 reais,2.203221,3,2025-08-25 22:34:57.265,admin
+591,premio-me-mimei,4.00,4 reais,1.652416,4,2025-08-25 22:34:57.265,admin
+592,premio-me-mimei,5.00,5 reais,1.321932,5,2025-08-25 22:34:57.265,admin
+593,premio-me-mimei,10.00,Batom Boca Rosa,0.660966,6,2025-08-25 22:34:57.265,admin
+594,premio-me-mimei,15.00,Máscara Ruby Rose,0.440644,7,2025-08-25 22:34:57.265,admin
+595,premio-me-mimei,20.00,Iluminador Bruna Tavares,0.330483,8,2025-08-25 22:34:57.265,admin
+596,premio-me-mimei,50.00,Perfume Egeo Dolce,0.132193,9,2025-08-25 22:34:57.265,admin
+597,premio-me-mimei,100.00,Bolsa Petite Jolie,0.066097,10,2025-08-25 22:34:57.265,admin
+598,premio-me-mimei,200.00,Kit WEPINK,0.033048,11,2025-08-25 22:34:57.265,admin
+599,premio-me-mimei,500.00,Perfume Good Girl,0.013219,12,2025-08-25 22:34:57.265,admin
+600,premio-me-mimei,1000.00,Kit Completo Bruna Tavares,0.006610,13,2025-08-25 22:34:57.265,admin
+601,premio-me-mimei,2000.00,Kit Kerastase,0.003305,14,2025-08-25 22:34:57.265,admin
+602,premio-me-mimei,5000.00,Bolsa Luxo Michael Kors,0.001322,15,2025-08-25 22:34:57.265,admin
+603,premio-me-mimei,10000.00,Dyson Secador,0.000661,16,2025-08-25 22:34:57.265,admin
+604,premio-me-mimei,100000.00,Anel Vivara Diamante,0.000066,17,2025-08-25 22:34:57.265,admin
+605,bau-pix,0.50,"R$ 0,50",33.219324,0,2025-08-27 21:54:08.187714,system
+606,bau-pix,1.00,"R$ 1,00",6.609662,1,2025-08-27 21:54:08.240548,system
+607,bau-pix,2.00,"R$ 2,00",3.304831,2,2025-08-27 21:54:08.28372,system
+608,bau-pix,3.00,"R$ 3,00",2.203221,3,2025-08-27 21:54:08.326673,system
+609,bau-pix,4.00,"R$ 4,00",1.652416,4,2025-08-27 21:54:08.369678,system
+610,bau-pix,5.00,"R$ 5,00",1.321932,5,2025-08-27 21:54:08.413243,system
+611,bau-pix,10.00,"R$ 10,00",0.660966,6,2025-08-27 21:54:08.457762,system
+612,bau-pix,15.00,"R$ 15,00",0.440644,7,2025-08-27 21:54:08.502816,system
+613,bau-pix,20.00,"R$ 20,00",0.330483,8,2025-08-27 21:54:08.546497,system
+614,bau-pix,50.00,"R$ 50,00",0.132193,9,2025-08-27 21:54:08.589154,system
+615,bau-pix,100.00,"R$ 100,00",0.066097,10,2025-08-27 21:54:08.632772,system
+616,bau-pix,200.00,"R$ 200,00",0.033048,11,2025-08-27 21:54:08.675465,system
+617,bau-pix,500.00,"R$ 500,00",0.000000,12,2025-08-27 21:54:08.718762,system
+618,bau-pix,1000.00,"R$ 1.000,00",0.000000,13,2025-08-27 21:54:08.763843,system
+619,bau-pix,2000.00,"R$ 2.000,00",0.000000,14,2025-08-27 21:54:08.812144,system
+620,bau-pix,5000.00,"R$ 5.000,00",0.000000,15,2025-08-27 21:54:08.854467,system
+621,bau-pix,10000.00,"R$ 10.000,00",0.000000,16,2025-08-27 21:54:08.898623,system
+622,bau-pix,100000.00,"R$ 100.000,00",0.000000,17,2025-08-27 21:54:08.941814,system
+623,bau-me-mimei,0.50,50 centavos,33.219324,0,2025-08-27 21:54:09.070386,system
+624,bau-me-mimei,1.00,1 real,6.609662,1,2025-08-27 21:54:09.112745,system
+625,bau-me-mimei,2.00,2 reais,3.304831,2,2025-08-27 21:54:09.154969,system
+626,bau-me-mimei,3.00,3 reais,2.203221,3,2025-08-27 21:54:09.197582,system
+627,bau-me-mimei,4.00,4 reais,1.652416,4,2025-08-27 21:54:09.241775,system
+628,bau-me-mimei,5.00,5 reais,1.321932,5,2025-08-27 21:54:09.284507,system
+629,bau-me-mimei,10.00,Batom Boca Rosa,0.660966,6,2025-08-27 21:54:09.326834,system
+630,bau-me-mimei,15.00,Máscara Ruby Rose,0.440644,7,2025-08-27 21:54:09.369209,system
+631,bau-me-mimei,20.00,Iluminador Bruna Tavares,0.330483,8,2025-08-27 21:54:09.411797,system
+632,bau-me-mimei,50.00,Perfume Egeo Dolce,0.132193,9,2025-08-27 21:54:09.454682,system
+633,bau-me-mimei,100.00,Bolsa Petite Jolie,0.066097,10,2025-08-27 21:54:09.497651,system
+634,bau-me-mimei,200.00,Kit WEPINK,0.033048,11,2025-08-27 21:54:09.540429,system
+635,bau-me-mimei,500.00,Perfume Good Girl,0.013219,12,2025-08-27 21:54:09.583416,system
+636,bau-me-mimei,1000.00,Kit Completo Bruna Tavares,0.006610,13,2025-08-27 21:54:09.626193,system
+637,bau-me-mimei,2000.00,Kit Kerastase,0.003305,14,2025-08-27 21:54:09.66915,system
+638,bau-me-mimei,5000.00,Bolsa Luxo Michael Kors,0.001322,15,2025-08-27 21:54:09.712349,system
+639,bau-me-mimei,10000.00,Dyson Secador,0.000661,16,2025-08-27 21:54:09.754825,system
+640,bau-me-mimei,100000.00,Anel Vivara Diamante,0.000066,17,2025-08-27 21:54:09.798131,system
+641,bau-eletronicos,0.50,50 centavos,33.219324,0,2025-08-27 21:54:09.926632,system
+642,bau-eletronicos,1.00,1 real,6.609662,1,2025-08-27 21:54:09.969344,system
+643,bau-eletronicos,2.00,2 reais,3.304831,2,2025-08-27 21:54:10.012998,system
+644,bau-eletronicos,3.00,3 reais,2.203221,3,2025-08-27 21:54:10.095446,system
+645,bau-eletronicos,4.00,4 reais,1.652416,4,2025-08-27 21:54:10.1379,system
+646,bau-eletronicos,5.00,5 reais,1.321932,5,2025-08-27 21:54:10.180286,system
+647,bau-eletronicos,10.00,Cabo USB,0.660966,6,2025-08-27 21:54:10.222614,system
+648,bau-eletronicos,15.00,Suporte de Celular,0.440644,7,2025-08-27 21:54:10.26538,system
+649,bau-eletronicos,20.00,Capinha de Celular,0.330483,8,2025-08-27 21:54:10.319725,system
+650,bau-eletronicos,50.00,Power Bank,0.132193,9,2025-08-27 21:54:10.362247,system
+651,bau-eletronicos,100.00,Fone sem Fio,0.066097,10,2025-08-27 21:54:10.404468,system
+652,bau-eletronicos,200.00,SmartWatch,0.033048,11,2025-08-27 21:54:10.446746,system
+653,bau-eletronicos,500.00,Air Fryer,0.000000,12,2025-08-27 21:54:10.489209,system
+654,bau-eletronicos,1000.00,Caixa de Som JBL,0.000000,13,2025-08-27 21:54:10.53289,system
+655,bau-eletronicos,2000.00,"Smart TV 55"" 4K",0.000000,14,2025-08-27 21:54:10.577287,system
+656,bau-eletronicos,5000.00,Notebook Dell G15,0.000000,15,2025-08-27 21:54:10.62079,system
+657,bau-eletronicos,10000.00,iPhone 16 Pro,0.000000,16,2025-08-27 21:54:10.663613,system
+658,bau-eletronicos,100000.00,Kit Completo Apple,0.000000,17,2025-08-27 21:54:10.70725,system
+659,bau-super-premios,10.00,"R$ 10,00",33.221276,0,2025-08-27 21:54:10.839585,system
+660,bau-super-premios,20.00,"R$ 20,00",6.610638,1,2025-08-27 21:54:10.882546,system
+661,bau-super-premios,40.00,"R$ 40,00",3.305319,2,2025-08-27 21:54:10.926769,system
+662,bau-super-premios,60.00,"R$ 60,00",2.203546,3,2025-08-27 21:54:10.970275,system
+663,bau-super-premios,80.00,"R$ 80,00",1.652659,4,2025-08-27 21:54:11.012916,system
+664,bau-super-premios,100.00,"R$ 100,00",1.322128,5,2025-08-27 21:54:11.055606,system
+665,bau-super-premios,200.00,Óculos,0.661064,6,2025-08-27 21:54:11.101,system
+666,bau-super-premios,300.00,Capacete,0.440709,7,2025-08-27 21:54:11.143444,system
+667,bau-super-premios,400.00,Bicicleta,0.330560,8,2025-08-27 21:54:11.186183,system
+668,bau-super-premios,1000.00,HoverBoard,0.000000,9,2025-08-27 21:54:11.228594,system
+669,bau-super-premios,2000.00,Patinete Elétrico,0.000000,10,2025-08-27 21:54:11.27088,system
+670,bau-super-premios,4000.00,Scooter Elétrica,0.000000,11,2025-08-27 21:54:11.360721,system
+671,bau-super-premios,10000.00,Buggy,0.000000,12,2025-08-27 21:54:11.40334,system
+672,bau-super-premios,20000.00,Moto CG,0.000000,13,2025-08-27 21:54:11.445759,system
+673,bau-super-premios,200000.00,Jeep Compass,0.000000,14,2025-08-27 21:54:11.487894,system
+674,bau-super-premios,500000.00,Super Sorte,0.000000,15,2025-08-27 21:54:11.530264,system

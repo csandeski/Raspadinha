@@ -231,12 +231,11 @@ function AdminDashboardContent() {
         )}
       </AnimatePresence>
 
-      {/* Modern Sidebar - Responsive */}
-      <motion.aside
-        initial={{ x: -320 }}
-        animate={{ x: mobileMenuOpen ? 0 : -320 }}
-        transition={{ type: "spring", bounce: 0, duration: 0.4 }}
-        className={`fixed left-0 top-0 h-screen w-72 backdrop-blur-xl z-50 flex flex-col transition-colors duration-300 md:translate-x-0 md:w-80 ${
+      {/* Modern Sidebar - Desktop Always Visible, Mobile Toggle */}
+      <aside
+        className={`fixed left-0 top-0 h-screen w-72 md:w-80 backdrop-blur-xl z-50 flex flex-col transition-all duration-300 ${
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0 ${
           theme === 'dark'
             ? 'bg-zinc-900/95 border-r border-zinc-800/50'
             : 'bg-white/95 border-r border-gray-200'
@@ -341,7 +340,7 @@ function AdminDashboardContent() {
               </motion.button>
             </div>
 
-      </motion.aside>
+      </aside>
 
       {/* Mobile Bottom Navigation */}
       <motion.div 

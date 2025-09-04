@@ -19,7 +19,8 @@ import {
   AlertCircle,
   Plus,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  Wand2
 } from "lucide-react";
 import {
   Select,
@@ -46,23 +47,23 @@ const gameConfig = {
     color: 'from-blue-500 to-blue-600',
     borderColor: 'border-blue-500',
     defaultPrizes: [
-      { value: '0.50', name: '50 centavos', probability: 20.0 },
-      { value: '1.00', name: '1 real', probability: 10.0 },
-      { value: '2.00', name: '2 reais', probability: 8.0 },
-      { value: '3.00', name: '3 reais', probability: 6.0 },
-      { value: '4.00', name: '4 reais', probability: 5.0 },
-      { value: '5.00', name: '5 reais', probability: 4.0 },
-      { value: '10.00', name: '10 reais', probability: 3.0 },
-      { value: '15.00', name: '15 reais', probability: 2.0 },
-      { value: '20.00', name: '20 reais', probability: 1.5 },
-      { value: '50.00', name: '50 reais', probability: 1.0 },
+      { value: '0.50', name: '50 centavos', probability: 25.0 },
+      { value: '1.00', name: '1 real', probability: 20.0 },
+      { value: '2.00', name: '2 reais', probability: 15.0 },
+      { value: '3.00', name: '3 reais', probability: 10.0 },
+      { value: '4.00', name: '4 reais', probability: 8.0 },
+      { value: '5.00', name: '5 reais', probability: 7.0 },
+      { value: '10.00', name: '10 reais', probability: 5.0 },
+      { value: '15.00', name: '15 reais', probability: 4.0 },
+      { value: '20.00', name: '20 reais', probability: 3.0 },
+      { value: '50.00', name: '50 reais', probability: 2.0 },
       { value: '100.00', name: '100 reais', probability: 0.5 },
-      { value: '200.00', name: '200 reais', probability: 0.3 },
-      { value: '500.00', name: '500 reais', probability: 0.2 },
-      { value: '1000.00', name: '1 mil reais', probability: 0.1 },
-      { value: '2000.00', name: '2 mil reais', probability: 0.05 },
+      { value: '200.00', name: '200 reais', probability: 0.25 },
+      { value: '500.00', name: '500 reais', probability: 0.1 },
+      { value: '1000.00', name: '1 mil reais', probability: 0.08 },
+      { value: '2000.00', name: '2 mil reais', probability: 0.04 },
       { value: '5000.00', name: '5 mil reais', probability: 0.02 },
-      { value: '10000.00', name: '10 mil reais', probability: 0.01 },
+      { value: '10000.00', name: '10 mil reais', probability: 0.009 },
       { value: '100000.00', name: '100 mil reais', probability: 0.001 }
     ]
   },
@@ -289,6 +290,100 @@ export function PrizeProbabilityEnhanced() {
     }
   };
 
+  const autoDistribute = () => {
+    if (prizes.length === 0) return;
+    
+    // Sort prizes by value (ascending)
+    const sortedPrizes = [...prizes].sort((a, b) => 
+      parseFloat(a.prize_value) - parseFloat(b.prize_value)
+    );
+    
+    // Calculate probabilities using exponential decay
+    const totalPrizes = sortedPrizes.length;
+    let remainingProb = 100;
+    const distributedPrizes = [];
+    
+    // Base distribution percentages for different prize tiers
+    const getBaseProbability = (index: number, total: number) => {
+      const position = index / (total - 1); // 0 to 1, where 0 is smallest prize
+      
+      if (position <= 0.3) {
+        // First 30% of prizes (smallest) get 60% of total probability
+        return 60 / (total * 0.3);
+      } else if (position <= 0.6) {
+        // Middle 30% get 30% of total probability
+        return 30 / (total * 0.3);
+      } else if (position <= 0.9) {
+        // Next 30% get 9% of total probability
+        return 9 / (total * 0.3);
+      } else {
+        // Last 10% (biggest prizes) share 1% of total probability
+        return 1 / (total * 0.1);
+      }
+    };
+    
+    // Calculate initial probabilities
+    let tempProbs: number[] = [];
+    for (let i = 0; i < totalPrizes; i++) {
+      tempProbs.push(getBaseProbability(i, totalPrizes));
+    }
+    
+    // Normalize to exactly 100%
+    const sumProbs = tempProbs.reduce((a, b) => a + b, 0);
+    tempProbs = tempProbs.map(p => (p / sumProbs) * 100);
+    
+    // Apply probabilities to prizes
+    for (let i = 0; i < sortedPrizes.length; i++) {
+      const prize = sortedPrizes[i];
+      let probability = tempProbs[i];
+      
+      // Round to reasonable precision
+      if (probability >= 10) {
+        probability = Math.round(probability * 10) / 10; // 1 decimal
+      } else if (probability >= 1) {
+        probability = Math.round(probability * 100) / 100; // 2 decimals
+      } else if (probability >= 0.1) {
+        probability = Math.round(probability * 1000) / 1000; // 3 decimals
+      } else {
+        probability = Math.round(probability * 10000) / 10000; // 4 decimals
+      }
+      
+      distributedPrizes.push({
+        ...prize,
+        probability
+      });
+    }
+    
+    // Final adjustment to ensure exactly 100%
+    const currentSum = distributedPrizes.reduce((sum, p) => sum + p.probability, 0);
+    const diff = 100 - currentSum;
+    
+    if (Math.abs(diff) > 0.001) {
+      // Add difference to the prize with highest probability
+      const maxProbIndex = distributedPrizes.reduce((maxIdx, p, idx, arr) => 
+        p.probability > arr[maxIdx].probability ? idx : maxIdx, 0
+      );
+      distributedPrizes[maxProbIndex].probability = 
+        Math.round((distributedPrizes[maxProbIndex].probability + diff) * 1000) / 1000;
+    }
+    
+    // Restore original order
+    const finalPrizes = prizes.map(originalPrize => {
+      const updated = distributedPrizes.find(p => 
+        p.prize_value === originalPrize.prize_value && 
+        p.prize_name === originalPrize.prize_name
+      );
+      return updated || originalPrize;
+    });
+    
+    setPrizes(finalPrizes);
+    setHasChanges(true);
+    
+    toast({
+      description: "✅ Probabilidades distribuídas automaticamente (total: 100%)",
+    });
+  };
+
   const totalProbability = prizes.reduce((sum, p) => sum + (p.probability || 0), 0);
   const isValidTotal = totalProbability <= 100;
   const config = gameConfig[selectedGame as keyof typeof gameConfig];
@@ -339,6 +434,32 @@ export function PrizeProbabilityEnhanced() {
               ))}
             </SelectContent>
           </Select>
+          
+          <Button
+            onClick={autoDistribute}
+            variant="outline"
+            className={
+              theme === 'dark'
+                ? 'border-zinc-700 hover:bg-zinc-800 text-white'
+                : 'border-gray-300 hover:bg-gray-100 text-gray-900'
+            }
+          >
+            <Wand2 className="h-4 w-4 mr-2" />
+            Auto Configurar
+          </Button>
+          
+          <Button
+            onClick={resetToDefaults}
+            variant="outline"
+            className={
+              theme === 'dark'
+                ? 'border-zinc-700 hover:bg-zinc-800 text-white'
+                : 'border-gray-300 hover:bg-gray-100 text-gray-900'
+            }
+          >
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Restaurar Padrões
+          </Button>
           
           <Button
             onClick={() => updateMutation.mutate(prizes)}

@@ -47,24 +47,24 @@ const gameConfig = {
     color: 'from-blue-500 to-blue-600',
     borderColor: 'border-blue-500',
     defaultPrizes: [
-      { value: '0.50', name: '50 centavos', probability: 25.0 },
-      { value: '1.00', name: '1 real', probability: 20.0 },
-      { value: '2.00', name: '2 reais', probability: 15.0 },
-      { value: '3.00', name: '3 reais', probability: 10.0 },
-      { value: '4.00', name: '4 reais', probability: 8.0 },
-      { value: '5.00', name: '5 reais', probability: 7.0 },
-      { value: '10.00', name: '10 reais', probability: 5.0 },
-      { value: '15.00', name: '15 reais', probability: 4.0 },
-      { value: '20.00', name: '20 reais', probability: 3.0 },
-      { value: '50.00', name: '50 reais', probability: 2.0 },
-      { value: '100.00', name: '100 reais', probability: 0.5 },
-      { value: '200.00', name: '200 reais', probability: 0.25 },
-      { value: '500.00', name: '500 reais', probability: 0.1 },
-      { value: '1000.00', name: '1 mil reais', probability: 0.08 },
-      { value: '2000.00', name: '2 mil reais', probability: 0.04 },
-      { value: '5000.00', name: '5 mil reais', probability: 0.02 },
-      { value: '10000.00', name: '10 mil reais', probability: 0.009 },
-      { value: '100000.00', name: '100 mil reais', probability: 0.001 }
+      { value: '0.5', name: '50 centavos', probability: 25.0 },
+      { value: '1', name: '1 real', probability: 20.0 },
+      { value: '2', name: '2 reais', probability: 15.0 },
+      { value: '3', name: '3 reais', probability: 10.0 },
+      { value: '4', name: '4 reais', probability: 8.0 },
+      { value: '5', name: '5 reais', probability: 7.0 },
+      { value: '10', name: '10 reais', probability: 5.0 },
+      { value: '15', name: '15 reais', probability: 4.0 },
+      { value: '20', name: '20 reais', probability: 3.0 },
+      { value: '50', name: '50 reais', probability: 2.0 },
+      { value: '100', name: '100 reais', probability: 0.5 },
+      { value: '200', name: '200 reais', probability: 0.25 },
+      { value: '500', name: '500 reais', probability: 0.1 },
+      { value: '1000', name: '1 mil reais', probability: 0.08 },
+      { value: '2000', name: '2 mil reais', probability: 0.04 },
+      { value: '5000', name: '5 mil reais', probability: 0.02 },
+      { value: '10000', name: '10 mil reais', probability: 0.009 },
+      { value: '100000', name: '100 mil reais', probability: 0.001 }
     ]
   },
   'me_mimei': {
@@ -261,7 +261,7 @@ export function PrizeProbabilityEnhanced() {
   const addPrize = () => {
     const newPrize: PrizeProbability = {
       game_type: selectedGame,
-      prize_value: '1.00',
+      prize_value: '1',
       prize_name: 'Novo Prêmio',
       probability: 0,
       order: prizes.length

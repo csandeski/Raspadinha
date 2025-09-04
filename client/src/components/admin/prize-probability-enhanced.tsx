@@ -47,24 +47,24 @@ const gameConfig = {
     color: 'from-blue-500 to-blue-600',
     borderColor: 'border-blue-500',
     defaultPrizes: [
-      { value: '0.5', name: '50 centavos', probability: 25.0 },
-      { value: '1', name: '1 real', probability: 20.0 },
-      { value: '2', name: '2 reais', probability: 15.0 },
+      { value: '0.5', name: '50 centavos', probability: 30.0 },
+      { value: '1', name: '1 real', probability: 25.0 },
+      { value: '2', name: '2 reais', probability: 20.0 },
       { value: '3', name: '3 reais', probability: 10.0 },
-      { value: '4', name: '4 reais', probability: 8.0 },
-      { value: '5', name: '5 reais', probability: 7.0 },
-      { value: '10', name: '10 reais', probability: 5.0 },
-      { value: '15', name: '15 reais', probability: 4.0 },
-      { value: '20', name: '20 reais', probability: 3.0 },
-      { value: '50', name: '50 reais', probability: 2.0 },
-      { value: '100', name: '100 reais', probability: 0.5 },
-      { value: '200', name: '200 reais', probability: 0.25 },
-      { value: '500', name: '500 reais', probability: 0.1 },
-      { value: '1000', name: '1 mil reais', probability: 0.08 },
-      { value: '2000', name: '2 mil reais', probability: 0.04 },
-      { value: '5000', name: '5 mil reais', probability: 0.02 },
-      { value: '10000', name: '10 mil reais', probability: 0.009 },
-      { value: '100000', name: '100 mil reais', probability: 0.001 }
+      { value: '4', name: '4 reais', probability: 6.0 },
+      { value: '5', name: '5 reais', probability: 4.0 },
+      { value: '10', name: '10 reais', probability: 2.5 },
+      { value: '15', name: '15 reais', probability: 1.0 },
+      { value: '20', name: '20 reais', probability: 0.8 },
+      { value: '50', name: '50 reais', probability: 0.3 },
+      { value: '100', name: '100 reais', probability: 0.15 },
+      { value: '200', name: '200 reais', probability: 0.08 },
+      { value: '500', name: '500 reais', probability: 0.03 },
+      { value: '1000', name: '1 mil reais', probability: 0.015 },
+      { value: '2000', name: '2 mil reais', probability: 0.008 },
+      { value: '5000', name: '5 mil reais', probability: 0.003 },
+      { value: '10000', name: '10 mil reais', probability: 0.001 },
+      { value: '100000', name: '100 mil reais', probability: 0.0001 }
     ]
   },
   'me_mimei': {
@@ -495,7 +495,7 @@ export function PrizeProbabilityEnhanced() {
                       ? 'text-[#00E880]'
                       : 'text-red-500'
                   }`}>
-                    {totalProbability.toFixed(4)}%
+                    {totalProbability.toFixed(6)}%
                   </span>
                   {!isValidTotal && (
                     <Badge variant="destructive">Excede 100%</Badge>
@@ -597,7 +597,7 @@ export function PrizeProbabilityEnhanced() {
                     type="number"
                     value={prize.probability}
                     onChange={(e) => handleProbabilityChange(index, e.target.value)}
-                    step="0.01"
+                    step="0.0001"
                     min="0"
                     max="100"
                     className={`${

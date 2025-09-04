@@ -18541,6 +18541,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Endpoint temporário para criar tabela faltante
+  app.post("/api/admin/fix-database", authenticateAdmin, async (req: any, res) => {
+    try {
+      // Criar tabela active_game_sessions se não existir
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "active_game_sessions" (
+          "id" serial PRIMARY KEY NOT NULL,
+          "user_id" integer NOT NULL,
+          "game_type" text NOT NULL,
+          "game_id" text NOT NULL UNIQUE,
+          "game_state" jsonb NOT NULL,
+          "created_at" timestamp DEFAULT now(),
+          "updated_at" timestamp DEFAULT now()
+        )
+      `);
+
+      // Adicionar foreign key se não existir
+      await db.execute(sql`
+        DO $$ 
+        BEGIN
+          IF NOT EXISTS (
+            SELECT 1 FROM information_schema.table_constraints 
+            WHERE constraint_name = 'active_game_sessions_user_id_app_users_id_fk'
+          ) THEN
+            ALTER TABLE "active_game_sessions" 
+            ADD CONSTRAINT "active_game_sessions_user_id_app_users_id_fk" 
+            FOREIGN KEY ("user_id") REFERENCES "app_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+          END IF;
+        END $$
+      `);
+
+      res.json({ 
+        success: true, 
+        message: "Tabela active_game_sessions criada com sucesso!" 
+      });
+    } catch (error) {
+      console.error("Fix database error:", error);
+      res.status(500).json({ error: "Erro ao criar tabela" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

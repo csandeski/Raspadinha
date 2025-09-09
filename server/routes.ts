@@ -6410,7 +6410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     } else {
                       commissionRate = parseFloat(affiliate.currentLevelRate || '40.00');
                     }
-                    const depositAmount = parseFloat(deposit.amount);
+                    const depositAmount = parseFloat(deposit.amount.toString());
                     commissionAmount = depositAmount * commissionRate / 100;
                   }
                   
@@ -6428,7 +6428,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   console.log(`Created affiliate commission: R$${commission.toFixed(2)} for affiliate ${affiliate.id} from deposit of R$${depositAmount}`);
                 }
               }
-              const depositAmount = parseFloat(deposit.amount);
+              const depositAmount = parseFloat(deposit.amount.toString());
               
               // Check if this is the user's first deposit
               const isFirstDeposit = user && !user.hasFirstDeposit;
@@ -6576,7 +6576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Get user to check for applied coupons
           const user = await storage.getUser(deposit.userId);
-          const depositAmount = parseFloat(deposit.amount);
+          const depositAmount = parseFloat(deposit.amount.toString());
           
           // Check if this is the user's first deposit
           const isFirstDeposit = user && !user.hasFirstDeposit;
@@ -6756,7 +6756,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           const oldBalance = parseFloat(wallet.balance || "0");
-          const depositAmount = parseFloat(deposit.amount);
+          const depositAmount = parseFloat(deposit.amount.toString());
           const newBalance = oldBalance + depositAmount;
           
           await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));
@@ -6950,7 +6950,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           const oldBalance = parseFloat(wallet.balance || "0");
-          const depositAmount = parseFloat(deposit.amount);
+          const depositAmount = parseFloat(deposit.amount.toString());
           const newBalance = oldBalance + depositAmount;
           
           await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));
@@ -7235,7 +7235,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update user balance
       const wallet = await storage.getWallet(deposit.userId);
       const currentBalance = parseFloat(wallet?.balance || "0");
-      const depositAmount = parseFloat(deposit.amount);
+      const depositAmount = parseFloat(deposit.amount.toString());
       const newBalance = currentBalance + depositAmount;
 
       await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));
@@ -7524,7 +7524,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const oldBalance = parseFloat(wallet.balance || "0");
-      const depositAmount = parseFloat(deposit.amount);
+      const depositAmount = parseFloat(deposit.amount.toString());
       const newBalance = oldBalance + depositAmount;
       
       await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));
@@ -7687,7 +7687,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
 
           const oldBalance = parseFloat(wallet.balance || "0");
-          const depositAmount = parseFloat(deposit.amount);
+          const depositAmount = parseFloat(deposit.amount.toString());
           const newBalance = oldBalance + depositAmount;
           
           await storage.updateWalletBalance(deposit.userId, newBalance.toFixed(2));

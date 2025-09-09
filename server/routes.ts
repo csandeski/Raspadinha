@@ -5709,27 +5709,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const { gameType, gameId, gameState } = req.body;
+        const userId = req.userId;
 
-        // Check if there's already an active session for this game type
-        const existingSession = await storage.getActiveGameSession(
-          req.userId,
-          gameType,
-        );
+        // Use SQL direto para evitar problemas com Drizzle
+        const existingSession = await db.execute(sql`
+          SELECT * FROM active_game_sessions 
+          WHERE user_id = ${userId} 
+          AND game_type = ${gameType}
+          LIMIT 1
+        `);
 
-        if (existingSession) {
+        if (existingSession.rows.length > 0) {
           // Update existing session
-          await storage.updateActiveGameSession(
-            existingSession.gameId,
-            gameState,
-          );
+          await db.execute(sql`
+            UPDATE active_game_sessions 
+            SET game_state = ${JSON.stringify(gameState)}::jsonb, 
+                updated_at = NOW()
+            WHERE user_id = ${userId} 
+            AND game_type = ${gameType}
+          `);
         } else {
           // Create new session
-          await storage.createActiveGameSession({
-            userId: req.userId,
-            gameType,
-            gameId,
-            gameState,
-          });
+          await db.execute(sql`
+            INSERT INTO active_game_sessions (user_id, game_type, game_id, game_state, created_at, updated_at)
+            VALUES (${userId}, ${gameType}, ${gameId}, ${JSON.stringify(gameState)}::jsonb, NOW(), NOW())
+          `);
         }
 
         res.json({ success: true });
@@ -18540,7 +18544,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ error: "Erro ao gerar código de convite" });
     }
   });
-
 
   const httpServer = createServer(app);
   return httpServer;

@@ -5750,19 +5750,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const { gameType } = req.params;
-        const session = await storage.getActiveGameSession(
-          req.userId,
-          gameType,
-        );
+        const userId = req.userId;
+        
+        // Use SQL direto para buscar sessão
+        const sessionResult = await db.execute(sql`
+          SELECT * FROM active_game_sessions 
+          WHERE user_id = ${userId} 
+          AND game_type = ${gameType}
+          ORDER BY created_at DESC
+          LIMIT 1
+        `);
 
-        if (!session) {
+        if (sessionResult.rows.length === 0) {
           return res
             .status(404)
             .json({ error: "Nenhuma sessão ativa encontrada" });
         }
 
-        // Check if the game still exists in activeGames map
-        const gameState = session.gameState;
+        const session = sessionResult.rows[0];
+        const gameState = session.game_state;
         const gameId = gameState?.gameId;
         
         if (gameId && gameType.startsWith('premio-')) {
@@ -5855,29 +5861,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     async (req: any, res) => {
       try {
         const { gameType } = req.params;
-        const sessions = await storage.getUserActiveGameSessions(req.userId);
-        let cleared = 0;
+        const userId = req.userId;
 
-        // Clear all sessions for this game type
-        for (const session of sessions) {
-          if (session.gameType === gameType) {
-            await storage.deleteActiveGameSession(session.gameId);
-            cleared++;
-          }
-        }
+        // Use SQL direto para limpar sessões
+        const result = await db.execute(sql`
+          DELETE FROM active_game_sessions 
+          WHERE user_id = ${userId} 
+          AND game_type = ${gameType}
+        `);
 
-        // Double-check by querying again and clearing any remaining
-        const remainingSessions = await storage.getUserActiveGameSessions(
-          req.userId,
-        );
-        for (const session of remainingSessions) {
-          if (session.gameType === gameType) {
-            await storage.deleteActiveGameSession(session.gameId);
-            cleared++;
-          }
-        }
-
-        res.json({ success: true, cleared });
+        res.json({ success: true, cleared: result.rowCount || 0 });
       } catch (error) {
         console.error("Clear game type sessions error:", error);
         res

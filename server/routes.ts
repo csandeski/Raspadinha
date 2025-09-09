@@ -76,8 +76,9 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import rateLimit from "express-rate-limit";
 
-// Security: Use a strong JWT secret from environment or generate a secure one
-const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+// Security: Use a strong JWT secret from environment or fallback to a fixed secret
+// IMPORTANT: In production, always use a secure JWT_SECRET environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'maniabrasil-jwt-secret-key-2025-secure-token-generation';
 const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
 // OrinPay is now the only payment provider

@@ -19,6 +19,7 @@ import { balanceTracker } from "@/lib/balance-tracker";
 import { MultiplierInfoModal } from "@/components/multiplier-info-modal";
 import { LoginRequiredModal } from "@/components/login-required-modal";
 import { InsufficientFundsModal } from "@/components/insufficient-funds-modal";
+import { WinModal } from "@/components/win-modal";
 
 
 
@@ -118,6 +119,7 @@ export default function GamePremioMeMimei() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [insufficientFundsType, setInsufficientFundsType] = useState<"balance" | "bonus">("balance");
+  const [showWinModal, setShowWinModal] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const gameContainerRef = useRef<HTMLDivElement>(null);
@@ -496,6 +498,11 @@ export default function GamePremioMeMimei() {
       setPrizeValue(response.prizeValue || "");
       setResultReady(true); // Mark result as ready to display
 
+      // Show win modal for winning games
+      if (response.won && response.prize > 0) {
+        setShowWinModal(true);
+      }
+
       // Add balance change to queue for wins
       if (response.won && response.prize > 0) {
         // Notify balance tracker we're processing local change
@@ -590,6 +597,7 @@ export default function GamePremioMeMimei() {
   };
 
   const handlePlayAgain = () => {
+    setShowWinModal(false);
     setGameStarted(false);
     setGameComplete(false);
     setRevealed(new Array(9).fill(false));
@@ -1479,6 +1487,17 @@ export default function GamePremioMeMimei() {
           </div>
         </div>
       </div>
+      
+      {/* Win Modal */}
+      <WinModal
+        isOpen={showWinModal}
+        onClose={() => setShowWinModal(false)}
+        prizeImage={getPrizeInfo(prizeValue || prize.toString()).path}
+        prizeName={getPrizeInfo(prizeValue || prize.toString()).name}
+        prizeValue={prize}
+        onPlayAgain={handlePlayAgain}
+      />
+      
       {/* Prize Modal */}
       {selectedPrize && (
         <PrizeModal

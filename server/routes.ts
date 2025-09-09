@@ -1605,7 +1605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ exists: !!user });
     } catch (error) {
       console.error("Check phone error:", error);
-      res.status(400).json({ exists: false });
+      res.status(200).json({ exists: false });
     }
   });
   
@@ -1623,7 +1623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ exists: !!user });
     } catch (error) {
       console.error("Check email error:", error);
-      res.status(400).json({ exists: false });
+      res.status(200).json({ exists: false });
     }
   });
   
@@ -1644,7 +1644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ exists: !!user });
     } catch (error) {
       console.error("Check CPF error:", error);
-      res.status(400).json({ exists: false });
+      res.status(200).json({ exists: false });
     }
   });
 

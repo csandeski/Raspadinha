@@ -38,6 +38,7 @@ export const users = pgTable("app_users", {
   couponApplied: integer("coupon_applied").default(0), // 0 = no coupon, 1 = coupon applied
   currentCoupon: text("current_coupon"), // The coupon code currently applied
   hasFirstDeposit: boolean("has_first_deposit").default(false), // Track if user made first deposit
+  firstDepositCompleted: boolean("first_deposit_completed").default(false), // Track if first deposit was completed
   affiliateId: integer("affiliate_id"), // ID of the affiliate who referred this user
   partnerId: integer("partner_id"), // ID of the partner who referred this user (if any)
   createdAt: timestamp("created_at").defaultNow(),
@@ -351,6 +352,8 @@ export const coupons = pgTable("coupons", {
   id: serial("id").primaryKey(),
   code: text("code").notNull().unique(), // Coupon code (e.g. "SORTE", "BONUS10")
   description: text("description"), // Description of the coupon
+  bonusType: text("bonus_type").notNull().default("percentage"), // Type of bonus: 'percentage' or 'fixed'
+  bonusAmount: decimal("bonus_amount", { precision: 10, scale: 2 }).notNull().default("0"), // Bonus amount (percentage or fixed value)
   minDeposit: decimal("min_deposit", { precision: 10, scale: 2 }).notNull().default("0"), // Minimum deposit required
   usageLimit: integer("usage_limit"), // Total usage limit (null = unlimited)
   usageCount: integer("usage_count").notNull().default(0), // Current usage count

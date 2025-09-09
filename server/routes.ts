@@ -438,11 +438,11 @@ setInterval(
     const now = Date.now();
     const GAME_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
-    for (const [gameId, game] of activeGames.entries()) {
+    activeGames.forEach((game, gameId) => {
       if (now - game.createdAt.getTime() > GAME_EXPIRY) {
         activeGames.delete(gameId);
       }
-    }
+    });
   },
   5 * 60 * 1000,
 ); // Clean up every 5 minutes
@@ -7244,12 +7244,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let finalScratchBonus = wallet?.scratchBonus || 0;
       const user = await storage.getUser(deposit.userId);
       
-      if (user?.firstDepositCompleted === false) {
+      if (user && user.firstDepositCompleted === false) {
         const bonusCards = Math.floor(depositAmount);
         finalScratchBonus += bonusCards;
         
-        await storage.updateScratchBonus(deposit.userId, finalScratchBonus);
-        await storage.markFirstDepositCompleted(deposit.userId);
+        await storage.updateWalletScratchBonus(deposit.userId, finalScratchBonus);
+        // Mark first deposit as completed
+        await db.update(users)
+          .set({ firstDepositCompleted: true })
+          .where(eq(users.id, deposit.userId));
         
         console.log(`First deposit bonus applied: ${bonusCards} scratch cards`);
       }
@@ -9944,7 +9947,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
 
       // Initialize prizes for each game
-      for (const [gameType, prizes] of Object.entries(realGamePrizes)) {
+      for (const gameType of Object.keys(realGamePrizes)) {
+        const prizes = realGamePrizes[gameType as keyof typeof realGamePrizes];
         await storage.updatePrizeProbabilities(gameType, prizes.map(p => ({
           prizeValue: p.value,
           prizeName: p.name,

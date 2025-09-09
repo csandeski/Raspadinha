@@ -19,6 +19,7 @@ import { MultiplierInfoModal } from "@/components/multiplier-info-modal";
 import { LoginRequiredModal } from "@/components/login-required-modal";
 import { InsufficientFundsModal } from "@/components/insufficient-funds-modal";
 import { WinModal } from "@/components/win-modal";
+import { LoseModal } from "@/components/lose-modal";
 
 
 
@@ -121,6 +122,7 @@ export default function GamePremioSuperPremios() {
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [insufficientFundsType, setInsufficientFundsType] = useState<"balance" | "bonus">("balance");
   const [showWinModal, setShowWinModal] = useState(false);
+  const [showLoseModal, setShowLoseModal] = useState(false);
   const gameContainerRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -500,9 +502,11 @@ export default function GamePremioSuperPremios() {
       setPrizeValue(response.prizeValue || "");
       setResultReady(true); // Mark result as ready to display
 
-      // Show win modal for winning games
+      // Show appropriate modal based on result
       if (response.won && response.prize > 0) {
         setShowWinModal(true);
+      } else if (!response.won) {
+        setShowLoseModal(true);
       }
 
       // Add balance change to queue for wins
@@ -600,6 +604,7 @@ export default function GamePremioSuperPremios() {
 
   const handlePlayAgain = () => {
     setShowWinModal(false);
+    setShowLoseModal(false);
     setGameStarted(false);
     setGameComplete(false);
     setRevealed(new Array(9).fill(false));
@@ -1505,6 +1510,13 @@ export default function GamePremioSuperPremios() {
         prizeImage={getPrizeInfo(prizeValue || prize.toString()).path || ''}
         prizeName={getPrizeInfo(prizeValue || prize.toString()).name}
         prizeValue={prize}
+        onPlayAgain={handlePlayAgain}
+      />
+      
+      {/* Lose Modal */}
+      <LoseModal
+        isOpen={showLoseModal}
+        onClose={() => setShowLoseModal(false)}
         onPlayAgain={handlePlayAgain}
       />
       

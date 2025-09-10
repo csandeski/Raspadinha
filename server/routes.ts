@@ -8764,8 +8764,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user stats
       const userStats = await storage.getUserStats();
       
-      // Get new users in period
-      const allUsers = await db.select().from(users);
+      // Get new users in period using raw SQL to avoid Drizzle issues
+      const allUsersResult = await pool.query(
+        `SELECT id, created_at FROM app_users`
+      );
+      const allUsers = allUsersResult.rows.map(row => ({
+        id: row.id,
+        createdAt: row.created_at
+      }));
+      
       const newUsersInPeriod = allUsers.filter(u => {
         const userDate = new Date(u.createdAt);
         return userDate >= filterStartDate && userDate <= filterEndDate;
@@ -9020,10 +9027,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all users
   app.get("/api/admin/users", authenticateAdmin, async (req, res) => {
     try {
-      const allUsers = await db
-        .select()
-        .from(users)
-        .orderBy(desc(users.createdAt));
+      // Use raw SQL to avoid Drizzle issues with app_users table
+      const allUsersResult = await pool.query(
+        `SELECT * FROM app_users ORDER BY created_at DESC`
+      );
+      
+      const allUsers = allUsersResult.rows.map(row => ({
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      }));
 
       // Get wallets for all users
       const userWallets = await db.select().from(wallets);
@@ -10428,28 +10460,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get all deposits for admin
   app.get("/api/admin/deposits", authenticateAdmin, async (req, res) => {
     try {
-      const allDeposits = await db
-        .select({
-          deposit: deposits,
-          user: users,
-        })
-        .from(deposits)
-        .leftJoin(users, eq(deposits.userId, users.id))
-        .orderBy(desc(deposits.createdAt));
+      // Use raw SQL to avoid Drizzle issues with app_users table
+      const allDepositsResult = await pool.query(
+        `SELECT 
+          d.id, 
+          d.display_id, 
+          d.transaction_id, 
+          d.user_id, 
+          d.amount, 
+          d.status, 
+          d.pix_code, 
+          d.payment_provider, 
+          d.created_at, 
+          d.completed_at,
+          u.name as user_name,
+          u.email as user_email
+        FROM deposits d
+        LEFT JOIN app_users u ON d.user_id = u.id
+        ORDER BY d.created_at DESC`
+      );
 
-      const formattedDeposits = allDeposits.map(({ deposit, user }) => ({
-        id: deposit.id,
-        displayId: deposit.displayId || deposit.transactionId,
-        userId: deposit.userId,
-        userName: user?.name || "Unknown",
-        userEmail: user?.email || "Unknown",
-        amount: deposit.amount,
-        status: deposit.status,
-        pixCode: deposit.pixCode,
-        transactionId: deposit.transactionId,
-        paymentProvider: deposit.paymentProvider,
-        createdAt: deposit.createdAt,
-        completedAt: deposit.completedAt,
+      const formattedDeposits = allDepositsResult.rows.map((row) => ({
+        id: row.id,
+        displayId: row.display_id || row.transaction_id,
+        userId: row.user_id,
+        userName: row.user_name || "Unknown",
+        userEmail: row.user_email || "Unknown",
+        amount: row.amount,
+        status: row.status,
+        pixCode: row.pix_code,
+        transactionId: row.transaction_id,
+        paymentProvider: row.payment_provider,
+        createdAt: row.created_at,
+        completedAt: row.completed_at,
       }));
 
       res.json(formattedDeposits);

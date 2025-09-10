@@ -302,13 +302,47 @@ export interface IStorage {
 export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    // Use raw SQL to avoid Drizzle issue with app_users table
+    const result = await pool.query(
+      `SELECT * FROM app_users WHERE id = $1 LIMIT 1`,
+      [id]
+    );
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        password: row.password,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        firstDepositCompleted: row.first_deposit_completed,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as User;
+    }
+    return undefined;
   }
 
   async getUserById(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    // Use the same method as getUser since they do the same thing
+    return this.getUser(id);
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
@@ -822,9 +856,10 @@ export class DatabaseStorage implements IStorage {
 
   // Stats operations
   async getUserStats(): Promise<{ totalUsers: number; activeUsers: number }> {
-    const [totalResult] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(users);
+    // Use raw SQL to count users from app_users table
+    const totalResult = await pool.query(
+      `SELECT COUNT(*) as count FROM app_users`
+    );
     
     const [activeResult] = await db
       .select({ count: sql<number>`count(distinct ${gamePremios.userId})` })
@@ -832,7 +867,7 @@ export class DatabaseStorage implements IStorage {
       .where(sql`${gamePremios.playedAt} > NOW() - INTERVAL '30 days'`);
     
     return {
-      totalUsers: totalResult.count,
+      totalUsers: parseInt(totalResult.rows[0].count),
       activeUsers: activeResult.count || 0,
     };
   }

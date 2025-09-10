@@ -97,7 +97,7 @@ import {
   type EsquiloGameState,
   type InsertEsquiloGameState,
 } from "@shared/schema";
-import { db } from "./db";
+import { db, pool } from "./db";
 import { eq, desc, and, sql, gte, lt, count, asc, inArray } from "drizzle-orm";
 
 export interface IStorage {
@@ -312,18 +312,126 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.email, email));
-    return user;
+    // Temporary workaround - use raw SQL to avoid Drizzle issue
+    const result = await pool.query(
+      `SELECT * FROM app_users WHERE email = $1 LIMIT 1`,
+      [email]
+    );
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      // Map database snake_case to camelCase for TypeScript types
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        password: row.password,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        firstDepositCompleted: row.first_deposit_completed,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as User;
+    }
+    
+    return undefined;
   }
 
   async getUserByPhone(phone: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.phone, phone));
-    return user;
+    // Temporary workaround - use raw SQL to avoid Drizzle issue
+    const result = await pool.query(
+      `SELECT * FROM app_users WHERE phone = $1 LIMIT 1`,
+      [phone]
+    );
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      // Map database snake_case to camelCase for TypeScript types
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        password: row.password,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        firstDepositCompleted: row.first_deposit_completed,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as User;
+    }
+    
+    return undefined;
   }
   
   async getUserByCPF(cpf: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.cpf, cpf));
-    return user;
+    // Temporary workaround - use raw SQL to avoid Drizzle issue
+    const result = await pool.query(
+      `SELECT * FROM app_users WHERE cpf = $1 LIMIT 1`,
+      [cpf]
+    );
+    
+    if (result.rows.length > 0) {
+      const row = result.rows[0];
+      // Map database snake_case to camelCase for TypeScript types
+      return {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        password: row.password,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        firstDepositCompleted: row.first_deposit_completed,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as User;
+    }
+    
+    return undefined;
   }
 
   async createUser(insertUser: InsertUser & { affiliateId?: number | null; partnerId?: number | null }): Promise<User> {
@@ -334,18 +442,74 @@ export class DatabaseStorage implements IStorage {
       });
       
       // Generate referral code if not provided
-      const userDataWithReferralCode = {
-        ...insertUser,
-        referralCode: insertUser.referralCode || `RAS${Date.now()}${Math.floor(Math.random() * 1000)}`,
-        hasFirstDeposit: insertUser.hasFirstDeposit ?? false,
-      };
+      const referralCode = insertUser.referralCode || `RAS${Date.now()}${Math.floor(Math.random() * 1000)}`;
+      const hasFirstDeposit = insertUser.hasFirstDeposit ?? false;
       
-      console.log("[createUser] Data to insert (with defaults):", {
-        ...userDataWithReferralCode,
-        password: "[HIDDEN]"
-      });
+      // Use raw SQL to avoid Drizzle issue with column names
+      // Temporarily remove first_deposit_completed to test
+      const result = await pool.query(
+        `INSERT INTO app_users (
+          name, email, phone, password, cpf, is_adult, 
+          referral_code, referred_by, utm_source, utm_medium, 
+          utm_campaign, utm_term, utm_content, utm_src, 
+          landing_page, coupon_applied, current_coupon, 
+          has_first_deposit,
+          affiliate_id, partner_id
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, 
+          $11, $12, $13, $14, $15, $16, $17, $18, $19, $20
+        ) RETURNING *`,
+        [
+          insertUser.name,
+          insertUser.email,
+          insertUser.phone,
+          insertUser.password,
+          insertUser.cpf || null,
+          insertUser.isAdult || null,
+          referralCode,
+          insertUser.referredBy || null,
+          insertUser.utmSource || null,
+          insertUser.utmMedium || null,
+          insertUser.utmCampaign || null,
+          insertUser.utmTerm || null,
+          insertUser.utmContent || null,
+          insertUser.utmSrc || null,
+          insertUser.landingPage || null,
+          insertUser.couponApplied || 0,
+          insertUser.currentCoupon || null,
+          hasFirstDeposit,
+          insertUser.affiliateId || null,
+          insertUser.partnerId || null
+        ]
+      );
       
-      const [user] = await db.insert(users).values(userDataWithReferralCode).returning();
+      const row = result.rows[0];
+      const user = {
+        id: row.id,
+        name: row.name,
+        email: row.email,
+        phone: row.phone,
+        password: row.password,
+        cpf: row.cpf,
+        isAdult: row.is_adult,
+        referralCode: row.referral_code,
+        referredBy: row.referred_by,
+        utmSource: row.utm_source,
+        utmMedium: row.utm_medium,
+        utmCampaign: row.utm_campaign,
+        utmTerm: row.utm_term,
+        utmContent: row.utm_content,
+        utmSrc: row.utm_src,
+        landingPage: row.landing_page,
+        couponApplied: row.coupon_applied,
+        currentCoupon: row.current_coupon,
+        hasFirstDeposit: row.has_first_deposit,
+        firstDepositCompleted: row.first_deposit_completed,
+        affiliateId: row.affiliate_id,
+        partnerId: row.partner_id,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at
+      } as User;
       
       console.log("[createUser] User inserted successfully with ID:", user.id);
       

@@ -144,17 +144,17 @@ export default function Home() {
         <WinnersCarousel />
 
         {/* Seção de Navegação Premium */}
-        <section className="px-3 md:px-8 mb-6 md:mb-12 mt-8 md:mt-16 relative">
+        <section className="px-3 md:px-8 mb-4 md:mb-8 mt-6 md:mt-12 relative">
           {/* Decorative gradient background */}
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00E880]/5 to-transparent blur-3xl -z-10" />
           
-          <div className="text-center mb-6 md:mb-10">
+          <div className="text-center mb-4 md:mb-6">
             {/* Título da Seção com Efeito Premium */}
-            <div className="relative inline-block mb-6 md:mb-8">
+            <div className="relative inline-block mb-4 md:mb-6">
               {/* Glow effect behind title */}
               <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-2xl -z-10 animate-pulse" />
               
-              <h2 className="font-black text-[24px] md:text-[42px] tracking-[0.12em] md:tracking-[0.15em] uppercase relative">
+              <h2 className="font-black text-[20px] md:text-[36px] tracking-[0.12em] md:tracking-[0.15em] uppercase relative">
                 <span className="relative">
                   {/* Main gradient text */}
                   <span className="bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] bg-clip-text text-transparent">
@@ -166,325 +166,337 @@ export default function Home() {
                   </span>
                   
                   {/* Decorative underline */}
-                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-32 md:w-48 h-1 bg-gradient-to-r from-transparent via-[#00E880] to-transparent rounded-full" />
+                  <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 md:w-40 h-1 bg-gradient-to-r from-transparent via-[#00E880] to-transparent rounded-full" />
                 </span>
               </h2>
               
               {/* Subtitle */}
-              <p className="text-gray-400 text-xs md:text-sm mt-4 font-medium tracking-wider uppercase">
+              <p className="text-gray-400 text-[10px] md:text-xs mt-3 font-medium tracking-wider uppercase">
                 ✨ Escolha sua experiência preferida ✨
               </p>
             </div>
             
             {/* Navegação Mobile - Design Glass Morphism Premium */}
-            <div className="md:hidden flex gap-3 px-2 justify-center">
+            <div className="md:hidden flex gap-2 px-2 justify-center">
               {/* Raspadinhas Card */}
-              <button
-                onClick={() => setGameSection('raspadinhas')}
-                className={`relative w-[115px] h-[100px] transition-all duration-500 transform ${
-                  gameSection === 'raspadinhas'
-                    ? 'scale-110 -translate-y-1'
-                    : 'scale-100 hover:scale-105'
-                }`}
-              >
-                {/* Glow effect when active */}
-                {gameSection === 'raspadinhas' && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-3xl animate-pulse" />
-                )}
-                
-                <div className={`h-full rounded-3xl overflow-hidden ${
-                  gameSection === 'raspadinhas'
-                    ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                    : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
-                } backdrop-blur-xl`}>
-                  <div className={`h-full rounded-3xl flex flex-col items-center justify-center gap-2 relative overflow-hidden ${
+              <div className="relative">
+                <button
+                  onClick={() => setGameSection('raspadinhas')}
+                  className={`relative w-[85px] h-[65px] transition-all duration-500 transform ${
                     gameSection === 'raspadinhas'
-                      ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
-                      : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
-                  } backdrop-blur-sm`}>
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
-                    </div>
-                    
-                    {/* Icon with glow */}
-                    <div className="relative">
-                      <Grid3X3 className={`w-8 h-8 relative z-10 transition-all duration-300 ${
-                        gameSection === 'raspadinhas' 
-                          ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                          : 'text-gray-400'
-                      }`} />
-                      {gameSection === 'raspadinhas' && (
-                        <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
-                      )}
-                    </div>
-                    
-                    <span className={`text-[11px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                      ? 'scale-110 -translate-y-1'
+                      : 'scale-100 hover:scale-105'
+                  }`}
+                >
+                  {/* Glow effect when active */}
+                  {gameSection === 'raspadinhas' && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-2xl animate-pulse" />
+                  )}
+                  
+                  <div className={`h-full rounded-2xl overflow-hidden ${
+                    gameSection === 'raspadinhas'
+                      ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
+                      : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
+                  } backdrop-blur-xl`}>
+                    <div className={`h-full rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden ${
                       gameSection === 'raspadinhas'
-                        ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
-                        : 'text-gray-400'
-                    }`}>
-                      Raspadinhas
-                    </span>
-                    
-                    {/* Badge Premium */}
-                    <div className="absolute -top-2 -right-2 z-20">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 blur-sm animate-pulse" />
-                        <div className="relative bg-gradient-to-r from-red-500 to-orange-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
-                          🔥 QUENTE
-                        </div>
+                        ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
+                        : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
+                    } backdrop-blur-sm`}>
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
                       </div>
+                      
+                      {/* Icon with glow */}
+                      <div className="relative">
+                        <Grid3X3 className={`w-6 h-6 relative z-10 transition-all duration-300 ${
+                          gameSection === 'raspadinhas' 
+                            ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
+                            : 'text-gray-400'
+                        }`} />
+                        {gameSection === 'raspadinhas' && (
+                          <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
+                        )}
+                      </div>
+                      
+                      <span className={`text-[9px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                        gameSection === 'raspadinhas'
+                          ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
+                          : 'text-gray-400'
+                      }`}>
+                        Raspadinhas
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                
+                {/* Badge Premium - positioned outside */}
+                <div className="absolute -top-4 -right-4 z-30">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 blur-sm animate-pulse" />
+                    <div className="relative bg-gradient-to-r from-red-500 to-orange-400 text-white text-[8px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
+                      🔥 QUENTE
                     </div>
                   </div>
                 </div>
-              </button>
+              </div>
               
               {/* Minigames Card */}
-              <button
-                onClick={() => setGameSection('minigames')}
-                className={`relative w-[115px] h-[100px] transition-all duration-500 transform ${
-                  gameSection === 'minigames'
-                    ? 'scale-110 -translate-y-1'
-                    : 'scale-100 hover:scale-105'
-                }`}
-              >
-                {/* Glow effect when active */}
-                {gameSection === 'minigames' && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-3xl animate-pulse" />
-                )}
-                
-                <div className={`h-full rounded-3xl overflow-hidden ${
-                  gameSection === 'minigames'
-                    ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                    : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
-                } backdrop-blur-xl`}>
-                  <div className={`h-full rounded-3xl flex flex-col items-center justify-center gap-2 relative overflow-hidden ${
+              <div className="relative">
+                <button
+                  onClick={() => setGameSection('minigames')}
+                  className={`relative w-[85px] h-[65px] transition-all duration-500 transform ${
                     gameSection === 'minigames'
-                      ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
-                      : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
-                  } backdrop-blur-sm`}>
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
-                    </div>
-                    
-                    {/* Icon with glow */}
-                    <div className="relative">
-                      <Gamepad2 className={`w-8 h-8 relative z-10 transition-all duration-300 ${
-                        gameSection === 'minigames' 
-                          ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                          : 'text-gray-400'
-                      }`} />
-                      {gameSection === 'minigames' && (
-                        <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
-                      )}
-                    </div>
-                    
-                    <span className={`text-[11px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                      ? 'scale-110 -translate-y-1'
+                      : 'scale-100 hover:scale-105'
+                  }`}
+                >
+                  {/* Glow effect when active */}
+                  {gameSection === 'minigames' && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-2xl animate-pulse" />
+                  )}
+                  
+                  <div className={`h-full rounded-2xl overflow-hidden ${
+                    gameSection === 'minigames'
+                      ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
+                      : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
+                  } backdrop-blur-xl`}>
+                    <div className={`h-full rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden ${
                       gameSection === 'minigames'
-                        ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
-                        : 'text-gray-400'
-                    }`}>
-                      Minigames
-                    </span>
-                    
-                    {/* Badge Premium */}
-                    <div className="absolute -top-2 -right-2 z-20">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-sm animate-pulse" />
-                        <div className="relative bg-gradient-to-r from-purple-500 to-pink-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
-                          ✨ NOVO
-                        </div>
+                        ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
+                        : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
+                    } backdrop-blur-sm`}>
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
                       </div>
+                      
+                      {/* Icon with glow */}
+                      <div className="relative">
+                        <Gamepad2 className={`w-6 h-6 relative z-10 transition-all duration-300 ${
+                          gameSection === 'minigames' 
+                            ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
+                            : 'text-gray-400'
+                        }`} />
+                        {gameSection === 'minigames' && (
+                          <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
+                        )}
+                      </div>
+                      
+                      <span className={`text-[9px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                        gameSection === 'minigames'
+                          ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
+                          : 'text-gray-400'
+                      }`}>
+                        Minigames
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                
+                {/* Badge Premium - positioned outside */}
+                <div className="absolute -top-4 -right-4 z-30">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-sm animate-pulse" />
+                    <div className="relative bg-gradient-to-r from-purple-500 to-pink-400 text-white text-[8px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
+                      ✨ NOVO
                     </div>
                   </div>
                 </div>
-              </button>
+              </div>
               
               {/* Baús Card */}
-              <button
-                onClick={() => setGameSection('baus')}
-                className={`relative w-[115px] h-[100px] transition-all duration-500 transform ${
-                  gameSection === 'baus'
-                    ? 'scale-110 -translate-y-1'
-                    : 'scale-100 hover:scale-105'
-                }`}
-              >
-                {/* Glow effect when active */}
-                {gameSection === 'baus' && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-3xl animate-pulse" />
-                )}
-                
-                <div className={`h-full rounded-3xl overflow-hidden ${
-                  gameSection === 'baus'
-                    ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                    : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
-                } backdrop-blur-xl`}>
-                  <div className={`h-full rounded-3xl flex flex-col items-center justify-center gap-2 relative overflow-hidden ${
+              <div className="relative">
+                <button
+                  onClick={() => setGameSection('baus')}
+                  className={`relative w-[85px] h-[65px] transition-all duration-500 transform ${
                     gameSection === 'baus'
-                      ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
-                      : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
-                  } backdrop-blur-sm`}>
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
-                    </div>
-                    
-                    {/* Icon with glow */}
-                    <div className="relative">
-                      <Package className={`w-8 h-8 relative z-10 transition-all duration-300 ${
-                        gameSection === 'baus' 
-                          ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                          : 'text-gray-400'
-                      }`}/>
-                      {gameSection === 'baus' && (
-                        <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
-                      )}
-                    </div>
-                    
-                    <span className={`text-[11px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                      ? 'scale-110 -translate-y-1'
+                      : 'scale-100 hover:scale-105'
+                  }`}
+                >
+                  {/* Glow effect when active */}
+                  {gameSection === 'baus' && (
+                    <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-40 blur-xl rounded-2xl animate-pulse" />
+                  )}
+                  
+                  <div className={`h-full rounded-2xl overflow-hidden ${
+                    gameSection === 'baus'
+                      ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] p-[2px] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
+                      : 'bg-gradient-to-br from-gray-700/50 to-gray-800/50 p-[1px]'
+                  } backdrop-blur-xl`}>
+                    <div className={`h-full rounded-2xl flex flex-col items-center justify-center gap-1 relative overflow-hidden ${
                       gameSection === 'baus'
-                        ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
-                        : 'text-gray-400'
-                    }`}>
-                      Baús
-                    </span>
-                    
-                    {/* Badge Premium */}
-                    <div className="absolute -top-2 -right-2 z-20">
-                      <div className="relative">
-                        <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-500 blur-sm animate-pulse" />
-                        <div className="relative bg-gradient-to-r from-indigo-500 to-purple-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
-                          💎 NOVO
-                        </div>
+                        ? 'bg-gradient-to-br from-black/80 via-gray-900/80 to-black/80'
+                        : 'bg-gradient-to-br from-gray-900/90 via-black/90 to-gray-900/90'
+                    } backdrop-blur-sm`}>
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-transparent to-white/5" />
                       </div>
+                      
+                      {/* Icon with glow */}
+                      <div className="relative">
+                        <Package className={`w-6 h-6 relative z-10 transition-all duration-300 ${
+                          gameSection === 'baus' 
+                            ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
+                            : 'text-gray-400'
+                        }`}/>
+                        {gameSection === 'baus' && (
+                          <div className="absolute inset-0 bg-[#00E880] blur-lg opacity-50" />
+                        )}
+                      </div>
+                      
+                      <span className={`text-[9px] font-black uppercase tracking-wider relative z-10 transition-colors duration-300 ${
+                        gameSection === 'baus'
+                          ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)]'
+                          : 'text-gray-400'
+                      }`}>
+                        Baús
+                      </span>
+                    </div>
+                  </div>
+                </button>
+                
+                {/* Badge Premium - positioned outside */}
+                <div className="absolute -top-4 -right-4 z-30">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-500 blur-sm animate-pulse" />
+                    <div className="relative bg-gradient-to-r from-indigo-500 to-purple-400 text-white text-[8px] px-2 py-1 rounded-full font-black shadow-lg border border-white/20">
+                      💎 NOVO
                     </div>
                   </div>
                 </div>
-              </button>
+              </div>
             </div>
             
             {/* Navegação Desktop - Glass Morphism Premium */}
-            <div className="hidden md:flex items-center justify-center gap-4">
+            <div className="hidden md:flex items-center justify-center gap-3">
               {/* Container with glass effect */}
-              <div className="relative inline-flex items-center gap-2 p-2 bg-gradient-to-br from-gray-900/40 via-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-3xl border border-gray-700/50 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+              <div className="relative inline-flex items-center gap-1 p-1.5 bg-gradient-to-br from-gray-900/40 via-gray-800/40 to-gray-900/40 backdrop-blur-xl rounded-2xl border border-gray-700/50 shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
                 {/* Decorative glow */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#00E880]/10 via-transparent to-[#00FFB3]/10 rounded-3xl blur-xl" />
+                <div className="absolute inset-0 bg-gradient-to-r from-[#00E880]/10 via-transparent to-[#00FFB3]/10 rounded-2xl blur-xl" />
                 
                 {/* Tab Raspadinhas */}
-                <button
-                  onClick={() => setGameSection('raspadinhas')}
-                  className={`relative px-10 py-5 rounded-2xl font-bold text-base transition-all duration-500 flex items-center gap-3 group ${
-                    gameSection === 'raspadinhas'
-                      ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_30px_rgba(0,232,128,0.6)] scale-105'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {/* Active glow effect */}
-                  {gameSection === 'raspadinhas' && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-2xl animate-pulse" />
-                  )}
+                <div className="relative">
+                  <button
+                    onClick={() => setGameSection('raspadinhas')}
+                    className={`relative px-6 py-3 rounded-xl font-bold text-sm transition-all duration-500 flex items-center gap-2 group ${
+                      gameSection === 'raspadinhas'
+                        ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_20px_rgba(0,232,128,0.6)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {/* Active glow effect */}
+                    {gameSection === 'raspadinhas' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-xl animate-pulse" />
+                    )}
+                    
+                    <Grid3X3 className={`w-5 h-5 transition-all duration-300 ${
+                      gameSection === 'raspadinhas' 
+                        ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
+                        : 'text-gray-400 group-hover:text-[#00E880]'
+                    }`} />
+                    
+                    <span className="uppercase tracking-wider font-black relative z-10">
+                      Raspadinhas
+                    </span>
+                  </button>
                   
-                  <Grid3X3 className={`w-6 h-6 transition-all duration-300 ${
-                    gameSection === 'raspadinhas' 
-                      ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
-                      : 'text-gray-400 group-hover:text-[#00E880]'
-                  }`} />
-                  
-                  <span className="uppercase tracking-wider font-black relative z-10">
-                    Raspadinhas
-                  </span>
-                  
-                  {/* Premium Badge */}
-                  <div className="absolute -top-3 -right-3 z-20">
+                  {/* Premium Badge - positioned outside */}
+                  <div className="absolute -top-5 -right-5 z-30">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 blur-md animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-red-500 to-orange-400 text-white text-[11px] px-3 py-1.5 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
-                        <span className="text-lg">🔥</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 blur-sm animate-pulse" />
+                      <div className="relative bg-gradient-to-r from-red-500 to-orange-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
+                        <span className="text-sm">🔥</span>
                         <span>QUENTE</span>
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
                 
                 {/* Elegant Divider */}
-                <div className="w-[2px] h-12 bg-gradient-to-b from-transparent via-gray-600/50 to-transparent" />
+                <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-600/50 to-transparent" />
                 
                 {/* Tab Minigames */}
-                <button
-                  onClick={() => setGameSection('minigames')}
-                  className={`relative px-10 py-5 rounded-2xl font-bold text-base transition-all duration-500 flex items-center gap-3 group ${
-                    gameSection === 'minigames'
-                      ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_30px_rgba(0,232,128,0.6)] scale-105'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {/* Active glow effect */}
-                  {gameSection === 'minigames' && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-2xl animate-pulse" />
-                  )}
+                <div className="relative">
+                  <button
+                    onClick={() => setGameSection('minigames')}
+                    className={`relative px-6 py-3 rounded-xl font-bold text-sm transition-all duration-500 flex items-center gap-2 group ${
+                      gameSection === 'minigames'
+                        ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_20px_rgba(0,232,128,0.6)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {/* Active glow effect */}
+                    {gameSection === 'minigames' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-xl animate-pulse" />
+                    )}
+                    
+                    <Gamepad2 className={`w-5 h-5 transition-all duration-300 ${
+                      gameSection === 'minigames' 
+                        ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
+                        : 'text-gray-400 group-hover:text-[#00E880]'
+                    }`} />
+                    
+                    <span className="uppercase tracking-wider font-black relative z-10">
+                      Minigames
+                    </span>
+                  </button>
                   
-                  <Gamepad2 className={`w-6 h-6 transition-all duration-300 ${
-                    gameSection === 'minigames' 
-                      ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
-                      : 'text-gray-400 group-hover:text-[#00E880]'
-                  }`} />
-                  
-                  <span className="uppercase tracking-wider font-black relative z-10">
-                    Minigames
-                  </span>
-                  
-                  {/* Premium Badge */}
-                  <div className="absolute -top-3 -right-3 z-20">
+                  {/* Premium Badge - positioned outside */}
+                  <div className="absolute -top-5 -right-5 z-30">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-md animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-purple-500 to-pink-400 text-white text-[11px] px-3 py-1.5 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
-                        <span className="text-lg">✨</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-sm animate-pulse" />
+                      <div className="relative bg-gradient-to-r from-purple-500 to-pink-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
+                        <span className="text-sm">✨</span>
                         <span>NOVO</span>
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
                 
                 {/* Elegant Divider */}
-                <div className="w-[2px] h-12 bg-gradient-to-b from-transparent via-gray-600/50 to-transparent" />
+                <div className="w-[1px] h-8 bg-gradient-to-b from-transparent via-gray-600/50 to-transparent" />
                 
                 {/* Tab Baús */}
-                <button
-                  onClick={() => setGameSection('baus')}
-                  className={`relative px-10 py-5 rounded-2xl font-bold text-base transition-all duration-500 flex items-center gap-3 group ${
-                    gameSection === 'baus'
-                      ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_30px_rgba(0,232,128,0.6)] scale-105'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
-                  }`}
-                >
-                  {/* Active glow effect */}
-                  {gameSection === 'baus' && (
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-2xl animate-pulse" />
-                  )}
+                <div className="relative">
+                  <button
+                    onClick={() => setGameSection('baus')}
+                    className={`relative px-6 py-3 rounded-xl font-bold text-sm transition-all duration-500 flex items-center gap-2 group ${
+                      gameSection === 'baus'
+                        ? 'bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] text-black shadow-[0_0_20px_rgba(0,232,128,0.6)] scale-105'
+                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    }`}
+                  >
+                    {/* Active glow effect */}
+                    {gameSection === 'baus' && (
+                      <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-30 blur-xl rounded-xl animate-pulse" />
+                    )}
+                    
+                    <Package className={`w-5 h-5 transition-all duration-300 ${
+                      gameSection === 'baus' 
+                        ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
+                        : 'text-gray-400 group-hover:text-[#00E880]'
+                    }`}/>
+                    
+                    <span className="uppercase tracking-wider font-black relative z-10">
+                      Baús
+                    </span>
+                  </button>
                   
-                  <Package className={`w-6 h-6 transition-all duration-300 ${
-                    gameSection === 'baus' 
-                      ? 'text-black drop-shadow-[0_2px_4px_rgba(0,0,0,0.3)]' 
-                      : 'text-gray-400 group-hover:text-[#00E880]'
-                  }`}/>
-                  
-                  <span className="uppercase tracking-wider font-black relative z-10">
-                    Baús
-                  </span>
-                  
-                  {/* Premium Badge */}
-                  <div className="absolute -top-3 -right-3 z-20">
+                  {/* Premium Badge - positioned outside */}
+                  <div className="absolute -top-5 -right-5 z-30">
                     <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-500 blur-md animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-indigo-500 to-purple-400 text-white text-[11px] px-3 py-1.5 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
-                        <span className="text-lg">💎</span>
+                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-500 blur-sm animate-pulse" />
+                      <div className="relative bg-gradient-to-r from-indigo-500 to-purple-400 text-white text-[9px] px-2 py-1 rounded-full font-black shadow-xl border border-white/30 flex items-center gap-1">
+                        <span className="text-sm">💎</span>
                         <span>NOVO</span>
                       </div>
                     </div>
                   </div>
-                </button>
+                </div>
               </div>
             </div>
           </div>

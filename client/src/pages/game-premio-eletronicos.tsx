@@ -893,80 +893,232 @@ export default function GamePremioEletronicos() {
                   </div>
                 )}
 
-                {/* Internal Result Overlay */}
+                {/* Premium Tech Themed Result Overlay */}
                 <AnimatePresence>
                   {gameComplete && resultReady && (
                     <motion.div
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
-                      className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl"
+                      className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl overflow-hidden"
                     >
-                      {/* Dark overlay background */}
-                      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl" />
+                      {/* Animated gradient background */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/85 to-black/90 backdrop-blur-md rounded-2xl" />
                       
-                      {/* Result content */}
+                      {/* Animated light rays for wins */}
+                      {won && (
+                        <>
+                          <motion.div
+                            initial={{ rotate: 0 }}
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                            className="absolute inset-0 pointer-events-none"
+                          >
+                            <div className="absolute inset-0 bg-gradient-conic from-cyan-500/20 via-transparent to-cyan-500/20" />
+                          </motion.div>
+                          
+                          {/* Floating tech particles */}
+                          {[...Array(8)].map((_, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ y: 0, x: 0, opacity: 0 }}
+                              animate={{ 
+                                y: [-20, -100, -200],
+                                x: [0, (i % 2 === 0 ? 20 : -20), (i % 2 === 0 ? -10 : 10)],
+                                opacity: [0, 1, 0]
+                              }}
+                              transition={{
+                                duration: 3,
+                                delay: i * 0.2,
+                                repeat: Infinity,
+                                repeatDelay: 1
+                              }}
+                              className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl pointer-events-none"
+                              style={{ 
+                                left: `${50 + (i - 4) * 8}%`,
+                                top: `${60 + (i % 3) * 10}%`
+                              }}
+                            >
+                              {i % 3 === 0 ? '⚡' : i % 3 === 1 ? '🔌' : '💎'}
+                            </motion.div>
+                          ))}
+                        </>
+                      )}
+                      
+                      {/* Glassmorphism card */}
                       <motion.div
-                        initial={{ scale: 0.8, opacity: 0 }}
-                        animate={{ scale: 1, opacity: 1 }}
+                        initial={{ scale: 0.8, opacity: 0, y: 50 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
                         exit={{ scale: 0.8, opacity: 0 }}
-                        transition={{ type: "spring", duration: 0.5 }}
-                        className="relative z-10 text-center px-6 py-8 max-w-sm w-full"
+                        transition={{ type: "spring", duration: 0.6, bounce: 0.4 }}
+                        className="relative z-10 text-center p-6 max-w-sm w-full"
                       >
-                        {/* Win/Lose Icon */}
-                        <motion.div
-                          initial={{ scale: 0 }}
-                          animate={{ scale: 1 }}
-                          transition={{ delay: 0.2, type: "spring" }}
-                          className="mb-4"
-                        >
-                          {won ? (
-                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-xl">
-                              <Smartphone className="w-10 h-10 text-white" />
-                            </div>
-                          ) : (
-                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center shadow-xl">
-                              <X className="w-10 h-10 text-white" />
-                            </div>
-                          )}
-                        </motion.div>
-
-                        {/* Result Text */}
-                        <motion.div
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.3 }}
-                        >
-                          {won ? (
-                            <>
-                              <h2 className="text-3xl font-bold text-green-400 mb-2">Você ganhou!</h2>
-                              <div className="text-4xl font-bold text-white mb-1">
-                                R$ {prize.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        {/* Glow effect behind card */}
+                        {won && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1.2 }}
+                            transition={{ delay: 0.3, duration: 0.6 }}
+                            className="absolute -inset-8 bg-gradient-to-r from-cyan-500/30 via-blue-500/30 to-cyan-500/30 blur-3xl rounded-full pointer-events-none"
+                          />
+                        )}
+                        
+                        {/* Glass card background */}
+                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-3xl border border-white/20" />
+                        
+                        <div className="relative z-10">
+                          {/* Prize Image with glow */}
+                          <motion.div
+                            initial={{ scale: 0, rotate: -180 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                            className="mb-4 relative"
+                          >
+                            {won ? (
+                              <div className="relative">
+                                {/* Animated glow ring */}
+                                <motion.div
+                                  animate={{ 
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.5, 0.8, 0.5]
+                                  }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                  className="absolute -inset-4 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-2xl blur-xl"
+                                />
+                                
+                                {/* Prize image container */}
+                                <div className="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-cyan-400/50">
+                                  <img 
+                                    src={getPrizeInfo(prizeValue).path} 
+                                    alt={getPrizeInfo(prizeValue).name}
+                                    className="w-full h-full object-contain bg-gradient-to-br from-blue-900/50 to-cyan-900/50 p-2"
+                                  />
+                                  
+                                  {/* Shine effect overlay */}
+                                  <motion.div
+                                    initial={{ x: "-100%" }}
+                                    animate={{ x: "200%" }}
+                                    transition={{ duration: 2, delay: 1, repeat: Infinity, repeatDelay: 3 }}
+                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                                  />
+                                </div>
+                                
+                                {/* Lightning bolts around image */}
+                                {[...Array(4)].map((_, i) => (
+                                  <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, scale: 0 }}
+                                    animate={{ 
+                                      opacity: [0, 1, 0],
+                                      scale: [0, 1, 0]
+                                    }}
+                                    transition={{
+                                      duration: 2,
+                                      delay: 0.5 + i * 0.3,
+                                      repeat: Infinity
+                                    }}
+                                    className="absolute text-cyan-400 text-xl"
+                                    style={{
+                                      top: `${[0, 0, 100, 100][i]}%`,
+                                      left: `${[0, 100, 0, 100][i]}%`,
+                                      transform: 'translate(-50%, -50%)'
+                                    }}
+                                  >
+                                    ⚡
+                                  </motion.div>
+                                ))}
                               </div>
-                              <p className="text-sm text-gray-400">
-                                {multiplier > 1 && `Com multiplicador ${multiplier}x`}
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <h2 className="text-2xl font-bold text-gray-300 mb-2">Não foi desta vez</h2>
-                              <p className="text-gray-400">Tente novamente e boa sorte!</p>
-                            </>
-                          )}
-                        </motion.div>
-
-                        {/* Play Again Button */}
-                        <motion.button
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.4 }}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          onClick={handlePlayAgain}
-                          className="mt-6 px-8 py-3 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white rounded-xl font-bold transition-all shadow-lg"
-                        >
-                          Jogar Novamente
-                        </motion.button>
+                            ) : (
+                              <div className="relative w-24 h-24 mx-auto">
+                                <div className="absolute inset-0 bg-gradient-to-br from-gray-600/30 to-gray-700/30 rounded-full blur-xl" />
+                                <div className="relative w-full h-full bg-gradient-to-br from-gray-700 to-gray-800 rounded-full flex items-center justify-center shadow-xl border border-gray-600/50">
+                                  <X className="w-12 h-12 text-gray-400" />
+                                </div>
+                              </div>
+                            )}
+                          </motion.div>
+                          
+                          {/* Result Text with gradient */}
+                          <motion.div
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 }}
+                            className="mb-4"
+                          >
+                            {won ? (
+                              <>
+                                <h3 className="text-2xl font-black mb-2 bg-gradient-to-r from-cyan-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent animate-pulse">
+                                  VOCÊ GANHOU!
+                                </h3>
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: [1, 1.1, 1] }}
+                                  transition={{ delay: 0.5, duration: 0.5 }}
+                                  className="text-3xl font-black text-white mb-2 drop-shadow-2xl"
+                                >
+                                  R$ {prize.toFixed(2)}
+                                </motion.div>
+                                {multiplier > 1 && (
+                                  <motion.div
+                                    initial={{ opacity: 0, x: -20 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: 0.7 }}
+                                    className="inline-flex items-center gap-2 px-3 py-1 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 rounded-full border border-yellow-500/50"
+                                  >
+                                    <Sparkles className="w-4 h-4 text-yellow-400" />
+                                    <span className="text-xs font-bold text-yellow-400">
+                                      {multiplier}x MULTIPLICADOR!
+                                    </span>
+                                  </motion.div>
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <h3 className="text-xl font-bold mb-2 text-gray-300">
+                                  NÃO FOI DESSA VEZ
+                                </h3>
+                                <p className="text-gray-400 text-sm">
+                                  Continue tentando!
+                                </p>
+                              </>
+                            )}
+                          </motion.div>
+                          
+                          {/* Additional Message with style */}
+                          <motion.p
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: 0.6 }}
+                            className="text-xs mb-4 px-4"
+                          >
+                            {won ? (
+                              <span className="text-cyan-300/90">
+                                ⚡ Prêmio creditado em sua conta!
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">
+                                A tecnologia da sorte está ao seu lado!
+                              </span>
+                            )}
+                          </motion.p>
+                          
+                          {/* Premium Action Button */}
+                          <motion.button
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.8 }}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handlePlayAgain}
+                            className={`px-6 py-2.5 rounded-xl font-bold transition-all transform text-sm shadow-lg ${
+                              won
+                                ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
+                                : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
+                            }`}
+                          >
+                            Jogar Novamente
+                          </motion.button>
+                        </div>
                       </motion.div>
                     </motion.div>
                   )}

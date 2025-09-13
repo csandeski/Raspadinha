@@ -967,56 +967,15 @@ export default function GamePremioEletronicos() {
                         <div className="absolute inset-0 bg-black/70 rounded-3xl" />
                         
                         <div className="relative z-10">
-                          {/* Prize Image with glow */}
-                          <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="mb-4 relative"
-                          >
+                          {/* Prize Image - clean without effects */}
+                          <div className="mb-4">
                             {won ? (
-                              <div className="relative">
-                                {/* Prize image container - clean without borders/shadows */}
-                                <div className="relative w-28 h-28 mx-auto overflow-hidden">
-                                  <img 
-                                    src={getPrizeInfo(prizeValue).path} 
-                                    alt={getPrizeInfo(prizeValue).name}
-                                    className="w-full h-full object-contain bg-gradient-to-br from-blue-900/50 to-cyan-900/50 p-2"
-                                  />
-                                  
-                                  {/* Shine effect overlay */}
-                                  <motion.div
-                                    initial={{ x: "-100%" }}
-                                    animate={{ x: "200%" }}
-                                    transition={{ duration: 2, delay: 1, repeat: Infinity, repeatDelay: 3 }}
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
-                                  />
-                                </div>
-                                
-                                {/* Lightning bolts around image */}
-                                {[...Array(4)].map((_, i) => (
-                                  <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ 
-                                      opacity: [0, 1, 0],
-                                      scale: [0, 1, 0]
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      delay: 0.5 + i * 0.3,
-                                      repeat: Infinity
-                                    }}
-                                    className="absolute text-cyan-400 text-xl"
-                                    style={{
-                                      top: `${[0, 0, 100, 100][i]}%`,
-                                      left: `${[0, 100, 0, 100][i]}%`,
-                                      transform: 'translate(-50%, -50%)'
-                                    }}
-                                  >
-                                    ⚡
-                                  </motion.div>
-                                ))}
+                              <div className="w-28 h-28 mx-auto">
+                                <img 
+                                  src={getPrizeInfo(prizeValue).path} 
+                                  alt={getPrizeInfo(prizeValue).name}
+                                  className="w-full h-full object-contain"
+                                />
                               </div>
                             ) : (
                               <div className="relative w-24 h-24 mx-auto">
@@ -1092,22 +1051,6 @@ export default function GamePremioEletronicos() {
                             )}
                           </motion.p>
                           
-                          {/* Premium Action Button */}
-                          <motion.button
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handlePlayAgain}
-                            className={`px-6 py-2.5 rounded-xl font-bold transition-all transform text-sm shadow-lg ${
-                              won
-                                ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white"
-                                : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
-                            }`}
-                          >
-                            Jogar Novamente
-                          </motion.button>
                         </div>
                       </motion.div>
                     </motion.div>

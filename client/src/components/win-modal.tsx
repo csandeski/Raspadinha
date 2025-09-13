@@ -108,54 +108,7 @@ export function WinModal({
             className="fixed inset-0 flex items-center justify-center z-[9999] pointer-events-none"
           >
             <div className="relative bg-gradient-to-br from-[#1a1f2e] via-[#2d3348] to-[#1a1f2e] rounded-3xl p-8 max-w-md w-[90%] mx-auto shadow-2xl border border-[#00E880]/30 pointer-events-auto">
-              {/* Efeito de brilho animado */}
-              <div className="absolute inset-0 rounded-3xl overflow-hidden">
-                <motion.div
-                  animate={{
-                    backgroundPosition: ["0% 0%", "100% 100%", "0% 0%"],
-                  }}
-                  transition={{
-                    duration: 3,
-                    repeat: Infinity,
-                    ease: "linear",
-                  }}
-                  className="absolute inset-0 opacity-30"
-                  style={{
-                    background: "linear-gradient(45deg, transparent 30%, #00E880 50%, transparent 70%)",
-                    backgroundSize: "200% 200%",
-                  }}
-                />
-              </div>
 
-              {/* Estrelas decorativas animadas */}
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-4 -left-4"
-              >
-                <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              </motion.div>
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                className="absolute -top-4 -right-4"
-              >
-                <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              </motion.div>
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-4 -left-4"
-              >
-                <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              </motion.div>
-              <motion.div
-                animate={{ rotate: -360 }}
-                transition={{ duration: 22, repeat: Infinity, ease: "linear" }}
-                className="absolute -bottom-4 -right-4"
-              >
-                <Star className="w-8 h-8 text-yellow-400 fill-yellow-400" />
-              </motion.div>
 
               {/* Conteúdo */}
               <div className="relative space-y-6">
@@ -166,74 +119,21 @@ export function WinModal({
                   transition={{ delay: 0.3 }}
                   className="text-center"
                 >
-                  <motion.h2
-                    animate={{
-                      scale: [1, 1.1, 1],
-                    }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                    className="text-4xl font-bold bg-gradient-to-r from-[#00E880] via-yellow-400 to-[#00E880] bg-clip-text text-transparent flex items-center justify-center gap-2"
-                  >
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-[#00E880] via-yellow-400 to-[#00E880] bg-clip-text text-transparent flex items-center justify-center gap-2">
                     <Trophy className="w-10 h-10 text-yellow-400" />
                     Parabéns!
                     <Trophy className="w-10 h-10 text-yellow-400" />
-                  </motion.h2>
+                  </h2>
                 </motion.div>
 
                 {/* Imagem do prêmio */}
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ 
-                    scale: 1, 
-                    rotate: 0,
-                  }}
-                  transition={{ 
-                    delay: 0.5,
-                    type: "spring",
-                    stiffness: 200,
-                    damping: 20
-                  }}
-                  className="relative"
-                >
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.05, 1],
-                      rotate: [0, 5, -5, 0],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                    className="relative mx-auto w-48 h-48 rounded-full bg-gradient-to-br from-yellow-400/20 to-[#00E880]/20 p-1"
-                  >
-                    {/* Anel de brilho girando */}
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-                      className="absolute inset-0 rounded-full"
-                      style={{
-                        background: "conic-gradient(from 0deg, transparent, #00E880, transparent)",
-                        opacity: 0.5
-                      }}
-                    />
-                    
-                    <div className="relative w-full h-full rounded-full bg-[#0d1117] flex items-center justify-center overflow-hidden">
-                      <img
-                        src={prizeImage}
-                        alt={prizeName}
-                        className="w-32 h-32 object-contain"
-                      />
-                      
-                      {/* Sparkles ao redor da imagem */}
-                      <Sparkles className="absolute top-2 right-2 w-6 h-6 text-yellow-400 animate-pulse" />
-                      <Sparkles className="absolute bottom-2 left-2 w-6 h-6 text-[#00E880] animate-pulse" />
-                    </div>
-                  </motion.div>
-                </motion.div>
+                <div className="mb-4 flex justify-center">
+                  <img
+                    src={prizeImage}
+                    alt={prizeName}
+                    className="w-32 h-32 object-contain"
+                  />
+                </div>
 
                 {/* Nome do prêmio */}
                 <motion.div
@@ -245,20 +145,10 @@ export function WinModal({
                   <h3 className="text-2xl font-bold text-white">{prizeName}</h3>
                   
                   {/* Valor do prêmio */}
-                  <motion.div
-                    animate={{
-                      scale: [1, 1.2, 1],
-                    }}
-                    transition={{
-                      duration: 1,
-                      repeat: Infinity,
-                      repeatType: "reverse",
-                    }}
-                    className="text-5xl font-bold bg-gradient-to-r from-[#00E880] to-green-400 bg-clip-text text-transparent flex items-center justify-center gap-2"
-                  >
+                  <div className="text-5xl font-bold bg-gradient-to-r from-[#00E880] to-green-400 bg-clip-text text-transparent flex items-center justify-center gap-2">
                     <Coins className="w-10 h-10 text-[#00E880]" />
                     R$ {prizeValue.toFixed(2).replace('.', ',')}
-                  </motion.div>
+                  </div>
                   
                   <p className="text-green-400 text-lg font-semibold animate-pulse">
                     Prêmio adicionado ao saldo!

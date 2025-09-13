@@ -993,55 +993,22 @@ export default function GamePremioSuperPremios() {
                         <div className="absolute inset-0 bg-black/70 rounded-3xl" />
                         
                         <div className="relative z-10">
-                          {/* Prize Image with glow */}
-                          <motion.div
-                            initial={{ scale: 0, rotate: -180 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                            className="mb-4 relative"
-                          >
+                          {/* Prize Image - clean without effects */}
+                          <div className="mb-4">
                             {won ? (
-                              <div className="relative">
-                                {/* Prize image container - clean without borders/shadows */}
-                                <div className="relative w-28 h-28 mx-auto overflow-hidden">
-                                  {getPrizeInfo(prizeValue, 3).path ? (
-                                    <img 
-                                      src={getPrizeInfo(prizeValue, 3).path || ''} 
-                                      alt={getPrizeInfo(prizeValue, 3).name}
-                                      className="w-full h-full object-contain bg-gradient-to-br from-yellow-900/50 to-amber-900/50 p-2"
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-yellow-900/50 to-amber-900/50">
-                                      <span className="text-4xl">💰</span>
-                                    </div>
-                                  )}
-                                  
-                                  {/* Shine effect overlay */}
-                                  <motion.div
-                                    initial={{ x: "-100%" }}
-                                    animate={{ x: "200%" }}
-                                    transition={{ duration: 2, delay: 1, repeat: Infinity, repeatDelay: 3 }}
-                                    className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12"
+                              <div className="w-28 h-28 mx-auto">
+                                {getPrizeInfo(prizeValue, 3).path ? (
+                                  <img 
+                                    src={getPrizeInfo(prizeValue, 3).path || ''} 
+                                    alt={getPrizeInfo(prizeValue, 3).name}
+                                    className="w-full h-full object-contain"
                                   />
-                                </div>
-                                
-                                {/* Stars around image */}
-                                {[...Array(4)].map((_, i) => (
-                                  <motion.div
-                                    key={i}
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ 
-                                      opacity: [0, 1, 0],
-                                      scale: [0, 1, 0]
-                                    }}
-                                    transition={{
-                                      duration: 2,
-                                      delay: 0.5 + i * 0.3,
-                                      repeat: Infinity
-                                    }}
-                                    className="absolute text-yellow-400 text-xl"
-                                    style={{
-                                      top: `${[0, 0, 100, 100][i]}%`,
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center">
+                                    <span className="text-4xl">💰</span>
+                                  </div>
+                                )}
+                              </div>
                                       left: `${[0, 100, 0, 100][i]}%`,
                                       transform: 'translate(-50%, -50%)'
                                     }}
@@ -1124,22 +1091,6 @@ export default function GamePremioSuperPremios() {
                             )}
                           </motion.p>
                           
-                          {/* Premium Action Button */}
-                          <motion.button
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.8 }}
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={handlePlayAgain}
-                            className={`px-6 py-2.5 rounded-xl font-bold transition-all transform text-sm shadow-lg ${
-                              won
-                                ? "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white"
-                                : "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white"
-                            }`}
-                          >
-                            Jogar Novamente
-                          </motion.button>
                         </div>
                       </motion.div>
                     </motion.div>

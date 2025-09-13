@@ -1727,7 +1727,7 @@ export class DatabaseStorage implements IStorage {
   async getFullPrizeProbabilities(gameType: string): Promise<any[]> {
     // Use raw SQL to avoid schema mismatches
     const result = await db.execute(sql`
-      SELECT id, game_type, prize_value, prize_type as prize_name, probability, amount
+      SELECT id, game_type, prize_value, prize_name, probability
       FROM prize_probabilities
       WHERE game_type = ${gameType}
       ORDER BY CAST(prize_value AS DECIMAL)
@@ -1803,14 +1803,15 @@ export class DatabaseStorage implements IStorage {
     
     // Insert new probabilities using raw SQL to match database structure
     if (probabilities.length > 0) {
-      for (const p of probabilities) {
+      for (const [index, p] of probabilities.entries()) {
         const prizeValue = p.prizeValue || p.prize_value;
-        const prizeName = p.prizeName || `R$ ${parseFloat(prizeValue).toFixed(2)}`;
+        const prizeName = p.prizeName || p.prize_name || `R$ ${parseFloat(prizeValue).toFixed(2)}`;
         const probability = p.probability.toString();
+        const order = p.order !== undefined ? p.order : index;
         
         await db.execute(sql`
-          INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, amount, updated_at)
-          VALUES (${gameType}, ${prizeValue}, ${prizeName}, ${probability}, ${prizeValue}, NOW())
+          INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at)
+          VALUES (${gameType}, ${prizeValue}, ${prizeName}, ${probability}, ${order}, NOW())
         `);
       }
     }

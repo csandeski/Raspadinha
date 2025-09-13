@@ -9818,10 +9818,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Map frontend game types to database game types
       const gameTypeMapping: Record<string, string> = {
-        'pix': 'premio-pix',
-        'me_mimei': 'premio-me-mimei',
-        'eletronicos': 'premio-eletronicos',
-        'super': 'premio-super-premios'
+        'pix': 'premio_pix_conta',
+        'me_mimei': 'premio_me_mimei',
+        'eletronicos': 'premio_eletronicos',
+        'super': 'premio_super_premios'
       };
       
       // Validate game type
@@ -9862,10 +9862,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Map frontend game types to database game types
       const gameTypeMapping: Record<string, string> = {
-        'pix': 'premio-pix',
-        'me_mimei': 'premio-me-mimei',
-        'eletronicos': 'premio-eletronicos',
-        'super': 'premio-super-premios'
+        'pix': 'premio_pix_conta',
+        'me_mimei': 'premio_me_mimei',
+        'eletronicos': 'premio_eletronicos',
+        'super': 'premio_super_premios'
       };
       
       // Validate game type

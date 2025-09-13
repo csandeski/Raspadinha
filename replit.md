@@ -16,6 +16,16 @@ Avatar selector: Mobile-optimized with smaller avatars (48x48px), 3-column grid,
 Mobile panel headers: Affiliate and partner panels show user avatar on left and logo on right in mobile view (no commission display)
 Mobile menu design: Both affiliate and partner panels have identical mobile menu structure with user profile section at bottom including avatar, email, and action buttons (help, settings, logout)
 
+## Recent Changes (2025-09-13)
+- **Sistema Avançado de Probabilidades Personalizadas**: 
+  - Implementado sistema completo de configuração de probabilidades por jogo
+  - Cada prêmio pode ter sua probabilidade configurada individualmente
+  - Validação automática garantindo que soma total = 100%
+  - Interface administrativa para gerenciar probabilidades de cada jogo
+  - Tabelas `game_prizes_config` e `probability_validations` criadas
+  - Endpoints protegidos por autenticação de admin
+  - Sistema pronto para customização completa de chances de vitória
+
 ## Recent Changes (2025-09-03)
 - **Migração Completa para OrinPay**: Sistema de pagamentos totalmente migrado para usar apenas OrinPay
   - Removidos todos gateways antigos (IronPay, HorsePay, OrinPay antiga)

@@ -916,6 +916,85 @@ export default function GamePremioMeMimei() {
                   </div>
                 )}
 
+                {/* Internal Result Overlay */}
+                <AnimatePresence>
+                  {gameComplete && resultReady && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl"
+                    >
+                      {/* Dark overlay background */}
+                      <div className="absolute inset-0 bg-black/80 backdrop-blur-sm rounded-2xl" />
+                      
+                      {/* Result content */}
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.8, opacity: 0 }}
+                        transition={{ type: "spring", duration: 0.5 }}
+                        className="relative z-10 text-center px-6 py-8 max-w-sm w-full"
+                      >
+                        {/* Win/Lose Icon */}
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ delay: 0.2, type: "spring" }}
+                          className="mb-4"
+                        >
+                          {won ? (
+                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-pink-400 to-pink-600 rounded-full flex items-center justify-center shadow-xl">
+                              <Heart className="w-10 h-10 text-white" />
+                            </div>
+                          ) : (
+                            <div className="w-20 h-20 mx-auto bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center shadow-xl">
+                              <X className="w-10 h-10 text-white" />
+                            </div>
+                          )}
+                        </motion.div>
+
+                        {/* Result Text */}
+                        <motion.div
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.3 }}
+                        >
+                          {won ? (
+                            <>
+                              <h2 className="text-3xl font-bold text-pink-400 mb-2">Você ganhou!</h2>
+                              <div className="text-4xl font-bold text-white mb-1">
+                                R$ {prize.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </div>
+                              <p className="text-sm text-gray-400">
+                                {multiplier > 1 && `Com multiplicador ${multiplier}x`}
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <h2 className="text-2xl font-bold text-gray-300 mb-2">Não foi desta vez</h2>
+                              <p className="text-gray-400">Tente novamente e boa sorte!</p>
+                            </>
+                          )}
+                        </motion.div>
+
+                        {/* Play Again Button */}
+                        <motion.button
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{ delay: 0.4 }}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                          onClick={handlePlayAgain}
+                          className="mt-6 px-8 py-3 bg-gradient-to-r from-pink-500 to-pink-600 hover:from-pink-600 hover:to-pink-700 text-white rounded-xl font-bold transition-all shadow-lg"
+                        >
+                          Jogar Novamente
+                        </motion.button>
+                      </motion.div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 {/* Raspadinhas Grid */}
                 <div 
                   ref={gameContainerRef}

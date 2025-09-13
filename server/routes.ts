@@ -66,6 +66,7 @@ import {
   partnersWallet,
   partnersWalletTransactions,
   partnersWithdrawals,
+  activeGameSessions,
 } from "@shared/schema";
 import { randomUUID } from "crypto";
 import * as crypto from "crypto";
@@ -5714,39 +5715,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log("Saving game state:", { userId, gameType, gameId });
 
-        // Use SQL direto com pool para evitar problemas com Drizzle
-        const client = await pool.connect();
-        try {
-          const existingSession = await client.query(
-            `SELECT * FROM active_game_sessions 
-             WHERE user_id = $1 AND game_type = $2 
-             LIMIT 1`,
-            [userId, gameType]
-          );
+        // Use Drizzle ORM instead of raw SQL
+        const existingSession = await db
+          .select()
+          .from(activeGameSessions)
+          .where(
+            and(
+              eq(activeGameSessions.userId, userId),
+              eq(activeGameSessions.gameType, gameType)
+            )
+          )
+          .limit(1);
 
-          if (existingSession.rows.length > 0) {
-            // Update existing session
-            await client.query(
-              `UPDATE active_game_sessions 
-               SET game_state = $1::jsonb, updated_at = NOW()
-               WHERE user_id = $2 AND game_type = $3`,
-              [JSON.stringify(gameState), userId, gameType]
+        if (existingSession.length > 0) {
+          // Update existing session
+          await db
+            .update(activeGameSessions)
+            .set({
+              gameState: gameState,
+              updatedAt: new Date()
+            })
+            .where(
+              and(
+                eq(activeGameSessions.userId, userId),
+                eq(activeGameSessions.gameType, gameType)
+              )
             );
-            console.log("Updated existing game session");
-          } else {
-            // Create new session
-            await client.query(
-              `INSERT INTO active_game_sessions (user_id, game_type, game_id, game_state, created_at, updated_at)
-               VALUES ($1, $2, $3, $4::jsonb, NOW(), NOW())`,
-              [userId, gameType, gameId, JSON.stringify(gameState)]
-            );
-            console.log("Created new game session");
-          }
-
-          res.json({ success: true });
-        } finally {
-          client.release();
+          console.log("Updated existing game session");
+        } else {
+          // Create new session
+          await db
+            .insert(activeGameSessions)
+            .values({
+              userId,
+              gameType,
+              gameId,
+              gameState,
+              createdAt: new Date(),
+              updatedAt: new Date()
+            });
+          console.log("Created new game session");
         }
+
+        res.json({ success: true });
       } catch (error) {
         console.error("Save game state error - detailed:", error);
         res.status(500).json({ error: "Erro ao salvar estado do jogo" });
@@ -5762,42 +5773,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { gameType } = req.params;
         const userId = req.userId;
         
-        // Use SQL direto com pool para buscar sessão
-        const client = await pool.connect();
-        try {
-          const sessionResult = await client.query(
-            `SELECT * FROM active_game_sessions 
-             WHERE user_id = $1 AND game_type = $2
-             ORDER BY created_at DESC
-             LIMIT 1`,
-            [userId, gameType]
-          );
+        // Use Drizzle ORM instead of raw SQL
+        const sessionResult = await db
+          .select()
+          .from(activeGameSessions)
+          .where(
+            and(
+              eq(activeGameSessions.userId, userId),
+              eq(activeGameSessions.gameType, gameType)
+            )
+          )
+          .orderBy(desc(activeGameSessions.createdAt))
+          .limit(1);
 
-          if (sessionResult.rows.length === 0) {
+        if (sessionResult.length === 0) {
+          return res
+            .status(404)
+            .json({ error: "Nenhuma sessão ativa encontrada" });
+        }
+
+        const session = sessionResult[0];
+        const gameState = session.gameState;
+        const gameId = gameState?.gameId;
+        
+        if (gameId && gameType.startsWith('premio-')) {
+          const activeGame = activeGames.get(gameId);
+          if (!activeGame || activeGame.userId !== req.userId) {
+            // Game no longer exists, clean up the stale session
+            await storage.deleteActiveGameSession(session.gameId);
             return res
               .status(404)
-              .json({ error: "Nenhuma sessão ativa encontrada" });
+              .json({ error: "Sessão expirada ou jogo concluído" });
           }
-
-          const session = sessionResult.rows[0];
-          const gameState = session.game_state;
-          const gameId = gameState?.gameId;
-          
-          if (gameId && gameType.startsWith('premio-')) {
-            const activeGame = activeGames.get(gameId);
-            if (!activeGame || activeGame.userId !== req.userId) {
-              // Game no longer exists, clean up the stale session
-              await storage.deleteActiveGameSession(session.game_id);
-              return res
-                .status(404)
-                .json({ error: "Sessão expirada ou jogo concluído" });
-            }
-          }
-
-          res.json(session);
-        } finally {
-          client.release();
         }
+
+        res.json(session);
       } catch (error) {
         console.error("Restore game state error:", error);
         res.status(500).json({ error: "Erro ao restaurar estado do jogo" });
@@ -5878,19 +5888,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const { gameType } = req.params;
         const userId = req.userId;
 
-        // Use SQL direto com pool para limpar sessões
-        const client = await pool.connect();
-        try {
-          const result = await client.query(
-            `DELETE FROM active_game_sessions 
-             WHERE user_id = $1 AND game_type = $2`,
-            [userId, gameType]
+        // Use Drizzle ORM instead of raw SQL
+        const result = await db
+          .delete(activeGameSessions)
+          .where(
+            and(
+              eq(activeGameSessions.userId, userId),
+              eq(activeGameSessions.gameType, gameType)
+            )
           );
 
-          res.json({ success: true, cleared: result.rowCount || 0 });
-        } finally {
-          client.release();
-        }
+        res.json({ success: true, cleared: result.count || 0 });
       } catch (error) {
         console.error("Clear game type sessions error:", error);
         res

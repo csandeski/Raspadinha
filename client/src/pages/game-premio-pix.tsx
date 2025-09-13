@@ -972,8 +972,8 @@ export default function GamePremioPIX() {
                       exit={{ opacity: 0 }}
                       className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl overflow-hidden"
                     >
-                      {/* Animated gradient background */}
-                      <div className="absolute inset-0 bg-gradient-to-br from-black/90 via-black/85 to-black/90 backdrop-blur-md rounded-2xl" />
+                      {/* Simple overlay background */}
+                      <div className="absolute inset-0 bg-black/80 rounded-2xl" />
                       
                       {/* Animated light rays for wins */}
                       {won && (
@@ -1033,8 +1033,8 @@ export default function GamePremioPIX() {
                           />
                         )}
                         
-                        {/* Glass card background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-xl rounded-3xl border border-white/20" />
+                        {/* Simple dark background */}
+                        <div className="absolute inset-0 bg-black/70 rounded-3xl" />
                         
                         <div className="relative z-10">
                           {/* Prize Image with glow */}
@@ -1046,18 +1046,8 @@ export default function GamePremioPIX() {
                           >
                             {won ? (
                               <div className="relative">
-                                {/* Animated glow ring */}
-                                <motion.div
-                                  animate={{ 
-                                    scale: [1, 1.2, 1],
-                                    opacity: [0.5, 0.8, 0.5]
-                                  }}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                  className="absolute -inset-4 bg-gradient-to-r from-green-400 to-emerald-400 rounded-2xl blur-xl"
-                                />
-                                
-                                {/* Prize image container */}
-                                <div className="relative w-28 h-28 mx-auto rounded-2xl overflow-hidden shadow-2xl border-2 border-green-400/50">
+                                {/* Prize image container - clean without borders/shadows */}
+                                <div className="relative w-28 h-28 mx-auto overflow-hidden">
                                   <img 
                                     src={getPrizeImage(prizeValue)} 
                                     alt="Prêmio"

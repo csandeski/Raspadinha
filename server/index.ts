@@ -4,6 +4,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { performanceMiddleware } from "./performance-middleware";
 import { initializeCronJobs } from "./cron-jobs";
+import { ensureActiveGameSessions } from "./db";
 
 const app = express();
 
@@ -97,6 +98,15 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Ensure active_game_sessions table exists before starting server
+  try {
+    await ensureActiveGameSessions();
+    console.log('[Server] Active game sessions table check completed');
+  } catch (error) {
+    console.error('[Server] Error ensuring active_game_sessions table:', error);
+    // Continue server startup even if table creation fails
+  }
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

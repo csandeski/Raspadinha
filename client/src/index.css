@@ -2072,3 +2072,13 @@ input, textarea {
 .animate-gradient {
   animation: gradient 3s ease-in-out infinite;
 }
+
+/* Spin animation for rotating light rays */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

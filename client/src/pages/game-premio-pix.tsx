@@ -785,27 +785,12 @@ export default function GamePremioPIX() {
               <div
                 className={`bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800 backdrop-blur-xl ${gameComplete && resultReady ? "rounded-b-3xl border-b border-l border-r border-gray-700/30" : "rounded-3xl border border-gray-700/30"} p-6 shadow-2xl ${!gameStarted && "opacity-75"} relative overflow-hidden`}
               >
-                {/* Gray background with stars pattern */}
-                <div className="absolute inset-0 opacity-20">
-                  {/* Corner stars */}
-                  <div className="absolute top-4 left-4 text-4xl text-gray-300 drop-shadow-lg">★</div>
-                  <div className="absolute top-4 right-4 text-4xl text-gray-300 drop-shadow-lg">★</div>
-                  <div className="absolute bottom-4 left-4 text-4xl text-gray-300 drop-shadow-lg">★</div>
-                  <div className="absolute bottom-4 right-4 text-4xl text-gray-300 drop-shadow-lg">★</div>
-                  
-                  {/* Medium stars */}
-                  <div className="absolute top-1/4 left-1/3 text-2xl text-gray-400/80">★</div>
-                  <div className="absolute top-1/3 right-1/4 text-2xl text-gray-400/80">★</div>
-                  <div className="absolute bottom-1/4 right-1/3 text-2xl text-gray-400/80">★</div>
-                  <div className="absolute bottom-1/3 left-1/4 text-2xl text-gray-400/80">★</div>
-                  
-                  {/* Small scattered stars */}
-                  <div className="absolute top-20 left-20 text-xl text-gray-400/60">★</div>
-                  <div className="absolute top-32 right-16 text-xl text-gray-400/60">★</div>
-                  <div className="absolute bottom-20 right-20 text-xl text-gray-400/60">★</div>
-                  <div className="absolute bottom-32 left-16 text-xl text-gray-400/60">★</div>
-                  <div className="absolute top-1/2 left-12 text-lg text-gray-500/50">★</div>
-                  <div className="absolute top-1/2 right-12 text-lg text-gray-500/50">★</div>
+                {/* Premium gradient background pattern */}
+                <div className="absolute inset-0">
+                  {/* Subtle geometric pattern */}
+                  <div className="absolute inset-0 opacity-5">
+                    <div className="absolute inset-0 bg-[linear-gradient(60deg,transparent_25%,rgba(255,255,255,0.1)_25%,rgba(255,255,255,0.1)_50%,transparent_50%,transparent_75%,rgba(255,255,255,0.1)_75%)] bg-[length:20px_20px]"></div>
+                  </div>
                 </div>
                 
                 {/* Subtle gradient overlay for depth */}
@@ -830,13 +815,37 @@ export default function GamePremioPIX() {
                 <AnimatePresence>
                   {gameComplete && resultReady && !hideOverlay && (
                     <>
-                      {/* Blur overlay */}
+                      {/* Premium gradient overlay with animated effects */}
                       <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 bg-black/80 rounded-b-3xl z-10"
+                        className="absolute inset-0 rounded-b-3xl z-10"
+                        style={{
+                          background: won 
+                            ? "linear-gradient(135deg, rgba(0,0,0,0.95) 0%, rgba(212,175,55,0.1) 50%, rgba(0,0,0,0.95) 100%)"
+                            : "linear-gradient(135deg, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.95) 100%)"
+                        }}
                       />
+
+                      {/* Animated light rays for win state */}
+                      {won && (
+                        <motion.div
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: [0.2, 0.4, 0.2] }}
+                          transition={{ duration: 3, repeat: Infinity }}
+                          className="absolute inset-0 z-15 pointer-events-none"
+                        >
+                          <div className="absolute inset-0 bg-gradient-to-t from-yellow-400/10 via-transparent to-transparent" />
+                          <div 
+                            className="absolute inset-0"
+                            style={{
+                              background: "conic-gradient(from 180deg at 50% 50%, transparent 0deg, rgba(250,204,21,0.05) 60deg, transparent 120deg, rgba(250,204,21,0.05) 180deg, transparent 240deg, rgba(250,204,21,0.05) 300deg, transparent 360deg)",
+                              animation: "spin 20s linear infinite"
+                            }}
+                          />
+                        </motion.div>
+                      )}
 
                       {/* Result Message */}
                       <motion.div
@@ -845,55 +854,117 @@ export default function GamePremioPIX() {
                         exit={{ opacity: 0, scale: 0.8 }}
                         className="absolute inset-0 flex items-center justify-center z-30"
                       >
-                        <div className="text-center p-6">
-                          <h2
-                            className={`text-2xl font-bold mb-2 ${won ? "text-blue-400" : "text-red-400"}`}
-                          >
-                            {won ? "Parabéns!" : "Não foi desta vez"}
-                          </h2>
+                        <div className="text-center p-8 max-w-sm">
                           {won ? (
                             <>
+                              {/* Win title with premium gradient */}
                               <motion.div
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
+                                initial={{ opacity: 0, y: -20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                                className="mb-6"
+                              >
+                                <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-400 to-yellow-200 tracking-wider">
+                                  VOCÊ GANHOU!
+                                </h2>
+                              </motion.div>
+
+                              {/* Prize value with glowing effect */}
+                              <motion.div
+                                initial={{ scale: 0, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
                                 transition={{
                                   type: "spring",
-                                  stiffness: 260,
-                                  damping: 20,
-                                  delay: 0.3,
+                                  stiffness: 200,
+                                  damping: 15,
+                                  delay: 0.2
                                 }}
-                                className="mb-3"
+                                className="relative mb-6"
                               >
-                                <img
-                                  src={getPrizeImage(prizeValue || prize.toString())}
-                                  alt={prizeValue || `R$ ${prize}`}
-                                  className="w-32 h-32 mx-auto object-contain drop-shadow-2xl animate-float"
-                                />
-                              </motion.div>
-                              <div className="mb-2">
-                                <p className="text-xl font-bold text-white">
-                                  {getPrizeName(prizeValue || prize.toString())}
-                                </p>
-                              </div>
-                              {multiplier > 1 && prize > 0 ? (
+                                {/* Glow background */}
                                 <motion.div
-                                  initial={{ opacity: 0, y: -10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ delay: 0.5 }}
-                                  className="mb-2"
+                                  animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.3, 0.5, 0.3]
+                                  }}
+                                  transition={{
+                                    duration: 2,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                  }}
+                                  className="absolute inset-0 -m-8 bg-gradient-to-r from-yellow-400/20 via-yellow-300/20 to-yellow-400/20 blur-3xl"
+                                />
+                                
+                                {/* Prize amount */}
+                                <div className="relative">
+                                  <motion.div
+                                    initial={{ scale: 0.5 }}
+                                    animate={{ scale: 1 }}
+                                    transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+                                    className="text-5xl font-black text-white mb-3"
+                                    style={{
+                                      textShadow: "0 0 30px rgba(250,204,21,0.6), 0 0 60px rgba(250,204,21,0.3)"
+                                    }}
+                                  >
+                                    R$ {prize.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  </motion.div>
+                                  
+                                  {/* Prize image with premium shadow */}
+                                  <motion.div
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="mb-4"
+                                  >
+                                    <img
+                                      src={getPrizeImage(prizeValue || prize.toString())}
+                                      alt={prizeValue || `R$ ${prize}`}
+                                      className="w-24 h-24 mx-auto object-contain"
+                                      style={{
+                                        filter: "drop-shadow(0 10px 30px rgba(250,204,21,0.4))"
+                                      }}
+                                    />
+                                  </motion.div>
+                                  
+                                  {/* Prize name */}
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.45 }}
+                                    className="mb-3"
+                                  >
+                                    <p className="text-lg font-semibold text-gray-200">
+                                      {getPrizeName(prizeValue || prize.toString())}
+                                    </p>
+                                  </motion.div>
+                                </div>
+                              </motion.div>
+
+                              {/* Multiplier badge if applicable */}
+                              {multiplier > 1 && (
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.5, type: "spring" }}
+                                  className="mb-4"
                                 >
-                                  <p className="text-2xl font-bold text-yellow-400 animate-pulse">
-                                    R$ {(prize / multiplier).toFixed(2)} x {multiplier} = R$ {prize.toFixed(2)}
-                                  </p>
+                                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-400/30 rounded-full backdrop-blur-sm">
+                                    <span className="text-sm font-bold text-white">
+                                      MULTIPLICADOR {multiplier}x APLICADO
+                                    </span>
+                                  </div>
                                 </motion.div>
-                              ) : (
-                                <p className="text-3xl font-bold text-blue-400 mb-2 animate-pulse">
-                                  R$ {prize.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </p>
                               )}
-                              <p className="text-gray-300 text-sm">
-                                {prize > 0 ? "Prêmio adicionado ao saldo!" : "Prêmio conquistado!"}
-                              </p>
+
+                              {/* Success message */}
+                              <motion.p
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: 0.6 }}
+                                className="text-gray-300 text-sm mb-1"
+                              >
+                                Prêmio creditado em sua conta
+                              </motion.p>
                             </>
                           ) : (
                             <>

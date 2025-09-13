@@ -19,7 +19,6 @@ import { balanceTracker } from "@/lib/balance-tracker";
 import { MultiplierInfoModal } from "@/components/multiplier-info-modal";
 import { LoginRequiredModal } from "@/components/login-required-modal";
 import { InsufficientFundsModal } from "@/components/insufficient-funds-modal";
-import { WinModal } from "@/components/win-modal";
 import { LoseModal } from "@/components/lose-modal";
 
 
@@ -120,7 +119,6 @@ export default function GamePremioMeMimei() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [insufficientFundsType, setInsufficientFundsType] = useState<"balance" | "bonus">("balance");
-  const [showWinModal, setShowWinModal] = useState(false);
   const [showLoseModal, setShowLoseModal] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -501,9 +499,7 @@ export default function GamePremioMeMimei() {
       setResultReady(true); // Mark result as ready to display
 
       // Show appropriate modal based on result
-      if (response.won && response.prize > 0) {
-        setShowWinModal(true);
-      } else if (!response.won) {
+      if (!response.won) {
         setShowLoseModal(true);
       }
 
@@ -601,7 +597,6 @@ export default function GamePremioMeMimei() {
   };
 
   const handlePlayAgain = () => {
-    setShowWinModal(false);
     setShowLoseModal(false);
     setGameStarted(false);
     setGameComplete(false);
@@ -1390,16 +1385,6 @@ export default function GamePremioMeMimei() {
           </div>
         </div>
       </div>
-      
-      {/* Win Modal */}
-      <WinModal
-        isOpen={showWinModal}
-        onClose={() => setShowWinModal(false)}
-        prizeImage={getPrizeInfo(prizeValue || prize.toString()).path}
-        prizeName={getPrizeInfo(prizeValue || prize.toString()).name}
-        prizeValue={prize}
-        onPlayAgain={handlePlayAgain}
-      />
       
       {/* Lose Modal */}
       <LoseModal

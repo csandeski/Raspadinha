@@ -17,7 +17,6 @@ import { Confetti } from "@/components/confetti";
 import { MultiplierInfoModal } from "@/components/multiplier-info-modal";
 import { LoginRequiredModal } from "@/components/login-required-modal";
 import { InsufficientFundsModal } from "@/components/insufficient-funds-modal";
-import { WinModal } from "@/components/win-modal";
 import { LoseModal } from "@/components/lose-modal";
 
 
@@ -80,7 +79,6 @@ export default function GamePremioPIX() {
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [insufficientFundsType, setInsufficientFundsType] = useState<"balance" | "bonus">("balance");
-  const [showWinModal, setShowWinModal] = useState(false);
   const [showLoseModal, setShowLoseModal] = useState(false);
   const [scrollProgress, setScrollProgress] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -501,9 +499,7 @@ export default function GamePremioPIX() {
       setResultReady(true); // Mark result as ready to display
 
       // Show appropriate modal based on result
-      if (response.won && response.prize > 0) {
-        setShowWinModal(true);
-      } else if (!response.won) {
+      if (!response.won) {
         setShowLoseModal(true);
       }
 
@@ -611,7 +607,6 @@ export default function GamePremioPIX() {
       return;
     }
     
-    setShowWinModal(false);
     setShowLoseModal(false);
     setGameStarted(false);
     setGameComplete(false);
@@ -1419,16 +1414,6 @@ export default function GamePremioPIX() {
           </div>
         </div>
       </div>
-      
-      {/* Win Modal */}
-      <WinModal
-        isOpen={showWinModal}
-        onClose={() => setShowWinModal(false)}
-        prizeImage={getPrizeImage(prizeValue || prize.toString())}
-        prizeName={getPrizeName(prizeValue || prize.toString())}
-        prizeValue={prize}
-        onPlayAgain={handlePlayAgain}
-      />
       
       {/* Lose Modal */}
       <LoseModal

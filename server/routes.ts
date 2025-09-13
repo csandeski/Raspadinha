@@ -10196,6 +10196,148 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // =============== NEW CUSTOM PROBABILITIES ENDPOINTS ===============
+  // Get custom prize probabilities for each game
+  app.get("/api/admin/custom-probabilities/:gameType", authenticateAdmin, async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      
+      // Query the new game_prizes_config table
+      const result = await pool.query(
+        `SELECT * FROM game_prizes_config 
+         WHERE game_type = $1 
+         ORDER BY display_order, probability DESC`,
+        [gameType]
+      );
+      
+      // Calculate total probability
+      const totalProbability = result.rows.reduce((sum, prize) => 
+        sum + parseFloat(prize.probability || 0), 0
+      );
+      
+      res.json({
+        prizes: result.rows,
+        totalProbability: totalProbability.toFixed(2),
+        isValid: Math.abs(totalProbability - 100) < 0.01
+      });
+    } catch (error) {
+      console.error("Error getting custom probabilities:", error);
+      res.status(500).json({ message: "Erro ao buscar probabilidades personalizadas" });
+    }
+  });
+  
+  // Update custom prize probabilities
+  app.post("/api/admin/custom-probabilities/:gameType", authenticateAdmin, async (req, res) => {
+    try {
+      const { gameType } = req.params;
+      const { prizes } = req.body;
+      
+      // Validate total probability
+      const totalProbability = prizes.reduce((sum, prize) => 
+        sum + parseFloat(prize.probability || 0), 0
+      );
+      
+      if (Math.abs(totalProbability - 100) > 0.01) {
+        return res.status(400).json({ 
+          message: `As probabilidades devem somar exatamente 100%. Total atual: ${totalProbability.toFixed(2)}%` 
+        });
+      }
+      
+      // Update each prize probability
+      for (const prize of prizes) {
+        await pool.query(
+          `UPDATE game_prizes_config 
+           SET probability = $1, updated_at = CURRENT_TIMESTAMP 
+           WHERE game_type = $2 AND prize_key = $3`,
+          [prize.probability, gameType, prize.prize_key]
+        );
+      }
+      
+      // Update validation table
+      await pool.query(
+        `INSERT INTO game_probability_validation (game_type, total_probability, is_valid, validation_message)
+         VALUES ($1, $2, true, 'Probabilidades válidas - soma 100%')
+         ON CONFLICT (game_type) DO UPDATE SET
+           total_probability = EXCLUDED.total_probability,
+           is_valid = EXCLUDED.is_valid,
+           validation_message = EXCLUDED.validation_message,
+           last_validated_at = CURRENT_TIMESTAMP`,
+        [gameType, totalProbability]
+      );
+      
+      res.json({ success: true, message: "Probabilidades atualizadas com sucesso" });
+    } catch (error) {
+      console.error("Error updating custom probabilities:", error);
+      res.status(500).json({ message: "Erro ao atualizar probabilidades" });
+    }
+  });
+  
+  // Get all games history
+  app.get("/api/admin/games-history", authenticateAdmin, async (req, res) => {
+    try {
+      const { userId, gameType, won, limit = 100, offset = 0 } = req.query;
+      
+      let query = `
+        SELECT gh.*, u.name as user_name, u.email as user_email 
+        FROM game_history gh
+        LEFT JOIN app_users u ON gh.user_id = u.id
+        WHERE 1=1
+      `;
+      const params = [];
+      let paramIndex = 1;
+      
+      if (userId) {
+        query += ` AND gh.user_id = $${paramIndex++}`;
+        params.push(userId);
+      }
+      
+      if (gameType) {
+        query += ` AND gh.game_type = $${paramIndex++}`;
+        params.push(gameType);
+      }
+      
+      if (won !== undefined) {
+        query += ` AND gh.won = $${paramIndex++}`;
+        params.push(won === 'true');
+      }
+      
+      query += ` ORDER BY gh.played_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex}`;
+      params.push(limit, offset);
+      
+      const result = await pool.query(query, params);
+      
+      res.json(result.rows);
+    } catch (error) {
+      console.error("Error getting games history:", error);
+      res.status(500).json({ message: "Erro ao buscar histórico de jogos" });
+    }
+  });
+  
+  // Get game statistics
+  app.get("/api/admin/games-statistics", authenticateAdmin, async (req, res) => {
+    try {
+      const stats = await pool.query(`
+        SELECT 
+          game_type,
+          COUNT(*) as total_games,
+          SUM(CASE WHEN won = true THEN 1 ELSE 0 END) as total_wins,
+          SUM(cost) as total_wagered,
+          SUM(prize) as total_prizes,
+          AVG(CASE WHEN won = true THEN prize ELSE 0 END) as avg_win,
+          MAX(prize) as max_prize
+        FROM game_history
+        GROUP BY game_type
+        ORDER BY total_games DESC
+      `);
+      
+      res.json(stats.rows);
+    } catch (error) {
+      console.error("Error getting game statistics:", error);
+      res.status(500).json({ message: "Erro ao buscar estatísticas de jogos" });
+    }
+  });
+  // =============== END NEW CUSTOM PROBABILITIES ENDPOINTS ===============
+
   // Get Esquilo Bonus Mode probabilities
   app.get("/api/admin/esquilo-bonus-probabilities", authenticateAdmin, async (req, res) => {
     try {

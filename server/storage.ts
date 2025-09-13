@@ -330,7 +330,7 @@ export class DatabaseStorage implements IStorage {
         couponApplied: row.coupon_applied,
         currentCoupon: row.current_coupon,
         hasFirstDeposit: row.has_first_deposit,
-        firstDepositCompleted: row.first_deposit_completed,
+        // firstDepositCompleted: row.first_deposit_completed, // Column doesn't exist in DB
         affiliateId: row.affiliate_id,
         partnerId: row.partner_id,
         createdAt: row.created_at,
@@ -375,7 +375,7 @@ export class DatabaseStorage implements IStorage {
         couponApplied: row.coupon_applied,
         currentCoupon: row.current_coupon,
         hasFirstDeposit: row.has_first_deposit,
-        firstDepositCompleted: row.first_deposit_completed,
+        // firstDepositCompleted: row.first_deposit_completed, // Column doesn't exist in DB
         affiliateId: row.affiliate_id,
         partnerId: row.partner_id,
         createdAt: row.created_at,
@@ -416,7 +416,7 @@ export class DatabaseStorage implements IStorage {
         couponApplied: row.coupon_applied,
         currentCoupon: row.current_coupon,
         hasFirstDeposit: row.has_first_deposit,
-        firstDepositCompleted: row.first_deposit_completed,
+        // firstDepositCompleted: row.first_deposit_completed, // Column doesn't exist in DB
         affiliateId: row.affiliate_id,
         partnerId: row.partner_id,
         createdAt: row.created_at,
@@ -457,7 +457,7 @@ export class DatabaseStorage implements IStorage {
         couponApplied: row.coupon_applied,
         currentCoupon: row.current_coupon,
         hasFirstDeposit: row.has_first_deposit,
-        firstDepositCompleted: row.first_deposit_completed,
+        // firstDepositCompleted: row.first_deposit_completed, // Column doesn't exist in DB
         affiliateId: row.affiliate_id,
         partnerId: row.partner_id,
         createdAt: row.created_at,
@@ -538,7 +538,7 @@ export class DatabaseStorage implements IStorage {
         couponApplied: row.coupon_applied,
         currentCoupon: row.current_coupon,
         hasFirstDeposit: row.has_first_deposit,
-        firstDepositCompleted: row.first_deposit_completed,
+        // firstDepositCompleted: row.first_deposit_completed, // Column doesn't exist in DB
         affiliateId: row.affiliate_id,
         partnerId: row.partner_id,
         createdAt: row.created_at,

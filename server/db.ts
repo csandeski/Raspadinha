@@ -2,9 +2,8 @@ import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
-// Usar novo Supabase via Pooler (Session Mode - porta 5432)
-// IMPORTANTE: Ignorar variável de ambiente antiga e usar apenas a URL do novo Supabase
-const dbUrl = 'postgresql://postgres.upxximikhoshaxbmshee:Faneco235***@aws-1-sa-east-1.pooler.supabase.com:5432/postgres';
+// Use environment variable for database connection
+const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
 
 if (!dbUrl) {
   throw new Error(

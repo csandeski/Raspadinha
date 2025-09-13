@@ -1,11 +1,12 @@
 import pg from 'pg';
 const { Client } = pg;
 
-// Banco antigo (origem)
-const oldDbUrl = 'postgresql://postgres.qbusacxhdsywolzgfltl:RASPADINHA2@aws-0-sa-east-1.pooler.supabase.com:5432/postgres';
-
-// Banco novo (destino)
-const newDbUrl = 'postgresql://postgres.ozqcfahanojjobpmopak:!HUEtnp@2M+hxq3@aws-0-us-east-1.pooler.supabase.com:5432/postgres';
+// SECURITY WARNING: Database credentials removed for security
+// This migration script should not be used anymore
+// If migration is needed, use environment variables:
+// const oldDbUrl = process.env.OLD_DATABASE_URL;
+// const newDbUrl = process.env.NEW_DATABASE_URL;
+throw new Error('This migration script is disabled for security reasons. Use environment variables if migration is needed.');
 
 const oldClient = new Client({ connectionString: oldDbUrl });
 const newClient = new Client({ connectionString: newDbUrl });

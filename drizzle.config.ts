@@ -1,8 +1,7 @@
 import { defineConfig } from "drizzle-kit";
 
-// Usar novo Supabase via Pooler
-const SUPABASE_POOLER = 'postgresql://postgres.upxximikhoshaxbmshee:Faneco235***@aws-1-sa-east-1.pooler.supabase.com:5432/postgres';
-const dbUrl = SUPABASE_POOLER;
+// Use environment variable for database connection
+const dbUrl = process.env.SUPABASE_DATABASE_URL || process.env.DATABASE_URL;
 
 if (!dbUrl) {
   throw new Error("Database URL required");

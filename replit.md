@@ -15,16 +15,24 @@ Landing page design: Clean, professional aesthetic without decorative corner ico
 Avatar selector: Mobile-optimized with smaller avatars (48x48px), 3-column grid, compact spacing, and no scale effects on mobile for easier selection
 Mobile panel headers: Affiliate and partner panels show user avatar on left and logo on right in mobile view (no commission display)
 Mobile menu design: Both affiliate and partner panels have identical mobile menu structure with user profile section at bottom including avatar, email, and action buttons (help, settings, logout)
+Scratch card preferences: Clean result displays without animated backgrounds, single play again button, unformatted prize images without borders/shadows
 
 ## Recent Changes (2025-09-13)
-- **Sistema Avançado de Probabilidades Personalizadas**: 
-  - Implementado sistema completo de configuração de probabilidades por jogo
-  - Cada prêmio pode ter sua probabilidade configurada individualmente
-  - Validação automática garantindo que soma total = 100%
-  - Interface administrativa para gerenciar probabilidades de cada jogo
-  - Tabelas `game_prizes_config` e `probability_validations` criadas
-  - Endpoints protegidos por autenticação de admin
-  - Sistema pronto para customização completa de chances de vitória
+- **Jogo Esquilo Mania Removido**: Removido completamente o jogo Esquilo Mania que estava causando erro "Erro ao criar jogo"
+  - Rotas removidas do App.tsx
+  - Referências removidas do carrossel de vencedores
+  - Seção minigames agora mostra "Em Breve" ao invés do jogo
+  - Mantidos apenas os 4 jogos principais funcionando (PIX, Me Mimei, Eletrônicos, Super Prêmios)
+- **Melhorias Visuais das Raspadinhas**:
+  - Células não raspadas com design metálico premium e padrões temáticos
+  - Cards dos jogos unificados com glass morphism e gradientes suaves
+  - Seção "ESCOLHA SEU MODO" com fichas circulares estilo cassino
+  - Resultado de prêmios simplificado sem animações de fundo
+- **Sistema de Probabilidades Corrigido**: 
+  - Corrigido erro ao atualizar probabilidades no painel admin
+  - Mapeamento correto dos tipos de jogo no backend
+  - 70 configurações de prêmios populadas no banco de dados
+  - Interface completa de gerenciamento de probabilidades funcionando
 
 ## Recent Changes (2025-09-03)
 - **Migração Completa para OrinPay**: Sistema de pagamentos totalmente migrado para usar apenas OrinPay

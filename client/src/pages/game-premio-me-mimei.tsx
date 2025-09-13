@@ -848,9 +848,102 @@ export default function GamePremioMeMimei() {
                               </p>
                             </>
                           ) : (
-                            <p className="text-gray-300 text-sm">
-                              Tente novamente
-                            </p>
+                            <>
+                              {/* Lose animation container */}
+                              <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5, ease: "easeOut" }}
+                                className="relative"
+                              >
+                                {/* Background glow effect */}
+                                <motion.div
+                                  className="absolute inset-0 -m-12"
+                                  animate={{
+                                    background: [
+                                      "radial-gradient(circle at center, rgba(239, 68, 68, 0.1) 0%, transparent 70%)",
+                                      "radial-gradient(circle at center, rgba(239, 68, 68, 0.2) 0%, transparent 60%)",
+                                      "radial-gradient(circle at center, rgba(239, 68, 68, 0.1) 0%, transparent 70%)"
+                                    ]
+                                  }}
+                                  transition={{
+                                    duration: 3,
+                                    repeat: Infinity,
+                                    ease: "easeInOut"
+                                  }}
+                                />
+                                
+                                {/* X icon with animation */}
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ 
+                                    type: "spring",
+                                    stiffness: 200,
+                                    damping: 15,
+                                    delay: 0.2
+                                  }}
+                                  className="mb-4 mx-auto w-16 h-16 relative"
+                                >
+                                  {/* Outer circle with gradient */}
+                                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-red-500/20 to-red-600/20 backdrop-blur-sm" />
+                                  
+                                  {/* Inner X mark */}
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <motion.div
+                                      animate={{
+                                        scale: [1, 1.1, 1],
+                                      }}
+                                      transition={{
+                                        duration: 2,
+                                        repeat: Infinity,
+                                        ease: "easeInOut"
+                                      }}
+                                      className="relative"
+                                    >
+                                      <X className="w-8 h-8 text-red-400" strokeWidth={3} />
+                                    </motion.div>
+                                  </div>
+                                  
+                                  {/* Subtle ring animation */}
+                                  <motion.div
+                                    className="absolute inset-0 rounded-full border-2 border-red-400/30"
+                                    animate={{
+                                      scale: [1, 1.2, 1],
+                                      opacity: [0.5, 0, 0.5]
+                                    }}
+                                    transition={{
+                                      duration: 2,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                </motion.div>
+                                
+                                {/* Text content with gradient */}
+                                <div className="text-center space-y-3">
+                                  <motion.p
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.3 }}
+                                    className="text-lg font-medium text-gray-200"
+                                  >
+                                    Tente novamente
+                                  </motion.p>
+                                  
+                                  <motion.div
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ delay: 0.4 }}
+                                    className="px-4 py-1.5 bg-gradient-to-r from-red-500/10 to-orange-500/10 rounded-full inline-block backdrop-blur-sm border border-red-400/20"
+                                  >
+                                    <p className="text-xs text-gray-300">
+                                      A sorte está ao seu lado
+                                    </p>
+                                  </motion.div>
+                                </div>
+                              </motion.div>
+                            </>
                           )}
                         </div>
                       </motion.div>

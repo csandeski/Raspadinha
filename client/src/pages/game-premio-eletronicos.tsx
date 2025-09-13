@@ -1244,6 +1244,7 @@ export default function GamePremioEletronicos() {
                             newProgress[index] = percentage;
                             setScratchProgress(newProgress);
                           }}
+                          theme="eletronicos"
                         />
                       </div>
                     ),

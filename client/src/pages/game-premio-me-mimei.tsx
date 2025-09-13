@@ -1273,6 +1273,7 @@ export default function GamePremioMeMimei() {
                           }
                           revealed={revealed[index]}
                           allRevealed={allCardsRevealed}
+                          theme="mimei"
                         />
                       </div>
                     ),

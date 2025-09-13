@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 
+export type ScratchCardTheme = 'pix' | 'mimei' | 'eletronicos' | 'superpremios';
+
 interface ProScratchCardProps {
   value: React.ReactNode;
   index: number;
@@ -10,6 +12,7 @@ interface ProScratchCardProps {
   revealed?: boolean;
   onScratchProgress?: (percentage: number) => void;
   allRevealed?: boolean;
+  theme?: ScratchCardTheme;
 }
 
 export function ProScratchCard({ 
@@ -20,7 +23,8 @@ export function ProScratchCard({
   onScratchStart, 
   revealed = false,
   onScratchProgress,
-  allRevealed = false
+  allRevealed = false,
+  theme = 'pix'
 }: ProScratchCardProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -34,6 +38,49 @@ export function ProScratchCard({
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [isCanvasReady, setIsCanvasReady] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
+
+  // Theme-based color configurations
+  const getThemeConfig = (theme: ScratchCardTheme) => {
+    switch (theme) {
+      case 'pix':
+        return {
+          gradient: ['#0080FF', '#00B4FF', '#00E0FF', '#00C8FF', '#0090FF'],
+          accent: '#00E0FF',
+          pattern: 'money',
+          patternColor: 'rgba(0, 224, 255, 0.1)',
+          shimmerColor: 'rgba(0, 224, 255, 0.3)',
+          iconColor: '#FFFFFF'
+        };
+      case 'mimei':
+        return {
+          gradient: ['#FF1493', '#FF69B4', '#FFB6C1', '#FF85B3', '#FF1493'],
+          accent: '#FF69B4',
+          pattern: 'hearts',
+          patternColor: 'rgba(255, 105, 180, 0.1)',
+          shimmerColor: 'rgba(255, 105, 180, 0.3)',
+          iconColor: '#FFFFFF'
+        };
+      case 'eletronicos':
+        return {
+          gradient: ['#FF6B00', '#FF9500', '#FFAA00', '#FF8C00', '#FF7A00'],
+          accent: '#FFA500',
+          pattern: 'circuit',
+          patternColor: 'rgba(255, 165, 0, 0.1)',
+          shimmerColor: 'rgba(255, 165, 0, 0.3)',
+          iconColor: '#FFFFFF'
+        };
+      case 'superpremios':
+        return {
+          gradient: ['#00C851', '#FFD700', '#00E676', '#FFEA00', '#00D84F'],
+          accent: '#FFD700',
+          pattern: 'stars',
+          patternColor: 'rgba(255, 215, 0, 0.1)',
+          shimmerColor: 'rgba(255, 215, 0, 0.3)',
+          iconColor: '#FFFFFF'
+        };
+    }
+  };
 
   // Sync internal state with prop - reduce re-renders
   useEffect(() => {
@@ -89,130 +136,241 @@ export function ProScratchCard({
     totalPixelsRef.current = canvas.width * canvas.height;
     scratchedPixelsRef.current.clear();
     
+    const themeConfig = getThemeConfig(theme);
+    
     // Create sophisticated metallic gradient background
     const gradient = ctx.createRadialGradient(
       canvas.width / 2, canvas.height / 2, 0,
       canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
     );
-    gradient.addColorStop(0, '#C0C0C0'); // Bright silver center
-    gradient.addColorStop(0.3, '#9B9B9B'); // Medium silver
-    gradient.addColorStop(0.6, '#7D7D7D'); // Darker silver
-    gradient.addColorStop(0.8, '#6B6B6B'); // Dark gray
-    gradient.addColorStop(1, '#5A5A5A'); // Darkest edge
     
-    // First fill with base color
-    ctx.fillStyle = '#6B6B6B';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Metallic silver base with theme color tint
+    gradient.addColorStop(0, '#E8E8E8');
+    gradient.addColorStop(0.2, '#D0D0D0');
+    gradient.addColorStop(0.4, '#B8B8B8');
+    gradient.addColorStop(0.6, '#A0A0A0');
+    gradient.addColorStop(0.8, '#888888');
+    gradient.addColorStop(1, '#707070');
     
-    // Apply metallic gradient
+    // Fill with metallic gradient
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add sophisticated diagonal light streaks
-    ctx.globalCompositeOperation = 'source-over';
-    const raysGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-    raysGradient.addColorStop(0, 'rgba(255, 255, 255, 0.15)');
-    raysGradient.addColorStop(0.2, 'rgba(255, 255, 255, 0.05)');
-    raysGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.1)');
-    raysGradient.addColorStop(0.8, 'rgba(255, 255, 255, 0.05)');
-    raysGradient.addColorStop(1, 'rgba(255, 255, 255, 0.15)');
-    ctx.fillStyle = raysGradient;
+    // Add theme color overlay
+    const themeGradient = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, 0,
+      canvas.width / 2, canvas.height / 2, Math.max(canvas.width, canvas.height) / 2
+    );
+    themeConfig.gradient.forEach((color, i) => {
+      themeGradient.addColorStop(i / (themeConfig.gradient.length - 1), color + '15');
+    });
+    ctx.fillStyle = themeGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Add subtle holographic effect
+    // Add sophisticated pattern based on theme
+    ctx.save();
+    ctx.globalAlpha = 0.2;
+    
+    if (themeConfig.pattern === 'money') {
+      // Money/coin pattern for PIX
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const x = (canvas.width / 3) * j + canvas.width / 6;
+          const y = (canvas.height / 3) * i + canvas.height / 6;
+          
+          ctx.strokeStyle = themeConfig.patternColor;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.arc(x, y, 12, 0, Math.PI * 2);
+          ctx.stroke();
+          
+          // Dollar sign
+          ctx.fillStyle = themeConfig.patternColor;
+          ctx.font = 'bold 14px sans-serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('$', x, y);
+        }
+      }
+    } else if (themeConfig.pattern === 'hearts') {
+      // Hearts pattern for Me Mimei
+      const drawHeart = (x: number, y: number, size: number) => {
+        ctx.fillStyle = themeConfig.patternColor;
+        ctx.beginPath();
+        ctx.moveTo(x, y + size / 4);
+        ctx.quadraticCurveTo(x, y, x - size / 4, y);
+        ctx.quadraticCurveTo(x - size / 2, y, x - size / 2, y + size / 4);
+        ctx.quadraticCurveTo(x - size / 2, y + size / 2, x, y + size * 0.75);
+        ctx.quadraticCurveTo(x + size / 2, y + size / 2, x + size / 2, y + size / 4);
+        ctx.quadraticCurveTo(x + size / 2, y, x + size / 4, y);
+        ctx.quadraticCurveTo(x, y, x, y + size / 4);
+        ctx.fill();
+      };
+      
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const x = (canvas.width / 3) * j + canvas.width / 6;
+          const y = (canvas.height / 3) * i + canvas.height / 6;
+          drawHeart(x, y - 5, 20);
+        }
+      }
+    } else if (themeConfig.pattern === 'circuit') {
+      // Circuit pattern for Eletrônicos
+      ctx.strokeStyle = themeConfig.patternColor;
+      ctx.lineWidth = 1;
+      
+      // Draw circuit lines
+      for (let i = 0; i < 4; i++) {
+        const y = (canvas.height / 4) * i + canvas.height / 8;
+        ctx.beginPath();
+        ctx.moveTo(10, y);
+        ctx.lineTo(canvas.width - 10, y);
+        ctx.stroke();
+        
+        // Add nodes
+        for (let j = 0; j < 3; j++) {
+          const x = (canvas.width / 3) * j + canvas.width / 6;
+          ctx.beginPath();
+          ctx.arc(x, y, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      // Vertical connections
+      for (let i = 0; i < 3; i++) {
+        const x = (canvas.width / 3) * i + canvas.width / 6;
+        ctx.beginPath();
+        ctx.moveTo(x, 20);
+        ctx.lineTo(x, canvas.height - 20);
+        ctx.stroke();
+      }
+    } else if (themeConfig.pattern === 'stars') {
+      // Stars pattern for Super Prêmios
+      const drawStar = (x: number, y: number, size: number) => {
+        ctx.fillStyle = themeConfig.patternColor;
+        ctx.beginPath();
+        for (let i = 0; i < 5; i++) {
+          const angle = (Math.PI * 2 * i) / 5 - Math.PI / 2;
+          const nextAngle = (Math.PI * 2 * (i + 1)) / 5 - Math.PI / 2;
+          const innerAngle = angle + (nextAngle - angle) / 2;
+          
+          if (i === 0) {
+            ctx.moveTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+          } else {
+            ctx.lineTo(x + Math.cos(angle) * size, y + Math.sin(angle) * size);
+          }
+          ctx.lineTo(x + Math.cos(innerAngle) * size * 0.5, y + Math.sin(innerAngle) * size * 0.5);
+        }
+        ctx.closePath();
+        ctx.fill();
+      };
+      
+      for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+          const x = (canvas.width / 3) * j + canvas.width / 6;
+          const y = (canvas.height / 3) * i + canvas.height / 6;
+          drawStar(x, y, 12);
+        }
+      }
+    }
+    
+    ctx.restore();
+    
+    // Add shimmer effect
+    const shimmerGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    shimmerGradient.addColorStop(0, 'rgba(255, 255, 255, 0.3)');
+    shimmerGradient.addColorStop(0.3, 'rgba(255, 255, 255, 0.1)');
+    shimmerGradient.addColorStop(0.5, themeConfig.shimmerColor);
+    shimmerGradient.addColorStop(0.7, 'rgba(255, 255, 255, 0.1)');
+    shimmerGradient.addColorStop(1, 'rgba(255, 255, 255, 0.3)');
+    ctx.fillStyle = shimmerGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Add holographic effect
     const holoGradient = ctx.createLinearGradient(canvas.width, 0, 0, canvas.height);
-    holoGradient.addColorStop(0, 'rgba(138, 43, 226, 0.05)'); // Subtle purple
-    holoGradient.addColorStop(0.5, 'rgba(0, 232, 128, 0.05)'); // Subtle green
-    holoGradient.addColorStop(1, 'rgba(255, 215, 0, 0.05)'); // Subtle gold
+    holoGradient.addColorStop(0, themeConfig.accent + '10');
+    holoGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.05)');
+    holoGradient.addColorStop(1, themeConfig.accent + '10');
     ctx.fillStyle = holoGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Enhanced star/sparkle effects
-    // Create sparkle function
-    const drawSparkle = (x: number, y: number, size: number, opacity: number) => {
-      ctx.save();
-      ctx.translate(x, y);
-      ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-      
-      // Four-pointed star
-      ctx.beginPath();
-      ctx.moveTo(0, -size);
-      ctx.lineTo(size * 0.3, -size * 0.3);
-      ctx.lineTo(size, 0);
-      ctx.lineTo(size * 0.3, size * 0.3);
-      ctx.lineTo(0, size);
-      ctx.lineTo(-size * 0.3, size * 0.3);
-      ctx.lineTo(-size, 0);
-      ctx.lineTo(-size * 0.3, -size * 0.3);
-      ctx.closePath();
-      ctx.fill();
-      
-      // Center glow
-      const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size);
-      glowGradient.addColorStop(0, `rgba(255, 255, 255, ${opacity * 0.8})`);
-      glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
-      ctx.fillStyle = glowGradient;
-      ctx.fillRect(-size, -size, size * 2, size * 2);
-      
-      ctx.restore();
-    };
+    // Draw elegant scratch icon in center
+    ctx.save();
+    ctx.translate(canvas.width / 2, canvas.height / 2);
     
-    // Corner sparkles (larger, more prominent)
-    drawSparkle(15, 15, 8, 0.6);
-    drawSparkle(canvas.width - 15, 15, 8, 0.6);
-    drawSparkle(15, canvas.height - 15, 8, 0.6);
-    drawSparkle(canvas.width - 15, canvas.height - 15, 8, 0.6);
+    // Outer glow for icon
+    const iconGlow = ctx.createRadialGradient(0, 0, 0, 0, 0, 25);
+    iconGlow.addColorStop(0, themeConfig.shimmerColor);
+    iconGlow.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = iconGlow;
+    ctx.fillRect(-30, -30, 60, 60);
     
-    // Scattered smaller sparkles
-    drawSparkle(canvas.width * 0.25, 20, 5, 0.4);
-    drawSparkle(canvas.width * 0.75, canvas.height - 20, 5, 0.4);
-    drawSparkle(25, canvas.height * 0.5, 5, 0.4);
-    drawSparkle(canvas.width - 25, canvas.height * 0.5, 5, 0.4);
-    drawSparkle(canvas.width * 0.5, 25, 4, 0.3);
-    drawSparkle(canvas.width * 0.5, canvas.height - 25, 4, 0.3);
+    // Draw hand/finger icon
+    ctx.strokeStyle = themeConfig.iconColor;
+    ctx.fillStyle = themeConfig.iconColor;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
     
-    // Add "RASPE AQUI!" text with sophisticated styling
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    // Simple finger pointing icon
+    ctx.beginPath();
+    // Finger
+    ctx.moveTo(-5, -10);
+    ctx.lineTo(-5, 5);
+    ctx.quadraticCurveTo(-5, 10, -2, 10);
+    ctx.lineTo(2, 10);
+    ctx.quadraticCurveTo(5, 10, 5, 5);
+    ctx.lineTo(5, -10);
+    ctx.quadraticCurveTo(5, -12, 3, -12);
+    ctx.lineTo(-3, -12);
+    ctx.quadraticCurveTo(-5, -12, -5, -10);
+    ctx.closePath();
+    ctx.fill();
     
-    // Create subtle text outline glow
-    ctx.shadowColor = '#FFFFFF';
-    ctx.shadowBlur = 3;
-    ctx.shadowOffsetX = 0;
-    ctx.shadowOffsetY = 0;
+    // Motion lines to suggest scratching
+    ctx.strokeStyle = themeConfig.iconColor + '80';
+    ctx.lineWidth = 1.5;
     
-    // Draw multiple shadow layers for depth
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('RASPE', canvas.width / 2 + 2, canvas.height / 2 - 10 + 2);
-    ctx.fillText('AQUI!', canvas.width / 2 + 2, canvas.height / 2 + 10 + 2);
+    // Left motion lines
+    ctx.beginPath();
+    ctx.moveTo(-15, -5);
+    ctx.lineTo(-10, -5);
+    ctx.moveTo(-15, 0);
+    ctx.lineTo(-10, 0);
+    ctx.moveTo(-15, 5);
+    ctx.lineTo(-10, 5);
+    ctx.stroke();
     
-    // Main text with gradient
-    const textGradient = ctx.createLinearGradient(
-      canvas.width / 2 - 30, 0,
-      canvas.width / 2 + 30, 0
-    );
-    textGradient.addColorStop(0, '#FFFFFF');
-    textGradient.addColorStop(0.5, '#F0F0F0');
-    textGradient.addColorStop(1, '#FFFFFF');
+    // Right motion lines
+    ctx.beginPath();
+    ctx.moveTo(10, -5);
+    ctx.lineTo(15, -5);
+    ctx.moveTo(10, 0);
+    ctx.lineTo(15, 0);
+    ctx.moveTo(10, 5);
+    ctx.lineTo(15, 5);
+    ctx.stroke();
     
-    ctx.fillStyle = textGradient;
-    ctx.font = 'bold 16px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
-    ctx.fillText('RASPE', canvas.width / 2, canvas.height / 2 - 10);
-    ctx.fillText('AQUI!', canvas.width / 2, canvas.height / 2 + 10);
+    ctx.restore();
     
-    // Remove shadow for other elements
-    ctx.shadowColor = 'transparent';
-    ctx.shadowBlur = 0;
+    // Add premium border with gradient
+    const borderGradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+    borderGradient.addColorStop(0, themeConfig.accent + '40');
+    borderGradient.addColorStop(0.5, 'rgba(255, 255, 255, 0.3)');
+    borderGradient.addColorStop(1, themeConfig.accent + '40');
     
-    // Add subtle border decoration
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.strokeStyle = borderGradient;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
+    
+    // Inner border for depth
+    ctx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+    ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
     
     // Mark canvas as ready
     setIsCanvasReady(true);
-  }, [isRevealed]);
+  }, [isRevealed, theme]);
 
   useEffect(() => {
     initCanvas();
@@ -342,13 +500,15 @@ export function ProScratchCard({
       const playAudio = async () => {
         try {
           // Reset audio time
-          audioRef.current.currentTime = 0;
-          
-          // Create a promise to handle the play
-          const playPromise = audioRef.current.play();
-          
-          if (playPromise !== undefined) {
-            await playPromise;
+          if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            
+            // Create a promise to handle the play
+            const playPromise = audioRef.current.play();
+            
+            if (playPromise !== undefined) {
+              await playPromise;
+            }
           }
         } catch (error) {
           // If autoplay fails, try to play with user gesture
@@ -356,11 +516,15 @@ export function ProScratchCard({
           
           // Try to unlock audio on iOS by playing a silent sound
           const unlockAudio = () => {
-            audioRef.current.play().then(() => {
-              audioRef.current.pause();
-              audioRef.current.currentTime = 0;
-              audioRef.current.play();
-            }).catch(() => {});
+            if (audioRef.current) {
+              audioRef.current.play().then(() => {
+                if (audioRef.current) {
+                  audioRef.current.pause();
+                  audioRef.current.currentTime = 0;
+                  audioRef.current.play();
+                }
+              }).catch(() => {});
+            }
           };
           
           // Try immediate unlock
@@ -531,13 +695,33 @@ export function ProScratchCard({
     handleEnd();
   };
 
+  // Get theme-based hover effects
+  const getHoverClass = () => {
+    if (isDisabled || isRevealed || allRevealed) return '';
+    
+    switch (theme) {
+      case 'pix':
+        return 'hover:shadow-[0_0_20px_rgba(0,224,255,0.5)]';
+      case 'mimei':
+        return 'hover:shadow-[0_0_20px_rgba(255,105,180,0.5)]';
+      case 'eletronicos':
+        return 'hover:shadow-[0_0_20px_rgba(255,165,0,0.5)]';
+      case 'superpremios':
+        return 'hover:shadow-[0_0_20px_rgba(255,215,0,0.5)]';
+      default:
+        return 'hover:shadow-[0_0_20px_rgba(255,255,255,0.3)]';
+    }
+  };
+
   return (
     <motion.div 
       ref={containerRef}
-      className={`w-full h-full relative rounded-md overflow-hidden bg-gray-600 ${isDisabled || allRevealed ? 'pointer-events-none' : ''}`}
+      className={`w-full h-full relative rounded-md overflow-hidden bg-gray-600 transition-all duration-300 ${isDisabled || allRevealed ? 'pointer-events-none' : ''} ${getHoverClass()}`}
       initial={{ scale: 0.9, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ delay: index * 0.05 }}
+      onMouseEnter={() => !isDisabled && !isRevealed && !allRevealed && setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       {/* Prize content - Always underneath the canvas */}
       <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-md z-0">
@@ -565,11 +749,32 @@ export function ProScratchCard({
         style={{ 
           opacity: isRevealed ? 0 : 1,
           transition: 'opacity 0.5s ease-out',
-          touchAction: 'none'
+          touchAction: 'none',
+          transform: isHovered ? 'scale(1.02)' : 'scale(1)',
+          transformOrigin: 'center'
         }}
       />
       
-
+      {/* Hover shimmer effect */}
+      {isHovered && !isRevealed && !isDisabled && !allRevealed && (
+        <div 
+          className="absolute inset-0 pointer-events-none z-20"
+          style={{
+            background: `linear-gradient(135deg, transparent 30%, rgba(255,255,255,0.2) 50%, transparent 70%)`,
+            animation: 'shimmer 2s infinite'
+          }}
+        />
+      )}
     </motion.div>
   );
 }
+
+// Add shimmer animation
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+`;
+document.head.appendChild(style);

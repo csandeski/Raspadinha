@@ -1295,6 +1295,7 @@ export default function GamePremioPIX() {
                             }
                             revealed={revealed[index]}
                             allRevealed={allCardsRevealed}
+                            theme="pix"
                           />
                         ) : (
                           /* Empty card when game hasn't started */

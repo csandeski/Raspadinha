@@ -1299,6 +1299,7 @@ export default function GamePremioSuperPremios() {
                           }
                           revealed={revealed[index]}
                           allRevealed={allCardsRevealed}
+                          theme="superpremios"
                         />
                       </div>
                     ),

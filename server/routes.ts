@@ -693,8 +693,7 @@ const processPartnerCommission = async (userId: number, depositAmount: string, p
       const pendingConversion = existingPendingConversions[0];
       await db.update(partnerConversions)
         .set({
-          status: 'completed',
-          updatedAt: new Date()
+          status: 'completed'
         })
         .where(eq(partnerConversions.id, pendingConversion.id));
       
@@ -796,7 +795,7 @@ const processPartnerCommission = async (userId: number, depositAmount: string, p
       const affiliateWalletSuccess = await processAffiliateWalletTransaction(
         partner.affiliateId,
         affiliateCommission,
-        partnerConversionId, // Use partner conversion ID as reference
+        partnerConversionId || 0, // Use partner conversion ID as reference, default to 0 if null
         'completed',
         `Comissão aprovada - Depósito usuário #${userId} (divisão com parceiro ${partner.code})`
       );
@@ -1871,7 +1870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Check for pending deposits and update if paid
-      const pendingDeposits = await storage.getDeposits(req.userId);
+      const pendingDeposits = await storage.getDepositsByUser(req.userId);
       const pendingOnes = pendingDeposits.filter((d) => d.status === "pending");
 
       for (const deposit of pendingOnes) {
@@ -1946,7 +1945,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // This improves response time from 3+ seconds to milliseconds
       setImmediate(async () => {
         try {
-          const pendingDeposits = await storage.getDeposits(req.userId);
+          const pendingDeposits = await storage.getDepositsByUser(req.userId);
           const pendingOnes = pendingDeposits.filter((d) => d.status === "pending");
           
           // Only check the most recent pending deposit to avoid multiple API calls
@@ -3000,7 +2999,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const scratchBonusCost = useBonus ? multiplier : 0;
 
         // Check if user has sufficient funds
-        if (!useBonus && (!wallet || parseFloat(wallet.balance) < cost)) {
+        if (!useBonus && (!wallet || parseFloat(wallet.balance || '0') < cost)) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -3150,7 +3149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fill rest with random values
           const allValues = prizeData.map(p => p.value).concat(["", "", ""]);
           for (let i = 3; i < 9; i++) {
-            let value;
+            let value: string;
             do {
               value = allValues[Math.floor(Math.random() * allValues.length)];
             } while (
@@ -3163,7 +3162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Generate non-winning grid
           const allValues = prizeData.map(p => p.value).concat(["", "", "", ""]);
           for (let i = 0; i < 9; i++) {
-            let value = allValues[Math.floor(Math.random() * allValues.length)];
+            let value: string = allValues[Math.floor(Math.random() * allValues.length)];
             while (
               hiddenValues.filter((v) => v === value).length >= 2 &&
               value !== ""
@@ -3212,7 +3211,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           gameData: JSON.stringify({ multiplier, type: 'chest' })
         };
         
-        await storage.createGame(gameRecord);
+        await storage.createGame(gameRecord as any);
 
         // Return response in the format expected by the frontend
         res.json({
@@ -3250,7 +3249,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cost = (freePlay || useBonus) ? 0 : baseCost * multiplier;
         const scratchBonusCost = useBonus ? multiplier : 0; // Scratch bonus cost is multiplier
 
-        if (!freePlay && !useBonus && userId && (!wallet || parseFloat(wallet.balance) < cost)) {
+        if (!freePlay && !useBonus && userId && (!wallet || parseFloat(wallet.balance || '0') < cost)) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -3351,7 +3350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fill rest with random values (ensuring no accidental 3-match)
           const allValues = prizeData.map(p => p.value).concat(["", "", ""]);
           for (let i = 3; i < 9; i++) {
-            let value;
+            let value: string;
             do {
               value = allValues[Math.floor(Math.random() * allValues.length)];
             } while (
@@ -3401,7 +3400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateWalletScratchBonus(userId, newScratchBonus);
           } else {
             // Deduct from real balance
-            const newBalance = parseFloat(wallet.balance) - cost;
+            const newBalance = parseFloat(wallet.balance || '0') - cost;
             await storage.updateWalletBalance(userId, newBalance.toFixed(2));
             await storage.incrementTotalWagered(userId, cost.toString());
           }
@@ -3471,7 +3470,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (won && numericPrize > 0 && userId) {
           const wallet = await storage.getWallet(userId);
           if (wallet) {
-            const newBalance = parseFloat(wallet.balance) + numericPrize;
+            const newBalance = parseFloat(wallet.balance || '0') + numericPrize;
             await storage.updateWalletBalance(
               userId,
               newBalance.toFixed(2),
@@ -3500,7 +3499,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (userId) {
           const sessions = await storage.getUserActiveGameSessions(userId);
           for (const session of sessions) {
-            if (session.gameType === 'premio-pix' && session.gameState?.gameId === gameId) {
+            if (session.gameType === 'premio-pix' && (session.gameState as any)?.gameId === gameId) {
               await storage.deleteActiveGameSession(session.id.toString());
             }
           }
@@ -3526,7 +3525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cost = (freePlay || useBonus) ? 0 : baseCost * multiplier;
         const scratchBonusCost = useBonus ? multiplier : 0; // Scratch bonus cost is multiplier
 
-        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance) < cost)) {
+        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance || '0') < cost)) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -3625,7 +3624,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fill rest with random values (ensuring no accidental 3-match)
           const allValues = prizeData.map(p => p.value).concat(["", "", ""]);
           for (let i = 3; i < 9; i++) {
-            let value;
+            let value: string;
             do {
               value = allValues[Math.floor(Math.random() * allValues.length)];
             } while (
@@ -3675,7 +3674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateWalletScratchBonus(req.userId, newScratchBonus);
           } else {
             // Deduct from real balance
-            const newBalance = parseFloat(wallet.balance) - cost;
+            const newBalance = parseFloat(wallet.balance || '0') - cost;
             await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
             await storage.incrementTotalWagered(req.userId, cost.toString());
           }
@@ -3737,7 +3736,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (won && numericPrize > 0) {
           const wallet = await storage.getWallet(req.userId);
           if (wallet) {
-            const newBalance = parseFloat(wallet.balance) + numericPrize;
+            const newBalance = parseFloat(wallet.balance || '0') + numericPrize;
             await storage.updateWalletBalance(
               req.userId,
               newBalance.toFixed(2),
@@ -3763,7 +3762,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clean up active game session
         const sessions = await storage.getUserActiveGameSessions(req.userId);
         for (const session of sessions) {
-          if (session.gameType === 'premio-me-mimei' && session.gameState?.gameId === gameId) {
+          if (session.gameType === 'premio-me-mimei' && (session.gameState as any)?.gameId === gameId) {
             await storage.deleteActiveGameSession(session.id.toString());
           }
         }
@@ -3788,7 +3787,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cost = (freePlay || useBonus) ? 0 : baseCost * multiplier;
         const scratchBonusCost = useBonus ? multiplier : 0; // Scratch bonus cost is multiplier
 
-        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance) < cost)) {
+        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance || '0') < cost)) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -3887,7 +3886,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fill rest with random values (ensuring no accidental 3-match)
           const allValues = prizeData.map(p => p.value).concat(["", "", ""]);
           for (let i = 3; i < 9; i++) {
-            let value;
+            let value: string;
             do {
               value = allValues[Math.floor(Math.random() * allValues.length)];
             } while (
@@ -3937,7 +3936,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateWalletScratchBonus(req.userId, newScratchBonus);
           } else {
             // Deduct from real balance
-            const newBalance = parseFloat(wallet.balance) - cost;
+            const newBalance = parseFloat(wallet.balance || '0') - cost;
             await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
             await storage.incrementTotalWagered(req.userId, cost.toString());
           }
@@ -3999,7 +3998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (won && numericPrize > 0) {
           const wallet = await storage.getWallet(req.userId);
           if (wallet) {
-            const newBalance = parseFloat(wallet.balance) + numericPrize;
+            const newBalance = parseFloat(wallet.balance || '0') + numericPrize;
             await storage.updateWalletBalance(
               req.userId,
               newBalance.toFixed(2),
@@ -4025,7 +4024,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clean up active game session
         const sessions = await storage.getUserActiveGameSessions(req.userId);
         for (const session of sessions) {
-          if (session.gameType === 'premio-eletronicos' && session.gameState?.gameId === gameId) {
+          if (session.gameType === 'premio-eletronicos' && (session.gameState as any)?.gameId === gameId) {
             await storage.deleteActiveGameSession(session.id.toString());
           }
         }
@@ -4050,7 +4049,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const cost = (freePlay || useBonus) ? 0 : baseCost * multiplier;
         const scratchBonusCost = useBonus ? 20 * multiplier : 0; // Scratch bonus cost is 20 × multiplier
 
-        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance) < cost)) {
+        if (!freePlay && !useBonus && (!wallet || parseFloat(wallet.balance || '0') < cost)) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -4147,7 +4146,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Fill rest with random values (ensuring no accidental 3-match)
           const allValues = prizeData.map(p => p.value).concat(["", "", ""]);
           for (let i = 3; i < 9; i++) {
-            let value;
+            let value: string;
             do {
               value = allValues[Math.floor(Math.random() * allValues.length)];
             } while (
@@ -4197,7 +4196,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.updateWalletScratchBonus(req.userId, newScratchBonus);
           } else {
             // Deduct from real balance
-            const newBalance = parseFloat(wallet.balance) - cost;
+            const newBalance = parseFloat(wallet.balance || '0') - cost;
             await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
             await storage.incrementTotalWagered(req.userId, cost.toString());
           }
@@ -4259,7 +4258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (won && numericPrize > 0) {
           const wallet = await storage.getWallet(req.userId);
           if (wallet) {
-            const newBalance = parseFloat(wallet.balance) + numericPrize;
+            const newBalance = parseFloat(wallet.balance || '0') + numericPrize;
             await storage.updateWalletBalance(
               req.userId,
               newBalance.toFixed(2),
@@ -4285,7 +4284,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Clean up active game session
         const sessions = await storage.getUserActiveGameSessions(req.userId);
         for (const session of sessions) {
-          if (session.gameType === 'premio-super-premios' && session.gameState?.gameId === gameId) {
+          if (session.gameType === 'premio-super-premios' && (session.gameState as any)?.gameId === gameId) {
             await storage.deleteActiveGameSession(session.id.toString());
           }
         }
@@ -4307,7 +4306,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const wallet = await storage.getWallet(req.userId);
         const gameCost = 20; // Fixed cost for premio PIX conta
 
-        if (!wallet || parseFloat(wallet.balance) < gameCost) {
+        if (!wallet || parseFloat(wallet.balance || '0') < gameCost) {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
@@ -4339,7 +4338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningValue = prizeValues[selectedIndex];
 
           // Place 3 matching values randomly in the grid
-          const winPositions = [];
+          const winPositions: number[] = [];
           while (winPositions.length < 3) {
             const pos = Math.floor(Math.random() * 9);
             if (!winPositions.includes(pos)) {
@@ -4390,7 +4389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Deduct cost
-        const newBalance = parseFloat(wallet.balance) - gameCost;
+        const newBalance = parseFloat(wallet.balance || '0') - gameCost;
         await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
 
         // Store game state
@@ -4435,7 +4434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (won && prize > 0) {
           const wallet = await storage.getWallet(req.userId);
           if (wallet) {
-            const newBalance = parseFloat(wallet.balance) + prize;
+            const newBalance = parseFloat(wallet.balance || '0') + prize;
             await storage.updateWalletBalance(
               req.userId,
               newBalance.toFixed(2),
@@ -4892,8 +4891,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Determine which balance to use
-      const usingBonus = useBonus && parseFloat(wallet.scratchBonus) > 0;
-      const currentBalance = usingBonus ? parseFloat(wallet.scratchBonus) : parseFloat(wallet.balance);
+      const usingBonus = useBonus && parseFloat(wallet.scratchBonus?.toString() || '0') > 0;
+      const currentBalance = usingBonus ? parseFloat(wallet.scratchBonus?.toString() || '0') : parseFloat(wallet.balance || '0');
       
       if (currentBalance < totalCost) {
         return res.status(400).json({ 
@@ -5122,7 +5121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Always update real balance (even if played with bonus)
         const wallet = await storage.getWallet(req.userId);
         if (wallet) {
-          const newBalance = parseFloat(wallet.balance) + winAmount;
+          const newBalance = parseFloat(wallet.balance || '0') + winAmount;
           await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
         }
         
@@ -5596,7 +5595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (
         !wallet ||
         !wallet.balance ||
-        parseFloat(wallet.balance) < parseFloat(config.cost)
+        parseFloat(wallet.balance || '0') < parseFloat(config.cost)
       ) {
         return res.status(400).json({ message: "Saldo insuficiente" });
       }
@@ -5618,7 +5617,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Update wallet balance
       const newBalance =
-        parseFloat(wallet.balance) - parseFloat(config.cost) + result.prize;
+        parseFloat(wallet.balance || '0') - parseFloat(config.cost) + result.prize;
       await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
 
       res.json({
@@ -5793,7 +5792,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const session = sessionResult[0];
-        const gameState = session.gameState;
+        const gameState = session.gameState as any;
         const gameId = gameState?.gameId;
         
         if (gameId && gameType.startsWith('premio-')) {
@@ -5827,7 +5826,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         for (const session of sessions) {
           // Check if the gameState is a string or object
-          let gameStateObj = session.gameState;
+          let gameStateObj = session.gameState as any;
           if (typeof gameStateObj === "string") {
             try {
               gameStateObj = JSON.parse(gameStateObj);
@@ -5844,10 +5843,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // 3. It's a premio game type (to ensure cleanup)
           if (
             session.gameId === gameId ||
-            (gameStateObj && gameStateObj.gameId === gameId) ||
+            (gameStateObj && (gameStateObj as any).gameId === gameId) ||
             (session.gameType.startsWith("premio-") &&
               gameStateObj &&
-              gameStateObj.gameId === gameId)
+              (gameStateObj as any).gameId === gameId)
           ) {
             await storage.deleteActiveGameSession(session.gameId);
           }
@@ -5898,7 +5897,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             )
           );
 
-        res.json({ success: true, cleared: result.count || 0 });
+        res.json({ success: true, cleared: 0 });
       } catch (error) {
         console.error("Clear game type sessions error:", error);
         res
@@ -6387,7 +6386,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const wallet = await storage.getWallet(deposit.userId);
             if (wallet && wallet.balance) {
               const newBalance =
-                parseFloat(wallet.balance) + parseFloat(deposit.amount);
+                parseFloat(wallet.balance || '0') + parseFloat(deposit.amount);
               await storage.updateWalletBalance(
                 deposit.userId,
                 newBalance.toFixed(2),
@@ -6576,7 +6575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const wallet = await storage.getWallet(deposit.userId);
         if (wallet && wallet.balance) {
           const newBalance =
-            parseFloat(wallet.balance) + parseFloat(deposit.amount);
+            parseFloat(wallet.balance || '0') + parseFloat(deposit.amount);
           await storage.updateWalletBalance(
             deposit.userId,
             newBalance.toFixed(2),
@@ -7355,7 +7354,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         const wallet = await storage.getWallet(req.userId);
-        if (!wallet || !wallet.balance || parseFloat(wallet.balance) < amount) {
+        if (!wallet || !wallet.balance || parseFloat(wallet.balance || '0') < amount) {
           return res.status(400).json({ message: "Saldo insuficiente" });
         }
 
@@ -7366,8 +7365,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
 
         // Create withdrawal request
+        const displayId = Math.floor(10000 + Math.random() * 90000);
         const withdrawal = await storage.createWithdrawal({
           userId: req.userId,
+          displayId,
           amount: amount.toString(),
           pixKey,
           pixKeyType,
@@ -7375,7 +7376,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
 
         // Update wallet balance
-        const newBalance = parseFloat(wallet.balance) - amount;
+        const newBalance = parseFloat(wallet.balance || '0') - amount;
         await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
 
         res.json({
@@ -7759,7 +7760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Refund the amount back to user's wallet
         const wallet = await storage.getWallet(withdrawal.userId);
         if (wallet) {
-          const currentBalance = parseFloat(wallet.balance);
+          const currentBalance = parseFloat(wallet.balance || '0');
           const withdrawalAmount = parseFloat(withdrawal.amount);
           const newBalance = currentBalance + withdrawalAmount;
           await storage.updateWalletBalance(withdrawal.userId, newBalance.toFixed(2));
@@ -8091,7 +8092,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ error: "Carteira não encontrada" });
       }
       
-      const newBalance = parseFloat(wallet.balance) + parseFloat(cashback.cashbackAmount.toString());
+      const newBalance = parseFloat(wallet.balance || '0') + parseFloat(cashback.cashbackAmount.toString());
       await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
       
       // Mark cashback as credited
@@ -8681,7 +8682,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         comparisonEndDate: comparisonEndDate?.toISOString()
       });
       // Get all deposits
-      const allDeposits = await storage.getDeposits();
+      const allDeposits = await db.select().from(deposits).orderBy(desc(deposits.createdAt));
       
       // Filter deposits by date range
       const depositsInPeriod = allDeposits.filter(d => {
@@ -9453,7 +9454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const wallet = await storage.getWallet(withdrawal.userId);
         if (wallet) {
           const newBalance =
-            parseFloat(wallet.balance) + parseFloat(withdrawal.amount);
+            parseFloat(wallet.balance || '0') + parseFloat(withdrawal.amount);
           await storage.updateWalletBalance(
             withdrawal.userId,
             newBalance.toFixed(2),
@@ -11451,7 +11452,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Check if user has ever made a deposit
       // Alternative: check if user has balance > 0
       const wallet = await storage.getWallet(userId);
-      const hasBalance = wallet && parseFloat(wallet.balance) > 0;
+      const hasBalance = wallet && parseFloat(wallet.balance || '0') > 0;
 
       // Also check deposits
       const deposits = await storage.getDepositsByUser(userId);
@@ -11759,7 +11760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         // Check if user has ever made a deposit or has balance
         const wallet = await storage.getWallet(userId);
-        const hasBalance = wallet && parseFloat(wallet.balance) > 0;
+        const hasBalance = wallet && parseFloat(wallet.balance || '0') > 0;
         const deposits = await storage.getDepositsByUser(userId);
         const hasEverDeposited =
           hasBalance || deposits.some((d) => d.status === "completed");
@@ -11859,7 +11860,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Add reward to user's balance
         const wallet = await storage.getWallet(userId);
         if (wallet) {
-          const newBalance = parseFloat(wallet.balance) + rewardAmount;
+          const newBalance = parseFloat(wallet.balance || '0') + rewardAmount;
           await storage.updateWalletBalance(userId, newBalance.toFixed(2));
         }
 
@@ -12196,7 +12197,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .limit(1);
         
         if (wallet) {
-          const newBalance = Math.max(0, parseFloat(wallet.balance) - parseFloat(withdrawal.amount));
+          const newBalance = Math.max(0, parseFloat(wallet.balance || '0') - parseFloat(withdrawal.amount));
           const newTotalWithdrawn = parseFloat(wallet.totalWithdrawn) + parseFloat(withdrawal.amount);
           
           await db.update(partnersWallet)
@@ -13038,7 +13039,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Add the amount to user's wallet balance
       const wallet = await storage.getWallet(req.userId);
       if (wallet) {
-        const newBalance = parseFloat(wallet.balance) + parseFloat(amount);
+        const newBalance = parseFloat(wallet.balance || '0') + parseFloat(amount);
         await storage.updateWalletBalance(req.userId, newBalance.toFixed(2));
       }
       
@@ -14665,7 +14666,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Carteira não encontrada" });
       }
       
-      const availableBalance = parseFloat(wallet.balance);
+      const availableBalance = parseFloat(wallet.balance || '0');
       
       // Security: Double-check balance is positive
       if (availableBalance < 0) {
@@ -15883,7 +15884,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .where(eq(affiliatesWallet.affiliateId, withdrawal.affiliateId));
           
         if (wallet) {
-          const currentBalance = parseFloat(wallet.balance);
+          const currentBalance = parseFloat(wallet.balance || '0');
           // IMPORTANT: Refund the ORIGINAL amount (net amount + fee)
           // The amount stored in DB is the net amount (after R$ 3 fee)
           // We need to refund the full original amount that was deducted
@@ -16458,7 +16459,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get wallet to get balances
         const wallet = await storage.getWallet(demoAccount.id);
         if (wallet) {
-          demoData.balance = parseFloat(wallet.balance);
+          demoData.balance = parseFloat(wallet.balance || '0');
           demoData.bonusBalance = wallet.scratchBonus || 0;
         }
         
@@ -16933,7 +16934,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Get wallet to get balances
         const wallet = await storage.getWallet(demoAccount.id);
         if (wallet) {
-          demoData.balance = parseFloat(wallet.balance);
+          demoData.balance = parseFloat(wallet.balance || '0');
           demoData.bonusBalance = wallet.scratchBonus || 0;
         }
         

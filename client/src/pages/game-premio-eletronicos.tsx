@@ -18,7 +18,6 @@ import { balanceTracker } from "@/lib/balance-tracker";
 import { MultiplierInfoModal } from "@/components/multiplier-info-modal";
 import { LoginRequiredModal } from "@/components/login-required-modal";
 import { InsufficientFundsModal } from "@/components/insufficient-funds-modal";
-import { LoseModal } from "@/components/lose-modal";
 
 
 
@@ -124,7 +123,6 @@ export default function GamePremioEletronicos() {
   const [currentCardIndex, setCurrentCardIndex] = useState<number | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showLoseModal, setShowLoseModal] = useState(false);
   const [showInsufficientFundsModal, setShowInsufficientFundsModal] = useState(false);
   const [insufficientFundsType, setInsufficientFundsType] = useState<"balance" | "bonus">("balance");
   const gameContainerRef = useRef<HTMLDivElement>(null);
@@ -451,7 +449,7 @@ export default function GamePremioEletronicos() {
 
       // Show appropriate modal based on result
       if (!response.won) {
-        setShowLoseModal(true);
+        // Lose result is shown in the cards
       }
 
       // Add balance change to queue for wins
@@ -544,7 +542,6 @@ export default function GamePremioEletronicos() {
   };
 
   const handlePlayAgain = () => {
-    setShowLoseModal(false);
     setGameStarted(false);
     setGameComplete(false);
     setRevealed(new Array(9).fill(false));
@@ -1355,12 +1352,6 @@ export default function GamePremioEletronicos() {
         </div>
       </div>
       
-      {/* Lose Modal */}
-      <LoseModal
-        isOpen={showLoseModal}
-        onClose={() => setShowLoseModal(false)}
-        onPlayAgain={handlePlayAgain}
-      />
       
       {/* Prize Modal */}
       {selectedPrize && (

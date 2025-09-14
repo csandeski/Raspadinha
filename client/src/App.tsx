@@ -377,7 +377,6 @@ function Router() {
           <Route path="/admin/login" component={AdminLogin} />
           <Route path="/admin/dashboard" component={AdminDashboard} />
           <Route path="/admin/probability-test" component={AdminProbabilityTestPage} />
-          <Route path="/admin/probabilities" component={AdminProbabilities} />
 
           <Route path="/macaco123" component={SupportAgentLogin} />
           <Route path="/support-agent" component={SupportAgent} />

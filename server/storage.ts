@@ -1725,23 +1725,35 @@ export class DatabaseStorage implements IStorage {
 
   // Get full prize probabilities for admin panel
   async getFullPrizeProbabilities(gameType: string): Promise<any[]> {
-    // Use raw SQL to avoid schema mismatches
-    const result = await db.execute(sql`
-      SELECT id, game_type, prize_value, prize_name, probability
-      FROM prize_probabilities
-      WHERE game_type = ${gameType}
-      ORDER BY CAST(prize_value AS DECIMAL)
-    `);
-    
-    // Return full objects for admin panel
-    return result.rows.map((p: any) => ({
-      id: p.id,
-      game_type: p.game_type,
-      prize_value: p.prize_value,
-      prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value).toFixed(2)}`,
-      probability: parseFloat(p.probability || 0),
-      order: 0
-    }));
+    // Use pool directly with correct column names based on actual DB structure
+    const client = await pool.connect();
+    try {
+      const result = await client.query(
+        `SELECT 
+          id,
+          game_type,
+          prize_value,
+          prize_type,
+          amount,
+          probability
+        FROM prize_probabilities
+        WHERE game_type = $1
+        ORDER BY CAST(COALESCE(prize_value, amount) AS DECIMAL)`,
+        [gameType]
+      );
+      
+      // Return full objects for admin panel, mapping to expected format
+      return result.rows.map((p: any, index) => ({
+        id: p.id,
+        game_type: p.game_type,
+        prize_value: p.prize_value || p.amount || '0',
+        prize_name: p.prize_type || `R$ ${parseFloat(p.prize_value || p.amount || '0').toFixed(2)}`,
+        probability: parseFloat(p.probability || '0'),
+        order: index
+      }));
+    } finally {
+      client.release();
+    }
   }
 
   // Get demo prize probabilities for admin panel
@@ -1798,22 +1810,42 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updatePrizeProbabilities(gameType: string, probabilities: any[]): Promise<void> {
-    // Delete existing probabilities for this game type using raw SQL
-    await db.execute(sql`DELETE FROM prize_probabilities WHERE game_type = ${gameType}`);
-    
-    // Insert new probabilities using raw SQL to match database structure
-    if (probabilities.length > 0) {
-      for (const [index, p] of probabilities.entries()) {
-        const prizeValue = p.prizeValue || p.prize_value;
-        const prizeName = p.prizeName || p.prize_name || `R$ ${parseFloat(prizeValue).toFixed(2)}`;
-        const probability = p.probability.toString();
-        const order = p.order !== undefined ? p.order : index;
-        
-        await db.execute(sql`
-          INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at)
-          VALUES (${gameType}, ${prizeValue}, ${prizeName}, ${probability}, ${order}, NOW())
-        `);
+    // Use pool directly with correct column names based on actual DB structure
+    const client = await pool.connect();
+    try {
+      // Start transaction for atomic operation
+      await client.query('BEGIN');
+      
+      // Delete existing probabilities for this game type
+      await client.query(
+        'DELETE FROM prize_probabilities WHERE game_type = $1',
+        [gameType]
+      );
+      
+      // Insert new probabilities with correct column names
+      if (probabilities.length > 0) {
+        for (const [index, p] of probabilities.entries()) {
+          const prizeValue = (p.prizeValue || p.prize_value || '0').toString();
+          const prizeName = p.prizeName || p.prize_name || `R$ ${parseFloat(prizeValue).toFixed(2)}`;
+          const probabilityValue = p.probability || 0; // Keep as decimal, don't convert to integer
+          const amount = parseFloat(prizeValue);
+          
+          await client.query(
+            `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, amount, probability, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
+            [gameType, prizeValue, prizeName, amount, probabilityValue]
+          );
+        }
       }
+      
+      // Commit transaction
+      await client.query('COMMIT');
+    } catch (error) {
+      // Rollback on error
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
   }
 

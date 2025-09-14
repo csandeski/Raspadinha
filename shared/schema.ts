@@ -315,13 +315,15 @@ export const gameProbabilities = pgTable("game_probabilities", {
 // Prize probabilities table - tracks individual prize probabilities
 export const prizeProbabilities = pgTable("prize_probabilities", {
   id: serial("id").primaryKey(),
-  gameType: text("game_type").notNull(),
-  prizeValue: text("prize_value").notNull(),
-  prizeName: text("prize_name"),
-  probability: decimal("probability", { precision: 10, scale: 6 }).notNull(), // 0.000000 to 100.000000
-  order: integer("order").notNull().default(0), // Display order
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-  updatedBy: text("updated_by").notNull().default('admin'),
+  prizeName: text("prize_type"), // Nome do prêmio (mapeado para prize_type no banco)
+  prizeValue: text("prize_value"), // Valor do prêmio como texto
+  amount: numeric("amount"), // Valor do prêmio alternativo
+  probability: decimal("probability", { precision: 10, scale: 6 }), // Probabilidade como decimal
+  order: integer("order").default(0), // Ordem de exibição
+  gameType: varchar("game_type"), // Tipo do jogo
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: text("updated_by").default('admin'), // Quem atualizou
 });
 
 // Esquilo Mania probabilities table - tracks prize probabilities for Esquilo game
@@ -1215,3 +1217,12 @@ export type InsertPartnerConversion = typeof partnerConversions.$inferInsert;
 export type PartnersWithdrawal = typeof partnersWithdrawals.$inferSelect;
 export type InsertPartnersWithdrawal = typeof partnersWithdrawals.$inferInsert;
 export type InsertDiscordWebhook = z.infer<typeof insertDiscordWebhookSchema>;
+
+// Prize probabilities types
+export type PrizeProbability = typeof prizeProbabilities.$inferSelect;
+export const insertPrizeProbabilitySchema = createInsertSchema(prizeProbabilities).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+export type InsertPrizeProbability = z.infer<typeof insertPrizeProbabilitySchema>;

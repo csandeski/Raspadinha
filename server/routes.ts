@@ -8008,6 +8008,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin users endpoint
+  app.get("/api/admin/users", authenticateAdmin, async (req: any, res) => {
+    try {
+      const users = await storage.getUsers();
+      
+      // Get wallet information for each user
+      const usersWithWallets = await Promise.all(users.map(async (user) => {
+        const wallet = await storage.getWallet(user.id);
+        return {
+          ...user,
+          balance: wallet?.balance || "0.00",
+          scratchBonus: wallet?.scratchBonus || 0
+        };
+      }));
+      
+      res.json(usersWithWallets);
+    } catch (error) {
+      console.error("Get admin users error:", error);
+      res.status(500).json({ error: "Erro ao buscar usuários" });
+    }
+  });
+
   // Admin stats endpoint
   app.get("/api/admin/stats", authenticateAdmin, async (req: any, res) => {
     try {

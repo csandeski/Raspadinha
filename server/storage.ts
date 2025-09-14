@@ -111,6 +111,7 @@ export interface IStorage {
   resetToDefaults(gameKey: string): Promise<void>;
   
   // User operations
+  getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -419,7 +420,7 @@ export class DatabaseStorage implements IStorage {
         .select()
         .from(prizeProbabilities)
         .where(eq(prizeProbabilities.gameType, mappedKey))
-        .orderBy(asc(prizeProbabilities.order));
+        .orderBy(asc(prizeProbabilities.gameType), asc(prizeProbabilities.prizeValue));
       
       if (dbProbabilities.length > 0) {
         return {
@@ -490,6 +491,14 @@ export class DatabaseStorage implements IStorage {
   }
   
   // User operations
+  async getUsers(): Promise<User[]> {
+    // Use raw SQL to get all users from app_users table
+    const result = await pool.query(
+      `SELECT * FROM app_users ORDER BY created_at DESC`
+    );
+    return result.rows as User[];
+  }
+
   async getUser(id: number): Promise<User | undefined> {
     // Use raw SQL to avoid Drizzle issue with app_users table
     const result = await pool.query(
@@ -1889,7 +1898,7 @@ export class DatabaseStorage implements IStorage {
       const probabilities = await db.execute(sql`
         SELECT * FROM demo_prize_probabilities 
         WHERE game_type = ${demoGameType}
-        ORDER BY "order"
+        ORDER BY game_type, prize_value
       `);
       
       // Map to expected format for game creation endpoints
@@ -1903,7 +1912,7 @@ export class DatabaseStorage implements IStorage {
     const probabilities = await db.select()
       .from(prizeProbabilities)
       .where(eq(prizeProbabilities.gameType, gameType))
-      .orderBy(prizeProbabilities.order);
+      .orderBy(prizeProbabilities.gameType, prizeProbabilities.prizeValue);
     
     // Map to expected format for game creation endpoints
     return probabilities.map(p => ({
@@ -1989,7 +1998,7 @@ export class DatabaseStorage implements IStorage {
         'SELECT id, game_type, prize_value, prize_name, probability, "order", updated_at, updated_by ' +
         'FROM prize_probabilities ' +
         'WHERE game_type = $1 ' +
-        'ORDER BY "order" ASC',
+        'ORDER BY game_type, prize_value ASC',
         [gameKey]
       );
       
@@ -2032,7 +2041,7 @@ export class DatabaseStorage implements IStorage {
       // Insert new probabilities
       for (const [index, p] of probabilities.entries()) {
         await client.query(
-          `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at, updated_by)
+          `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, updated_at, updated_by)
            VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
           [gameKey, p.value, p.name, p.probability, p.order || index, 'admin']
         );
@@ -2079,7 +2088,7 @@ export class DatabaseStorage implements IStorage {
     const probabilities = await db.execute(sql`
       SELECT * FROM demo_prize_probabilities 
       WHERE game_type = ${demoGameType}
-      ORDER BY "order"
+      ORDER BY game_type, prize_value
     `);
     
     // Return full objects for admin panel

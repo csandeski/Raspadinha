@@ -1733,12 +1733,12 @@ export class DatabaseStorage implements IStorage {
           id,
           game_type,
           prize_value,
-          prize_name,
+          prize_type as prize_name,
           probability,
-          "order"
+          0 as "order"
         FROM prize_probabilities
         WHERE game_type = $1
-        ORDER BY "order"`,
+        ORDER BY probability DESC, prize_value`,
         [gameType]
       );
       
@@ -1765,11 +1765,11 @@ export class DatabaseStorage implements IStorage {
           id,
           game_type,
           prize_value,
-          prize_name,
+          prize_type as prize_name,
           probability,
-          "order"
+          0 as "order"
         FROM prize_probabilities
-        ORDER BY game_type, "order"`
+        ORDER BY game_type, probability DESC, prize_value`
       );
       
       return result.rows.map((p: any) => ({
@@ -1860,9 +1860,9 @@ export class DatabaseStorage implements IStorage {
           const amount = parseFloat(prizeValue);
           
           await client.query(
-            `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at, updated_by)
-             VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
-            [gameType, prizeValue, prizeName, probabilityValue, index, 'admin']
+            `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, updated_at, updated_by)
+             VALUES ($1, $2, $3, $4, NOW(), $5)`,
+            [gameType, prizeValue, prizeName, probabilityValue, 'admin']
           );
         }
       }

@@ -4794,26 +4794,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       gameBoxes.set(gameId, boxes); // Store boxes for this game
       
       // Save game to database for history
-      await db.execute(sql`
-        INSERT INTO esquilo_games (
-          game_id, user_id, bet_amount, used_bonus, status, 
-          boxes, opened_boxes, started_at
-        ) VALUES (
-          ${gameId}, ${req.userId}, ${betAmount}, ${useBonus}, 
-          'playing', ${JSON.stringify(boxes)}, '[]', NOW()
-        )
-      `);
+      await storage.createEsquiloGame({
+        gameId,
+        userId: req.userId,
+        betAmount: betAmount.toString(),
+        usedBonus: useBonus,
+        status: 'playing',
+        boxes,
+        openedBoxes: [],
+        startedAt: new Date()
+      });
       
       // Save game state for resume functionality
-      await db.execute(sql`
-        INSERT INTO esquilo_game_states (
-          game_id, user_id, bet_amount, current_multiplier, 
-          used_bonus, is_active, boxes, opened_boxes
-        ) VALUES (
-          ${gameId}, ${req.userId}, ${betAmount}, 0, 
-          ${useBonus}, true, ${JSON.stringify(boxes)}, '[]'
-        )
-      `);
+      await storage.createEsquiloGameState({
+        gameId,
+        userId: req.userId,
+        betAmount: betAmount.toString(),
+        currentMultiplier: '0',
+        usedBonus: useBonus,
+        isActive: true,
+        boxes,
+        openedBoxes: []
+      });
       
       res.json({
         gameId,
@@ -5006,28 +5008,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       gameBoxes.set(gameId, boxes);
       
       // Save game to database with bonus ready for selection
-      await db.execute(sql`
-        INSERT INTO esquilo_games (
-          game_id, user_id, bet_amount, used_bonus, bonus_activated, 
-          active_bonus_multiplier, status, boxes, opened_boxes, started_at
-        ) VALUES (
-          ${gameId}, ${req.userId}, ${betAmount}, false, true, 
-          null, 'playing', ${JSON.stringify(boxes)}, '[]', NOW()
-        )
-      `);
+      await storage.createEsquiloGame({
+        gameId,
+        userId: req.userId,
+        betAmount: betAmount.toString(),
+        usedBonus: false,
+        bonusActivated: true,
+        status: 'playing',
+        boxes,
+        openedBoxes: [],
+        startedAt: new Date()
+      });
       
       // Save game state with bonus multipliers for selection
-      await db.execute(sql`
-        INSERT INTO esquilo_game_states (
-          game_id, user_id, bet_amount, current_multiplier, 
-          used_bonus, bonus_used, bonus_activated, active_bonus_multiplier,
-          is_active, boxes, opened_boxes, bonus_multipliers
-        ) VALUES (
-          ${gameId}, ${req.userId}, ${betAmount}, 0, 
-          false, false, true, null,
-          true, ${JSON.stringify(boxes)}, '[]', null
-        )
-      `);
+      await storage.createEsquiloGameState({
+        gameId,
+        userId: req.userId,
+        betAmount: betAmount.toString(),
+        currentMultiplier: '0',
+        usedBonus: false,
+        bonusUsed: false,
+        bonusActivated: true,
+        isActive: true,
+        boxes,
+        openedBoxes: []
+      });
       
       // Wager is automatically tracked through games history
       
@@ -5058,23 +5063,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let gameState = activeGames.get(gameId);
       if (!gameState) {
         // Try to restore from database first
-        const dbGame = await db.execute(sql`
-          SELECT 
-            bet_amount as "betAmount",
-            current_multiplier as "currentMultiplier",
-            used_bonus as "usedBonus",
-            bonus_used as "bonusUsed",
-            bonus_activated as "bonusActivated",
-            active_bonus_multiplier as "activeBonusMultiplier",
-            opened_boxes as "openedBoxes",
-            boxes
-          FROM esquilo_game_states
-          WHERE game_id = ${gameId} AND user_id = ${req.userId}
-          LIMIT 1
-        `);
+        const dbGame = await storage.getEsquiloGameState(gameId);
         
-        if (dbGame.rows.length > 0) {
-          const game = dbGame.rows[0];
+        if (dbGame && dbGame.userId === req.userId) {
+          const game = dbGame;
           gameState = {
             userId: req.userId,
             betAmount: parseFloat(game.betAmount),
@@ -5347,14 +5339,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               gameState.bonusMultipliers = bonusMultipliers;
               
               // Update database with bonus activation and box state
-              await db.execute(sql`
-                UPDATE esquilo_game_states 
-                SET bonus_activated = true,
-                    bonus_multipliers = ${JSON.stringify(bonusMultipliers)},
-                    boxes = ${JSON.stringify(boxes)},
-                    updated_at = NOW()
-                WHERE game_id = ${gameId}
-              `);
+              await storage.updateEsquiloGameState(gameId, {
+                bonusActivated: true,
+                bonusMultipliers,
+                boxes
+              });
               
               await db.execute(sql`
                 UPDATE esquilo_games 
@@ -5407,15 +5396,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const winAmount = gameState.betAmount * gameState.currentMultiplier;
         
         // Update game state in database with box contents and bonus info
-        await db.execute(sql`
-          UPDATE esquilo_game_states 
-          SET current_multiplier = ${gameState.currentMultiplier},
-              opened_boxes = ${JSON.stringify(Array.from(gameState.openedBoxes))},
-              boxes = ${JSON.stringify(boxes)},
-              active_bonus_multiplier = ${gameState.activeBonusMultiplier || null},
-              updated_at = NOW()
-          WHERE game_id = ${gameId}
-        `);
+        await storage.updateEsquiloGameState(gameId, {
+          currentMultiplier: gameState.currentMultiplier.toString(),
+          openedBoxes: Array.from(gameState.openedBoxes),
+          boxes,
+          activeBonusMultiplier: gameState.activeBonusMultiplier ? gameState.activeBonusMultiplier.toString() : undefined
+        });
         
         // Update game history with box contents
         await db.execute(sql`
@@ -5543,15 +5529,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const boxes = gameBoxes.get(gameId) || [];
       
       // Update database with bonus selection and box state
-      await db.execute(sql`
-        UPDATE esquilo_game_states 
-        SET active_bonus_multiplier = ${selectedMultiplier},
-            bonus_used = true,
-            bonus_activated = false,
-            boxes = ${JSON.stringify(boxes)},
-            updated_at = NOW()
-        WHERE game_id = ${gameId}
-      `);
+      await storage.updateEsquiloGameState(gameId, {
+        activeBonusMultiplier: selectedMultiplier.toString(),
+        bonusUsed: true,
+        bonusActivated: false,
+        boxes
+      });
       
       await db.execute(sql`
         UPDATE esquilo_games 

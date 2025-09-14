@@ -192,7 +192,7 @@ export default function Home() {
                 >
                   <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
                     gameSection === 'raspadinhas'
-                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      ? 'bg-gray-800/50 ring-1 ring-gray-600/30'
                       : 'bg-gray-900/30'
                   }`}>
                     {/* Image */}
@@ -227,7 +227,7 @@ export default function Home() {
                 >
                   <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
                     gameSection === 'minigames'
-                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      ? 'bg-gray-800/50 ring-1 ring-gray-600/30'
                       : 'bg-gray-900/30'
                   }`}>
                     {/* Image */}
@@ -262,7 +262,7 @@ export default function Home() {
                 >
                   <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
                     gameSection === 'baus'
-                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      ? 'bg-gray-800/50 ring-1 ring-gray-600/30'
                       : 'bg-gray-900/30'
                   }`}>
                     {/* Image */}

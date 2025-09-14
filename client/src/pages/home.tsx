@@ -192,6 +192,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
+                      {/* Glow Effect */}
+                      {gameSection === 'raspadinhas' && (
+                        <div className="absolute inset-0 -z-10">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        </div>
+                      )}
                       {/* Image Container */}
                       <div className="relative w-[90px] h-[60px] md:w-[120px] md:h-[80px]">
                         <img 
@@ -222,6 +228,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
+                      {/* Glow Effect */}
+                      {gameSection === 'minigames' && (
+                        <div className="absolute inset-0 -z-10">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        </div>
+                      )}
                       {/* Image Container */}
                       <div className="relative w-[80px] h-[90px] md:w-[100px] md:h-[112px]">
                         <img 
@@ -252,6 +264,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
+                      {/* Glow Effect */}
+                      {gameSection === 'baus' && (
+                        <div className="absolute inset-0 -z-10">
+                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        </div>
+                      )}
                       {/* Image Container */}
                       <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600" />

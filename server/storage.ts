@@ -1831,9 +1831,9 @@ export class DatabaseStorage implements IStorage {
           const amount = parseFloat(prizeValue);
           
           await client.query(
-            `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, amount, probability, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5, NOW(), NOW())`,
-            [gameType, prizeValue, prizeName, amount, probabilityValue]
+            `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at, updated_by)
+             VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
+            [gameType, prizeValue, prizeName, probabilityValue, index, 'admin']
           );
         }
       }

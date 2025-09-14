@@ -134,7 +134,6 @@ const generateWinners = () => {
       { value: 250, name: 'R$ 250,00' }, // 5x * 50
       { value: 500, name: 'R$ 500,00' }, // 5x * 100
       { value: 1000, name: 'R$ 1.000,00' }, // 2x * 500
-      { value: 2500, name: 'R$ 2.500,00' }, // 5x * 500
       { value: 5000, name: 'R$ 5.000,00' }  // 5x * 1000
     ]
   };
@@ -323,16 +322,23 @@ const getPrizeImage = (game: string, value: number) => {
     // Map values to appropriate PIX images
     if (value === 3) return '/premios/pix/3.webp';
     if (value === 5) return '/premios/pix/5.webp';
-    if (value === 8) return '/premios/pix/10.webp'; // Use 10 for 8
+    if (value === 8) return '/premios/pix/10.webp';  // Use 10 for 8
     if (value === 20) return '/premios/pix/20.webp';
     if (value === 50) return '/premios/pix/50.webp';
     if (value === 100) return '/premios/pix/100.webp';
     if (value === 250) return '/premios/pix/200.webp'; // Use 200 for 250
     if (value === 500) return '/premios/pix/500.webp';
     if (value === 1000) return '/premios/pix/1000.webp';
-    if (value === 2500) return '/premios/pix/2000.webp'; // Use 2000 for 2500
     if (value === 5000) return '/premios/pix/5000.webp';
-    return '/premios/pix/100.webp';
+    // Fallback for other values
+    if (value <= 5) return '/premios/pix/5.webp';
+    if (value <= 20) return '/premios/pix/20.webp';
+    if (value <= 50) return '/premios/pix/50.webp';
+    if (value <= 100) return '/premios/pix/100.webp';
+    if (value <= 500) return '/premios/pix/500.webp';
+    if (value <= 1000) return '/premios/pix/1000.webp';
+    if (value <= 5000) return '/premios/pix/5000.webp';
+    return '/premios/pix/10000.webp';
   }
   
   // For minigames (sorte, mines, double, infect) use raspadinha image

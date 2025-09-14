@@ -13,7 +13,20 @@ export const criticalImages = [
   '/premios/banner-me-mimei.webp',
   '/premios/banner-eletronicos.webp',
   '/premios/banner-super-premios.webp',
-  // Removed esquilo game assets
+  '/premios/jogo-esquilo/banner-esquilo-mania.webp',
+  
+  // Imagens do Jogo do Esquilo
+  '/premios/jogo-esquilo/chest-closed.png',
+  '/premios/jogo-esquilo/chest-open.png',
+  '/premios/jogo-esquilo/fox.png',
+  '/premios/jogo-esquilo/acorn.png',
+  '/premios/jogo-esquilo/apple.png',
+  '/premios/jogo-esquilo/golden-acorn.png',
+  '/premios/jogo-esquilo/pinecone.png',
+  '/premios/jogo-esquilo/ring.png',
+  '/premios/jogo-esquilo/forest-bg.png',
+  '/premios/jogo-esquilo/chest-grid.webp',
+  '/premios/jogo-esquilo/bonus-chest-grid.webp',
   
   // Logos e imagens comuns
   '/logos/logomania.svg',

@@ -1891,7 +1891,10 @@ export class DatabaseStorage implements IStorage {
     try {
       // Try to get from database first
       const result = await client.query(
-        'SELECT * FROM prize_probabilities WHERE game_type = $1 ORDER BY "order"',
+        'SELECT id, game_type, prize_value, prize_name, probability, "order", updated_at, updated_by ' +
+        'FROM prize_probabilities ' +
+        'WHERE game_type = $1 ' +
+        'ORDER BY "order" ASC',
         [gameKey]
       );
       
@@ -1900,7 +1903,7 @@ export class DatabaseStorage implements IStorage {
           value: row.prize_value,
           name: row.prize_type || row.prize_name || `R$ ${parseFloat(row.prize_value).toFixed(2).replace('.', ',')}`,
           probability: parseFloat(row.probability),
-          order: row.order || 0
+          order: row["order"] || 0
         }));
         return { probabilities };
       }

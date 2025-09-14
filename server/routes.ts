@@ -475,9 +475,22 @@ const authenticateOptionalWithWelcome = async (req: any, res: any, next: any) =>
   }
 };
 
-// Middleware to verify admin session
+// Middleware to verify admin session (supports both session cookie and Bearer token)
 const authenticateAdmin = async (req: any, res: any, next: any) => {
-  const sessionId = req.headers.authorization?.split(" ")[1];
+  // First, check if user is authenticated via session (cookie)
+  if (req.session?.isAdminAuthenticated && req.session?.adminUserId) {
+    // User is authenticated via session cookie
+    req.adminSession = {
+      sessionId: req.sessionID,
+      username: req.session.adminUsername,
+      userId: req.session.adminUserId
+    };
+    return next();
+  }
+
+  // If not authenticated via session, check Bearer token
+  const authHeader = req.headers.authorization;
+  const sessionId = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 
   if (!sessionId) {
     return res.status(401).json({ message: "Sessão de admin requerida" });
@@ -488,9 +501,12 @@ const authenticateAdmin = async (req: any, res: any, next: any) => {
     if (!session) {
       return res.status(403).json({ message: "Sessão inválida ou expirada" });
     }
+    
+    // Set admin session data for downstream use
     req.adminSession = session;
     next();
   } catch (error) {
+    console.error('Admin authentication error:', error);
     return res.status(500).json({ message: "Erro ao verificar sessão" });
   }
 };

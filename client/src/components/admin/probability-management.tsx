@@ -59,18 +59,11 @@ interface Prize {
 }
 
 interface Game {
-  id: number;
   game_key: string;
   name: string;
-  image_url: string;
   cost: string;
+  image_url: string;
   is_active: boolean;
-  prizes?: Prize[];
-  probabilities?: Prize[];
-}
-
-interface GameProbabilities {
-  [key: string]: Prize[];
 }
 
 // Game display configuration
@@ -108,7 +101,8 @@ const gameConfig: Record<string, {
 
 export function ProbabilityManagement() {
   const [selectedGame, setSelectedGame] = useState<string>('premio_pix_conta');
-  const [editedProbabilities, setEditedProbabilities] = useState<GameProbabilities>({});
+  const [editedProbabilities, setEditedProbabilities] = useState<Prize[]>([]);
+  const [validationError, setValidationError] = useState<string>("");
   const [hasChanges, setHasChanges] = useState<boolean>(false);
 
   // Fetch all games
@@ -118,7 +112,7 @@ export function ProbabilityManagement() {
   });
 
   // Fetch probabilities for selected game
-  const { data: currentProbabilities, refetch: refetchProbabilities } = useQuery({
+  const { data: currentProbabilities, isLoading: probabilitiesLoading, refetch: refetchProbabilities } = useQuery({
     queryKey: ['/api/admin/scratch-games', selectedGame, 'probabilities'],
     queryFn: () => apiRequest(`/api/admin/scratch-games/${selectedGame}/probabilities`),
     enabled: !!selectedGame,
@@ -127,30 +121,23 @@ export function ProbabilityManagement() {
   // Initialize edited probabilities when data loads
   useEffect(() => {
     if (currentProbabilities?.probabilities) {
-      setEditedProbabilities(prev => ({
-        ...prev,
-        [selectedGame]: currentProbabilities.probabilities
-      }));
+      setEditedProbabilities(currentProbabilities.probabilities);
       setHasChanges(false);
+      setValidationError("");
     }
-  }, [currentProbabilities, selectedGame]);
+  }, [currentProbabilities]);
 
   // Update probabilities mutation
   const updateProbabilitiesMutation = useMutation({
     mutationFn: async ({ gameKey, probabilities }: { gameKey: string; probabilities: Prize[] }) => {
       return apiRequest(`/api/admin/scratch-games/${gameKey}/probabilities`, 'PUT', {
-        probabilities: probabilities.map(p => ({
-          value: p.value,
-          name: p.name,
-          probability: p.probability,
-          order: p.order
-        }))
+        probabilities
       });
     },
-    onSuccess: (_, { gameKey }) => {
+    onSuccess: () => {
       toast({
-        title: "Probabilidades atualizadas",
-        description: `As probabilidades do jogo ${gameConfig[gameKey]?.displayName || gameKey} foram atualizadas com sucesso!`,
+        title: "✅ Probabilidades atualizadas",
+        description: `As probabilidades do jogo ${gameConfig[selectedGame]?.displayName || selectedGame} foram salvas com sucesso!`,
       });
       refetchProbabilities();
       setHasChanges(false);
@@ -206,31 +193,46 @@ export function ProbabilityManagement() {
 
   const handleProbabilityChange = (prizeIndex: number, value: string) => {
     const numValue = parseFloat(value) || 0;
-    const currentGameProbabilities = editedProbabilities[selectedGame] || [];
-    const updatedProbabilities = [...currentGameProbabilities];
+    
+    if (numValue < 0) {
+      setValidationError("Probabilidade não pode ser negativa");
+      return;
+    }
+    
+    if (numValue > 100) {
+      setValidationError("Probabilidade não pode ser maior que 100%");
+      return;
+    }
+    
+    const updatedProbabilities = [...editedProbabilities];
     updatedProbabilities[prizeIndex] = {
       ...updatedProbabilities[prizeIndex],
       probability: numValue
     };
     
-    setEditedProbabilities(prev => ({
-      ...prev,
-      [selectedGame]: updatedProbabilities
-    }));
+    setEditedProbabilities(updatedProbabilities);
     setHasChanges(true);
+    
+    // Validate total
+    const total = updatedProbabilities.reduce((sum, p) => sum + (p.probability || 0), 0);
+    if (Math.abs(total - 100) > 0.01) {
+      setValidationError(`Soma deve ser 100%. Atual: ${total.toFixed(2)}%`);
+    } else {
+      setValidationError("");
+    }
   };
 
-  const calculateTotal = (gameKey: string) => {
-    const probabilities = editedProbabilities[gameKey] || [];
-    return probabilities.reduce((sum, p) => sum + (p.probability || 0), 0);
+  const calculateTotal = () => {
+    return editedProbabilities.reduce((sum, p) => sum + (p.probability || 0), 0);
   };
 
   const handleSave = () => {
-    const total = calculateTotal(selectedGame);
+    const total = calculateTotal();
+    
     if (Math.abs(total - 100) > 0.01) {
       toast({
-        title: "Soma inválida",
-        description: `A soma das probabilidades deve ser exatamente 100%. Total atual: ${total.toFixed(2)}%`,
+        title: "⚠️ Erro de validação",
+        description: `A soma das probabilidades deve ser exatamente 100%. Soma atual: ${total.toFixed(2)}%`,
         variant: "destructive",
       });
       return;
@@ -238,7 +240,7 @@ export function ProbabilityManagement() {
     
     updateProbabilitiesMutation.mutate({
       gameKey: selectedGame,
-      probabilities: editedProbabilities[selectedGame]
+      probabilities: editedProbabilities
     });
   };
 
@@ -247,6 +249,14 @@ export function ProbabilityManagement() {
     return `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   };
 
+  const isLoading = gamesLoading || probabilitiesLoading || 
+                   updateProbabilitiesMutation.isPending || 
+                   distributeEquallyMutation.isPending || 
+                   resetDefaultsMutation.isPending;
+
+  const currentTotal = calculateTotal();
+  const isValidTotal = Math.abs(currentTotal - 100) < 0.01;
+
   if (gamesLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -254,10 +264,6 @@ export function ProbabilityManagement() {
       </div>
     );
   }
-
-  const activeGames = games?.filter(g => g.game_key.startsWith('premio_')) || [];
-  const currentTotal = calculateTotal(selectedGame);
-  const isValidTotal = Math.abs(currentTotal - 100) < 0.01;
 
   return (
     <div className="space-y-6">
@@ -296,89 +302,48 @@ export function ProbabilityManagement() {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {activeGames.map((game, index) => {
-          const config = gameConfig[game.game_key];
-          const gameTotal = calculateTotal(game.game_key);
-          const isSelected = selectedGame === game.game_key;
-          
-          return (
-            <motion.div
-              key={game.game_key}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card 
-                className={cn(
-                  "bg-black/50 border-zinc-800 cursor-pointer transition-all",
-                  isSelected && "ring-2 ring-[#00E880] border-[#00E880]"
-                )}
-                onClick={() => setSelectedGame(game.game_key)}
-              >
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-zinc-400 text-sm mb-1">{config?.displayName}</p>
-                      <p className="text-2xl font-bold text-white">
-                        <CountUp end={gameTotal} decimals={1} duration={0.5} />%
-                      </p>
-                      <p className="text-xs text-zinc-500 mt-2">Probabilidade Total</p>
-                    </div>
-                    <div className={cn(
-                      "p-3 rounded-xl",
-                      `bg-gradient-to-br ${config?.color.replace('border-', 'from-')}/20 ${config?.color.replace('border-', 'to-')}/30`
-                    )}>
-                      {config?.icon}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+      {/* Validation Alert */}
+      {validationError && (
+        <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-red-400">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">{validationError}</span>
+          </div>
+        </div>
+      )}
 
       {/* Game Tabs */}
       <Tabs value={selectedGame} onValueChange={setSelectedGame}>
         <TabsList className="grid grid-cols-4 w-full">
-          {activeGames.map(game => {
+          {games?.map(game => {
             const config = gameConfig[game.game_key];
             return (
               <TabsTrigger key={game.game_key} value={game.game_key}>
                 <div className="flex items-center gap-2">
                   {config?.icon}
-                  {config?.displayName}
+                  {config?.displayName || game.name}
                 </div>
               </TabsTrigger>
             );
           })}
         </TabsList>
 
-        {activeGames.map(game => {
-          const config = gameConfig[game.game_key];
-          const gameProbabilities = editedProbabilities[game.game_key] || [];
-          const gameTotal = calculateTotal(game.game_key);
-          const isValid = Math.abs(gameTotal - 100) < 0.01;
-          
-          return (
-            <TabsContent key={game.game_key} value={game.game_key}>
-              <Card className={cn("bg-black/50 border-2", config?.color)}>
+        <TabsContent value={selectedGame}>
+              <Card className={cn("bg-black/50 border-2", gameConfig[selectedGame]?.color)}>
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-xl font-bold text-white flex items-center gap-2">
-                        {config?.icon}
-                        {config?.displayName}
+                        {gameConfig[selectedGame]?.icon}
+                        {gameConfig[selectedGame]?.displayName}
                       </CardTitle>
-                      <p className="text-sm text-zinc-400 mt-1">{config?.description}</p>
+                      <p className="text-sm text-zinc-400 mt-1">{gameConfig[selectedGame]?.description}</p>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => distributeEquallyMutation.mutate(game.game_key)}
+                        onClick={() => distributeEquallyMutation.mutate(selectedGame)}
                         disabled={distributeEquallyMutation.isPending}
                         className="border-zinc-700 hover:bg-zinc-800"
                       >
@@ -388,7 +353,7 @@ export function ProbabilityManagement() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => resetDefaultsMutation.mutate(game.game_key)}
+                        onClick={() => resetDefaultsMutation.mutate(selectedGame)}
                         disabled={resetDefaultsMutation.isPending}
                         className="border-zinc-700 hover:bg-zinc-800"
                       >
@@ -399,31 +364,27 @@ export function ProbabilityManagement() {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  {/* Validation Alert */}
-                  {!isValid && (
-                    <div className="mb-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg">
-                      <div className="flex items-center gap-2 text-red-400">
-                        <AlertCircle className="h-4 w-4" />
-                        <span className="text-sm">
-                          A soma das probabilidades deve ser exatamente 100%. Total atual: {gameTotal.toFixed(2)}%
-                        </span>
-                      </div>
+                  {/* Loading State */}
+                  {probabilitiesLoading && (
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
                     </div>
                   )}
 
                   {/* Probabilities Table */}
-                  <div className="overflow-x-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow className="border-zinc-700">
-                          <TableHead className="text-zinc-400">Prêmio</TableHead>
-                          <TableHead className="text-zinc-400">Valor</TableHead>
-                          <TableHead className="text-zinc-400">Probabilidade (%)</TableHead>
-                          <TableHead className="text-zinc-400 text-right">Chance (1 em X)</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {gameProbabilities.map((prize, index) => {
+                  {!probabilitiesLoading && (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-zinc-700">
+                            <TableHead className="text-zinc-400">Prêmio</TableHead>
+                            <TableHead className="text-zinc-400">Valor</TableHead>
+                            <TableHead className="text-zinc-400">Probabilidade (%)</TableHead>
+                            <TableHead className="text-zinc-400 text-right">Chance (1 em X)</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {editedProbabilities.map((prize, index) => {
                           const chance = prize.probability > 0 ? (100 / prize.probability).toFixed(1) : '∞';
                           return (
                             <TableRow key={index} className="border-zinc-700">
@@ -442,7 +403,7 @@ export function ProbabilityManagement() {
                                   value={prize.probability}
                                   onChange={(e) => handleProbabilityChange(index, e.target.value)}
                                   className="w-24 bg-zinc-800 border-zinc-700 text-white"
-                                  disabled={updateProbabilitiesMutation.isPending}
+                                  disabled={isLoading}
                                 />
                               </TableCell>
                               <TableCell className="text-right text-zinc-400">
@@ -450,32 +411,33 @@ export function ProbabilityManagement() {
                               </TableCell>
                             </TableRow>
                           );
-                        })}
-                      </TableBody>
-                    </Table>
-                  </div>
+                          })}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )}
 
                   {/* Total Row */}
                   <div className="mt-4 p-4 bg-zinc-900 rounded-lg">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {isValid ? (
+                        {isValidTotal ? (
                           <CheckCircle className="w-5 h-5 text-[#00E880]" />
                         ) : (
                           <AlertCircle className="w-5 h-5 text-red-500" />
                         )}
                         <span className={cn(
                           "font-semibold",
-                          isValid ? "text-[#00E880]" : "text-red-400"
+                          isValidTotal ? "text-[#00E880]" : "text-red-400"
                         )}>
-                          Probabilidade Total: {gameTotal.toFixed(2)}%
+                          Probabilidade Total: {currentTotal.toFixed(2)}%
                         </span>
                       </div>
                       
-                      {selectedGame === game.game_key && (
+                      (
                         <Button
                           onClick={handleSave}
-                          disabled={!hasChanges || !isValid || updateProbabilitiesMutation.isPending}
+                          disabled={!hasChanges || !isValidTotal || isLoading}
                           className="bg-[#00E880] hover:bg-[#00E880]/90 text-black font-semibold"
                         >
                           {updateProbabilitiesMutation.isPending ? (

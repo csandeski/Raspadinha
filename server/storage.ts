@@ -101,6 +101,13 @@ import { db, pool } from "./db";
 import { eq, desc, and, sql, gte, lt, count, asc, inArray } from "drizzle-orm";
 
 export interface IStorage {
+  // Prize Probability Management
+  listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]>;
+  getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }>;
+  updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void>;
+  distributeEqually(gameKey: string): Promise<void>;
+  resetToDefaults(gameKey: string): Promise<void>;
+  
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
@@ -300,6 +307,93 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
+  // Default probabilities for each game
+  private readonly DEFAULT_PROBABILITIES: Record<string, { value: string; name: string; probability: number; order: number }[]> = {
+    'premio_pix_conta': [
+      { value: '0.5', name: 'R$ 0,50', probability: 35, order: 1 },
+      { value: '1', name: 'R$ 1,00', probability: 25, order: 2 },
+      { value: '2', name: 'R$ 2,00', probability: 15, order: 3 },
+      { value: '3', name: 'R$ 3,00', probability: 10, order: 4 },
+      { value: '4', name: 'R$ 4,00', probability: 5, order: 5 },
+      { value: '5', name: 'R$ 5,00', probability: 4, order: 6 },
+      { value: '10', name: 'R$ 10,00', probability: 3, order: 7 },
+      { value: '15', name: 'R$ 15,00', probability: 1.5, order: 8 },
+      { value: '20', name: 'R$ 20,00', probability: 1, order: 9 },
+      { value: '50', name: 'R$ 50,00', probability: 0.4, order: 10 },
+      { value: '100', name: 'R$ 100,00', probability: 0.1, order: 11 }
+    ],
+    'premio_me_mimei': [
+      { value: '0.5', name: 'Perfume', probability: 20, order: 1 },
+      { value: '1', name: 'Batom', probability: 18, order: 2 },
+      { value: '2', name: 'Esmalte', probability: 15, order: 3 },
+      { value: '3', name: 'Creme', probability: 12, order: 4 },
+      { value: '4', name: 'Maquiagem', probability: 10, order: 5 },
+      { value: '5', name: 'Shampoo', probability: 8, order: 6 },
+      { value: '10', name: 'Condicionador', probability: 6, order: 7 },
+      { value: '15', name: 'Hidratante', probability: 5, order: 8 },
+      { value: '20', name: 'Protetor Solar', probability: 3, order: 9 },
+      { value: '50', name: 'Kit Skincare', probability: 2, order: 10 },
+      { value: '100', name: 'Vale Presente', probability: 1, order: 11 }
+    ],
+    'premio_eletronicos': [
+      { value: '0.5', name: 'Fone Bluetooth', probability: 25, order: 1 },
+      { value: '1', name: 'Carregador', probability: 20, order: 2 },
+      { value: '2', name: 'Caixa de Som', probability: 15, order: 3 },
+      { value: '3', name: 'Smartwatch', probability: 12, order: 4 },
+      { value: '4', name: 'Tablet', probability: 10, order: 5 },
+      { value: '5', name: 'Console', probability: 8, order: 6 },
+      { value: '10', name: 'Notebook', probability: 5, order: 7 },
+      { value: '15', name: 'iPhone', probability: 3, order: 8 },
+      { value: '20', name: 'TV 55"', probability: 1.5, order: 9 },
+      { value: '50', name: 'PS5', probability: 0.4, order: 10 },
+      { value: '100', name: 'MacBook', probability: 0.1, order: 11 }
+    ],
+    'premio_super_premios': [
+      { value: '10', name: 'Vale Compras R$100', probability: 25, order: 1 },
+      { value: '20', name: 'Vale Combustível', probability: 20, order: 2 },
+      { value: '40', name: 'Jantar Romântico', probability: 15, order: 3 },
+      { value: '60', name: 'Dia no Spa', probability: 12, order: 4 },
+      { value: '80', name: 'Ingresso Cinema', probability: 10, order: 5 },
+      { value: '100', name: 'Assinatura Streaming', probability: 8, order: 6 },
+      { value: '200', name: 'Viagem Nacional', probability: 5, order: 7 },
+      { value: '500', name: 'Cruzeiro', probability: 3, order: 8 },
+      { value: '1000', name: 'Carro 0KM', probability: 1.5, order: 9 },
+      { value: '10000', name: 'Casa Própria', probability: 0.4, order: 10 },
+      { value: '100000', name: 'R$ 1 Milhão', probability: 0.1, order: 11 }
+    ]
+  };
+  
+  // Game configurations
+  private readonly SCRATCH_GAMES = [
+    {
+      game_key: 'premio_pix_conta',
+      name: 'PIX na Conta',
+      cost: '0.50',
+      image_url: '/premios/banner-pix.webp',
+      is_active: true
+    },
+    {
+      game_key: 'premio_me_mimei',
+      name: 'Me Mimei',
+      cost: '0.50', 
+      image_url: '/premios/banner-me-mimei.webp',
+      is_active: true
+    },
+    {
+      game_key: 'premio_eletronicos',
+      name: 'Eletrônicos',
+      cost: '0.50',
+      image_url: '/premios/banner-eletronicos.webp',
+      is_active: true
+    },
+    {
+      game_key: 'premio_super_premios',
+      name: 'Super Prêmios',
+      cost: '0.50',
+      image_url: '/premios/banner-super-premios.webp',
+      is_active: true
+    }
+  ];
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     // Use raw SQL to avoid Drizzle issue with app_users table
@@ -1786,6 +1880,102 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Get demo prize probabilities for admin panel
+  // List all scratch games
+  async listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]> {
+    return this.SCRATCH_GAMES.map(game => ({ ...game }));
+  }
+
+  // Get game probabilities from database or defaults
+  async getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }> {
+    const client = await pool.connect();
+    try {
+      // Try to get from database first
+      const result = await client.query(
+        'SELECT * FROM prize_probabilities WHERE game_type = $1 ORDER BY "order"',
+        [gameKey]
+      );
+      
+      if (result.rows.length > 0) {
+        const probabilities = result.rows.map((row: any) => ({
+          value: row.prize_value,
+          name: row.prize_type || row.prize_name || `R$ ${parseFloat(row.prize_value).toFixed(2).replace('.', ',')}`,
+          probability: parseFloat(row.probability),
+          order: row.order || 0
+        }));
+        return { probabilities };
+      }
+      
+      // Return defaults if no data in database
+      const defaults = this.DEFAULT_PROBABILITIES[gameKey] || [];
+      return { probabilities: defaults };
+    } finally {
+      client.release();
+    }
+  }
+
+  // Update game probabilities with validation
+  async updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void> {
+    // Validate that sum is approximately 100%
+    const sum = probabilities.reduce((acc, p) => acc + p.probability, 0);
+    if (Math.abs(sum - 100) > 0.01) {
+      throw new Error(`A soma das probabilidades deve ser 100%. Soma atual: ${sum.toFixed(2)}%`);
+    }
+    
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Delete existing probabilities
+      await client.query(
+        'DELETE FROM prize_probabilities WHERE game_type = $1',
+        [gameKey]
+      );
+      
+      // Insert new probabilities
+      for (const [index, p] of probabilities.entries()) {
+        await client.query(
+          `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, "order", updated_at, updated_by)
+           VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
+          [gameKey, p.value, p.name, p.probability, p.order || index, 'admin']
+        );
+      }
+      
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  // Distribute probability equally among all prizes
+  async distributeEqually(gameKey: string): Promise<void> {
+    const defaults = this.DEFAULT_PROBABILITIES[gameKey];
+    if (!defaults) {
+      throw new Error(`Jogo não encontrado: ${gameKey}`);
+    }
+    
+    const equalProbability = 100 / defaults.length;
+    const equallyDistributed = defaults.map((p, index) => ({
+      ...p,
+      probability: equalProbability,
+      order: index + 1
+    }));
+    
+    await this.updateGameProbabilities(gameKey, equallyDistributed);
+  }
+
+  // Reset to default probabilities
+  async resetToDefaults(gameKey: string): Promise<void> {
+    const defaults = this.DEFAULT_PROBABILITIES[gameKey];
+    if (!defaults) {
+      throw new Error(`Jogo não encontrado: ${gameKey}`);
+    }
+    
+    await this.updateGameProbabilities(gameKey, defaults);
+  }
+
   async getDemoPrizeProbabilities(gameType: string): Promise<any[]> {
     const demoGameType = `demo_${gameType}`;
     const probabilities = await db.execute(sql`

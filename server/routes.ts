@@ -10170,6 +10170,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ==================== ADMIN SCRATCH GAMES PROBABILITY ROUTES ====================
+  app.get('/api/admin/scratch-games', authenticateAdmin, async (req, res) => {
+    try {
+      const games = await storage.listScratchGames();
+      res.json(games);
+    } catch (error) {
+      console.error('Error fetching scratch games:', error);
+      res.status(500).json({ error: 'Erro ao buscar jogos' });
+    }
+  });
+
+  app.get('/api/admin/scratch-games/:gameKey/probabilities', authenticateAdmin, async (req, res) => {
+    try {
+      const { gameKey } = req.params;
+      const result = await storage.getGameProbabilities(gameKey);
+      res.json(result);
+    } catch (error) {
+      console.error('Error fetching game probabilities:', error);
+      res.status(500).json({ error: 'Erro ao buscar probabilidades' });
+    }
+  });
+
+  app.put('/api/admin/scratch-games/:gameKey/probabilities', authenticateAdmin, async (req, res) => {
+    try {
+      const { gameKey } = req.params;
+      const { probabilities } = req.body;
+      
+      if (!probabilities || !Array.isArray(probabilities)) {
+        return res.status(400).json({ error: 'Probabilidades inválidas' });
+      }
+      
+      // Validate sum equals 100%
+      const sum = probabilities.reduce((acc, p) => acc + (p.probability || 0), 0);
+      if (Math.abs(sum - 100) > 0.01) {
+        return res.status(400).json({ 
+          error: `A soma das probabilidades deve ser 100%. Soma atual: ${sum.toFixed(2)}%` 
+        });
+      }
+      
+      await storage.updateGameProbabilities(gameKey, probabilities);
+      res.json({ success: true, message: 'Probabilidades atualizadas com sucesso' });
+    } catch (error) {
+      console.error('Error updating game probabilities:', error);
+      res.status(500).json({ error: error.message || 'Erro ao atualizar probabilidades' });
+    }
+  });
+
+  app.post('/api/admin/scratch-games/:gameKey/distribute-equally', authenticateAdmin, async (req, res) => {
+    try {
+      const { gameKey } = req.params;
+      await storage.distributeEqually(gameKey);
+      
+      // Return updated probabilities
+      const result = await storage.getGameProbabilities(gameKey);
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('Error distributing equally:', error);
+      res.status(500).json({ error: error.message || 'Erro ao distribuir igualmente' });
+    }
+  });
+
+  app.post('/api/admin/scratch-games/:gameKey/reset-defaults', authenticateAdmin, async (req, res) => {
+    try {
+      const { gameKey } = req.params;
+      await storage.resetToDefaults(gameKey);
+      
+      // Return updated probabilities
+      const result = await storage.getGameProbabilities(gameKey);
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error('Error resetting to defaults:', error);
+      res.status(500).json({ error: error.message || 'Erro ao resetar padrões' });
+    }
+  });
+
   // Initialize prize probabilities with real game prizes
   app.post("/api/admin/prize-probabilities/initialize", authenticateAdmin, async (req, res) => {
     try {

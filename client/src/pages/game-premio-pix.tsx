@@ -1055,7 +1055,7 @@ export default function GamePremioPIX() {
                                 </div>
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                           
                           {/* Result Text with gradient */}
                           <motion.div

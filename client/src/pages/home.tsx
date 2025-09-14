@@ -176,227 +176,99 @@ export default function Home() {
               </p>
             </div>
             
-            {/* Casino Chips Navigation - Mobile & Desktop */}
+            {/* Mode Selector Navigation - Mobile & Desktop */}
             <div className="relative flex items-center justify-center">
-              {/* Container for chips and animated indicator */}
-              <div className="relative inline-flex items-center gap-6 md:gap-10">
-                {/* Animated Indicator Bar */}
-                <div className="absolute -bottom-4 left-0 right-0 h-1 flex items-center justify-center">
-                  <div 
-                    className="absolute h-1 bg-gradient-to-r from-[#00E880] to-[#00FFB3] rounded-full shadow-[0_0_20px_rgba(0,232,128,0.8)] transition-all duration-500 ease-out"
-                    style={{
-                      width: '60px',
-                      transform: `translateX(${
-                        gameSection === 'raspadinhas' ? '-72px' : 
-                        gameSection === 'minigames' ? '0px' : 
-                        '72px'
-                      })`
-                    }}
-                  />
-                </div>
+              {/* Container for mode selectors */}
+              <div className="relative inline-flex items-center gap-8 md:gap-12">
                 
-                {/* Raspadinhas Casino Chip */}
-                <div className="relative">
+                {/* Raspadinhas Mode Selector */}
+                <div className="relative flex flex-col items-center gap-2">
                   <button
                     onClick={() => setGameSection('raspadinhas')}
-                    className={`relative w-[72px] h-[72px] md:w-[96px] md:h-[96px] transition-all duration-500 transform ${
+                    className={`relative transition-all duration-500 transform ${
                       gameSection === 'raspadinhas'
-                        ? 'scale-110 -translate-y-1'
-                        : 'scale-100 hover:scale-105 hover:rotate-3'
+                        ? 'scale-110 opacity-100'
+                        : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                     }`}
                   >
-                    {/* Outer neon glow when active */}
-                    {gameSection === 'raspadinhas' && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-60 blur-2xl rounded-full animate-pulse" />
-                    )}
-                    
-                    {/* Casino chip design */}
-                    <div className="relative w-full h-full">
-                      {/* Outer ring */}
-                      <div className={`absolute inset-0 rounded-full ${
-                        gameSection === 'raspadinhas'
-                          ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                          : 'bg-gradient-to-br from-gray-700 to-gray-800'
-                      } p-[2px]`}>
-                        {/* Middle ring with stripe pattern */}
-                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-black to-gray-900 p-[2px]">
-                          {/* Inner ring */}
-                          <div className={`relative w-full h-full rounded-full ${
-                            gameSection === 'raspadinhas'
-                              ? 'bg-gradient-to-br from-[#00E880]/20 via-black to-[#00FFB3]/20'
-                              : 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
-                          } shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]`}>
-                            {/* Center content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                              <Grid3X3 className={`w-6 h-6 md:w-7 md:h-7 transition-all duration-300 ${
-                                gameSection === 'raspadinhas' 
-                                  ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                                  : 'text-gray-400'
-                              }`} />
-                              <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-colors duration-300 ${
-                                gameSection === 'raspadinhas'
-                                  ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
-                                  : 'text-gray-400'
-                              }`}>
-                                Raspadinhas
-                              </span>
-                            </div>
-                            
-                            {/* Chip stripes */}
-                            <div className="absolute inset-2 rounded-full overflow-hidden opacity-10">
-                              <div className="absolute inset-0 bg-repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 20px)" />
-                            </div>
-                          </div>
+                    {/* Image Container */}
+                    <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
+                          QUENTE
                         </div>
+                        <Grid3X3 className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
                       </div>
                     </div>
                   </button>
-                  
-                  {/* Floating Badge */}
-                  <div className="absolute -top-2 -right-2 z-30">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-red-600 to-orange-500 blur-sm animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-red-500 to-orange-400 text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-lg border border-white/20">
-                        🔥 QUENTE
-                      </div>
-                    </div>
-                  </div>
+                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                    gameSection === 'raspadinhas'
+                      ? 'text-white scale-105'
+                      : 'text-gray-400'
+                  }`}>
+                    Raspadinhas
+                  </span>
                 </div>
                 
-                {/* Minigames Casino Chip */}
-                <div className="relative">
+                {/* Minigames Mode Selector */}
+                <div className="relative flex flex-col items-center gap-2">
                   <button
                     onClick={() => setGameSection('minigames')}
-                    className={`relative w-[72px] h-[72px] md:w-[96px] md:h-[96px] transition-all duration-500 transform ${
+                    className={`relative transition-all duration-500 transform ${
                       gameSection === 'minigames'
-                        ? 'scale-110 -translate-y-1'
-                        : 'scale-100 hover:scale-105 hover:-rotate-3'
+                        ? 'scale-110 opacity-100'
+                        : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                     }`}
                   >
-                    {/* Outer neon glow when active */}
-                    {gameSection === 'minigames' && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-60 blur-2xl rounded-full animate-pulse" />
-                    )}
-                    
-                    {/* Casino chip design */}
-                    <div className="relative w-full h-full">
-                      {/* Outer ring */}
-                      <div className={`absolute inset-0 rounded-full ${
-                        gameSection === 'minigames'
-                          ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                          : 'bg-gradient-to-br from-gray-700 to-gray-800'
-                      } p-[2px]`}>
-                        {/* Middle ring with stripe pattern */}
-                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-black to-gray-900 p-[2px]">
-                          {/* Inner ring */}
-                          <div className={`relative w-full h-full rounded-full ${
-                            gameSection === 'minigames'
-                              ? 'bg-gradient-to-br from-[#00E880]/20 via-black to-[#00FFB3]/20'
-                              : 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
-                          } shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]`}>
-                            {/* Center content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                              <Gamepad2 className={`w-6 h-6 md:w-7 md:h-7 transition-all duration-300 ${
-                                gameSection === 'minigames' 
-                                  ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                                  : 'text-gray-400'
-                              }`} />
-                              <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-colors duration-300 ${
-                                gameSection === 'minigames'
-                                  ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
-                                  : 'text-gray-400'
-                              }`}>
-                                Minigames
-                              </span>
-                            </div>
-                            
-                            {/* Chip stripes */}
-                            <div className="absolute inset-2 rounded-full overflow-hidden opacity-10">
-                              <div className="absolute inset-0 bg-repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 20px)" />
-                            </div>
-                          </div>
+                    {/* Image Container */}
+                    <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500 to-purple-600" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 bg-pink-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
+                          NOVO
                         </div>
+                        <Gamepad2 className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
                       </div>
                     </div>
                   </button>
-                  
-                  {/* Floating Badge */}
-                  <div className="absolute -top-2 -right-2 z-30">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-500 blur-sm animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-purple-500 to-pink-400 text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-lg border border-white/20">
-                        ✨ NOVO
-                      </div>
-                    </div>
-                  </div>
+                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                    gameSection === 'minigames'
+                      ? 'text-white scale-105'
+                      : 'text-gray-400'
+                  }`}>
+                    Minigames
+                  </span>
                 </div>
                 
-                {/* Baús Casino Chip */}
-                <div className="relative">
+                {/* Baús Mode Selector */}
+                <div className="relative flex flex-col items-center gap-2">
                   <button
                     onClick={() => setGameSection('baus')}
-                    className={`relative w-[72px] h-[72px] md:w-[96px] md:h-[96px] transition-all duration-500 transform ${
+                    className={`relative transition-all duration-500 transform ${
                       gameSection === 'baus'
-                        ? 'scale-110 -translate-y-1'
-                        : 'scale-100 hover:scale-105 hover:rotate-3'
+                        ? 'scale-110 opacity-100'
+                        : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                     }`}
                   >
-                    {/* Outer neon glow when active */}
-                    {gameSection === 'baus' && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-[#00E880] to-[#00FFB3] opacity-60 blur-2xl rounded-full animate-pulse" />
-                    )}
-                    
-                    {/* Casino chip design */}
-                    <div className="relative w-full h-full">
-                      {/* Outer ring */}
-                      <div className={`absolute inset-0 rounded-full ${
-                        gameSection === 'baus'
-                          ? 'bg-gradient-to-br from-[#00E880] via-[#00FFB3] to-[#00E880] shadow-[0_0_30px_rgba(0,232,128,0.8)]'
-                          : 'bg-gradient-to-br from-gray-700 to-gray-800'
-                      } p-[2px]`}>
-                        {/* Middle ring with stripe pattern */}
-                        <div className="relative w-full h-full rounded-full bg-gradient-to-br from-gray-900 via-black to-gray-900 p-[2px]">
-                          {/* Inner ring */}
-                          <div className={`relative w-full h-full rounded-full ${
-                            gameSection === 'baus'
-                              ? 'bg-gradient-to-br from-[#00E880]/20 via-black to-[#00FFB3]/20'
-                              : 'bg-gradient-to-br from-gray-800 via-gray-900 to-gray-800'
-                          } shadow-[inset_0_2px_10px_rgba(0,0,0,0.8)]`}>
-                            {/* Center content */}
-                            <div className="absolute inset-0 flex flex-col items-center justify-center gap-0.5">
-                              <Package className={`w-6 h-6 md:w-7 md:h-7 transition-all duration-300 ${
-                                gameSection === 'baus' 
-                                  ? 'text-[#00E880] drop-shadow-[0_0_10px_rgba(0,232,128,0.8)]' 
-                                  : 'text-gray-400'
-                              }`} />
-                              <span className={`text-[8px] md:text-[9px] font-black uppercase tracking-wider transition-colors duration-300 ${
-                                gameSection === 'baus'
-                                  ? 'text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]'
-                                  : 'text-gray-400'
-                              }`}>
-                                Baús
-                              </span>
-                            </div>
-                            
-                            {/* Chip stripes */}
-                            <div className="absolute inset-2 rounded-full overflow-hidden opacity-10">
-                              <div className="absolute inset-0 bg-repeating-linear-gradient(45deg, transparent, transparent 10px, white 10px, white 20px)" />
-                            </div>
-                          </div>
+                    {/* Image Container */}
+                    <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600" />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="absolute top-2 right-2 bg-cyan-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
+                          BREVE
                         </div>
+                        <Package className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
                       </div>
                     </div>
                   </button>
-                  
-                  {/* Floating Badge */}
-                  <div className="absolute -top-2 -right-2 z-30">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-500 blur-sm animate-pulse" />
-                      <div className="relative bg-gradient-to-r from-indigo-500 to-purple-400 text-white text-[7px] md:text-[8px] px-1.5 py-0.5 rounded-full font-black shadow-lg border border-white/20">
-                        💎 NOVO
-                      </div>
-                    </div>
-                  </div>
+                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                    gameSection === 'baus'
+                      ? 'text-white scale-105'
+                      : 'text-gray-400'
+                  }`}>
+                    Baús
+                  </span>
                 </div>
               </div>
             </div>

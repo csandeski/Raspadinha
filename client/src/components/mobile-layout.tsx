@@ -81,7 +81,7 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
     enabled: !!user,
     refetchInterval: 2000, // Refresh every 2 seconds
     staleTime: 0, // Always consider data stale
-    cacheTime: 0, // Don't cache
+    gcTime: 0, // Don't cache
   });
 
   const balance = userWallet?.balance || "0.00";
@@ -948,14 +948,14 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
           
           {/* Main Bottom Navigation Bar */}
           {user ? (
-            <div className="bg-black/60 backdrop-blur-xl border-t border-white/10">
-              <div className="flex items-center justify-around px-2 py-1">
+            <div className="bg-black border-t border-gray-800">
+              <div className="flex items-center justify-around px-2 py-2">
                 {/* Home */}
                 <button
                   onClick={() => setLocation("/")}
-                  className="flex flex-col items-center gap-0.5 p-1 transition-all duration-200"
+                  className="flex flex-col items-center gap-1 p-2 transition-all duration-200"
                 >
-                  <Home className={`w-5 h-5 ${
+                  <Home className={`w-6 h-6 ${
                     location === "/" 
                       ? "text-[#00E880]" 
                       : "text-gray-400"
@@ -970,9 +970,9 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
                 {/* Rewards */}
                 <button
                   onClick={() => handleAuthenticatedAction("/rewards")}
-                  className="flex flex-col items-center gap-0.5 p-1 transition-all duration-200"
+                  className="flex flex-col items-center gap-1 p-2 transition-all duration-200"
                 >
-                  <Gift className={`w-5 h-5 ${
+                  <Gift className={`w-6 h-6 ${
                     location === "/rewards" 
                       ? "text-[#00E880]" 
                       : "text-gray-400"
@@ -985,14 +985,14 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
                 </button>
 
                 {/* PIX - Central larger button (space for it) */}
-                <div className="w-12"></div>
+                <div className="w-14"></div>
 
                 {/* Wallet */}
                 <button
                   onClick={() => handleAuthenticatedAction("/wallet")}
-                  className="flex flex-col items-center gap-0.5 p-1 transition-all duration-200"
+                  className="flex flex-col items-center gap-1 p-2 transition-all duration-200"
                 >
-                  <Wallet className={`w-5 h-5 ${
+                  <Wallet className={`w-6 h-6 ${
                     location === "/wallet" 
                       ? "text-[#00E880]" 
                       : "text-gray-400"
@@ -1007,9 +1007,9 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
                 {/* Profile */}
                 <button
                   onClick={() => handleAuthenticatedAction("/profile")}
-                  className="flex flex-col items-center gap-0.5 p-1 transition-all duration-200"
+                  className="flex flex-col items-center gap-1 p-2 transition-all duration-200"
                 >
-                  <User className={`w-5 h-5 ${
+                  <User className={`w-6 h-6 ${
                     location === "/profile" 
                       ? "text-[#00E880]" 
                       : "text-gray-400"

@@ -179,105 +179,95 @@ export default function Home() {
             {/* Mode Selector Navigation - Mobile & Desktop */}
             <div className="relative flex items-center justify-center">
               {/* Container for mode selectors */}
-              <div className="relative inline-flex items-end gap-8 md:gap-12">
+              <div className="relative inline-flex items-center gap-4 md:gap-6">
                 
                 {/* Raspadinhas Mode Selector */}
-                <div className="relative flex flex-col items-center">
-                  <div className="flex items-end h-[100px] md:h-[120px] mb-2">
-                    <button
-                      onClick={() => setGameSection('raspadinhas')}
-                      className={`relative transition-all duration-500 transform ${
-                        gameSection === 'raspadinhas'
-                          ? 'scale-110 opacity-100'
-                          : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
-                      }`}
-                    >
-                      {/* Subtle Background Effect */}
-                      {gameSection === 'raspadinhas' && (
-                        <div className="absolute inset-0 -z-10 scale-125">
-                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
-                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
-                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
-                        </div>
-                      )}
-                      {/* Image Container */}
-                      <div className="relative w-[90px] h-[60px] md:w-[120px] md:h-[80px]">
-                        <img 
-                          src="/images/raspadinhas-selector.png" 
-                          alt="Raspadinhas"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </button>
-                  </div>
-                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                <button
+                  onClick={() => setGameSection('raspadinhas')}
+                  className={`relative transition-all duration-500 ${
                     gameSection === 'raspadinhas'
-                      ? 'text-white scale-105'
-                      : 'text-gray-400'
+                      ? 'opacity-100'
+                      : 'opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
+                    gameSection === 'raspadinhas'
+                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      : 'bg-gray-900/30'
                   }`}>
-                    Raspadinhas
-                  </span>
-                </div>
+                    {/* Image */}
+                    <div className="flex items-center justify-center h-[75%] p-2">
+                      <img 
+                        src="/images/raspadinhas-selector.png" 
+                        alt="Raspadinhas"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    {/* Text */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[25%] flex items-center justify-center bg-black/40">
+                      <span className={`text-[10px] md:text-[12px] font-bold uppercase tracking-wider ${
+                        gameSection === 'raspadinhas'
+                          ? 'text-white'
+                          : 'text-gray-400'
+                      }`}>
+                        Raspadinhas
+                      </span>
+                    </div>
+                  </div>
+                </button>
                 
                 {/* Minigames Mode Selector */}
-                <div className="relative flex flex-col items-center">
-                  <div className="flex items-end h-[100px] md:h-[120px] mb-2">
-                    <button
-                      onClick={() => setGameSection('minigames')}
-                      className={`relative transition-all duration-500 transform ${
-                        gameSection === 'minigames'
-                          ? 'scale-110 opacity-100'
-                          : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
-                      }`}
-                    >
-                      {/* Subtle Background Effect */}
-                      {gameSection === 'minigames' && (
-                        <div className="absolute inset-0 -z-10 scale-125">
-                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
-                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
-                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
-                        </div>
-                      )}
-                      {/* Image Container */}
-                      <div className="relative w-[80px] h-[90px] md:w-[100px] md:h-[112px]">
-                        <img 
-                          src="/images/minigames-selector.png" 
-                          alt="Minigames"
-                          className="w-full h-full object-contain"
-                        />
-                      </div>
-                    </button>
-                  </div>
-                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
+                <button
+                  onClick={() => setGameSection('minigames')}
+                  className={`relative transition-all duration-500 ${
                     gameSection === 'minigames'
-                      ? 'text-white scale-105'
-                      : 'text-gray-400'
+                      ? 'opacity-100'
+                      : 'opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
+                    gameSection === 'minigames'
+                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      : 'bg-gray-900/30'
                   }`}>
-                    Minigames
-                  </span>
-                </div>
+                    {/* Image */}
+                    <div className="flex items-center justify-center h-[75%] p-2">
+                      <img 
+                        src="/images/minigames-selector.png" 
+                        alt="Minigames"
+                        className="w-full h-full object-contain"
+                      />
+                    </div>
+                    {/* Text */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[25%] flex items-center justify-center bg-black/40">
+                      <span className={`text-[10px] md:text-[12px] font-bold uppercase tracking-wider ${
+                        gameSection === 'minigames'
+                          ? 'text-white'
+                          : 'text-gray-400'
+                      }`}>
+                        Minigames
+                      </span>
+                    </div>
+                  </div>
+                </button>
                 
                 {/* Baús Mode Selector */}
-                <div className="relative flex flex-col items-center">
-                  <div className="flex items-end h-[100px] md:h-[120px] mb-2">
-                    <button
-                      onClick={() => setGameSection('baus')}
-                      className={`relative transition-all duration-500 transform ${
-                        gameSection === 'baus'
-                          ? 'scale-110 opacity-100'
-                          : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
-                      }`}
-                    >
-                      {/* Subtle Background Effect */}
-                      {gameSection === 'baus' && (
-                        <div className="absolute inset-0 -z-10 scale-125">
-                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
-                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
-                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
-                        </div>
-                      )}
-                      {/* Image Container */}
-                      <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
+                <button
+                  onClick={() => setGameSection('baus')}
+                  className={`relative transition-all duration-500 ${
+                    gameSection === 'baus'
+                      ? 'opacity-100'
+                      : 'opacity-60 hover:opacity-80'
+                  }`}
+                >
+                  <div className={`relative w-[100px] h-[120px] md:w-[140px] md:h-[160px] rounded-xl overflow-hidden transition-all duration-500 ${
+                    gameSection === 'baus'
+                      ? 'bg-gray-800/50 ring-2 ring-[#00E880]/50'
+                      : 'bg-gray-900/30'
+                  }`}>
+                    {/* Image */}
+                    <div className="flex items-center justify-center h-[75%] p-2">
+                      <div className="relative w-full h-full rounded-lg overflow-hidden">
                         <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600" />
                         <div className="absolute inset-0 flex items-center justify-center">
                           <div className="absolute top-2 right-2 bg-cyan-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
@@ -286,16 +276,19 @@ export default function Home() {
                           <Package className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
                         </div>
                       </div>
-                    </button>
+                    </div>
+                    {/* Text */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[25%] flex items-center justify-center bg-black/40">
+                      <span className={`text-[10px] md:text-[12px] font-bold uppercase tracking-wider ${
+                        gameSection === 'baus'
+                          ? 'text-white'
+                          : 'text-gray-400'
+                      }`}>
+                        Baús
+                      </span>
+                    </div>
                   </div>
-                  <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${
-                    gameSection === 'baus'
-                      ? 'text-white scale-105'
-                      : 'text-gray-400'
-                  }`}>
-                    Baús
-                  </span>
-                </div>
+                </button>
               </div>
             </div>
           </div>

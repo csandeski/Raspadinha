@@ -47,6 +47,8 @@ export default function ManiaFly() {
   const rocketImageRef = useRef<HTMLImageElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
   const [rocketLoaded, setRocketLoaded] = useState(false);
+  const cloudOffsetRef = useRef<number>(0);
+  const rocketAnimationRef = useRef<number>(0);
   
   // Game state from server
   const [gameStatus, setGameStatus] = useState<GameStatus>({
@@ -129,11 +131,17 @@ export default function ManiaFly() {
     ctx.fillStyle = sunGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Draw subtle clouds
+    // Update cloud offset for animation
+    if (gameStatus.state === 'playing') {
+      cloudOffsetRef.current -= 0.5 * Math.max(1, gameStatus.multiplier / 2); // Speed based on multiplier
+    }
+    
+    // Draw animated clouds
     ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-    for (let i = 0; i < 5; i++) {
-      const cloudX = (i * 150 + 50) % canvas.width;
-      const cloudY = 50 + Math.sin(i) * 30;
+    for (let i = 0; i < 8; i++) {
+      const baseX = i * 200 + cloudOffsetRef.current;
+      const cloudX = ((baseX % (canvas.width + 200)) + canvas.width + 200) % (canvas.width + 200) - 100;
+      const cloudY = 50 + Math.sin(i * 0.8) * 40;
       
       // Cloud shape with multiple circles
       ctx.beginPath();
@@ -192,48 +200,45 @@ export default function ManiaFly() {
         }
       }
       
-      // Draw trail with gradient effect
+      // Draw trail that grows from bottom
       if (trailPointsRef.current.length > 1) {
+        // Get starting position (fixed at bottom)
+        const startX = 80;
+        const startY = canvas.height - 80;
+        
         // Create gradient for trail
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
         
-        // Draw multiple trail layers for thickness
-        for (let layer = 0; layer < 3; layer++) {
-          ctx.beginPath();
-          
-          const baseWidth = 8 - layer * 2;
-          const opacity = 0.8 - layer * 0.2;
-          
-          for (let i = 1; i < trailPointsRef.current.length; i++) {
-            const point = trailPointsRef.current[i];
-            const prevPoint = trailPointsRef.current[i - 1];
-            const age = (now - point.time) / 2000; // Age in seconds
-            
-            // Fade out older parts of trail
-            const fadeOpacity = Math.max(0, opacity * (1 - age));
-            
-            // Trail color transitions from pink to red
-            const r = 255;
-            const g = Math.floor(20 + (235 - 20) * (1 - i / trailPointsRef.current.length));
-            const b = Math.floor(147 - (147 - 71) * (i / trailPointsRef.current.length));
-            
-            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${fadeOpacity})`;
-            ctx.lineWidth = baseWidth * (1 - i / trailPointsRef.current.length * 0.5);
-            
-            if (i === 1) {
-              ctx.moveTo(prevPoint.x, prevPoint.y);
-            }
-            
-            // Smooth curve between points
-            const cpx = (prevPoint.x + point.x) / 2;
-            const cpy = (prevPoint.y + point.y) / 2;
-            ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, cpx, cpy);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(point.x, point.y);
-          }
-        }
+        // Draw the trail from start position to current plane position
+        const trailGradient = ctx.createLinearGradient(startX, startY, planeX, planeY);
+        trailGradient.addColorStop(0, 'rgba(255, 100, 50, 0.9)');
+        trailGradient.addColorStop(0.5, 'rgba(255, 150, 100, 0.7)');
+        trailGradient.addColorStop(1, 'rgba(255, 200, 150, 0.5)');
+        
+        // Draw main trail with growing thickness
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        
+        // Create smooth curve to plane position
+        const midX = startX + (planeX - startX) * 0.3;
+        const midY = startY + (planeY - startY) * 0.7;
+        
+        ctx.quadraticCurveTo(midX, startY, midX, midY);
+        ctx.quadraticCurveTo(midX, planeY, planeX, planeY);
+        
+        ctx.strokeStyle = trailGradient;
+        ctx.lineWidth = 12;
+        ctx.stroke();
+        
+        // Add glow effect
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff6600';
+        ctx.strokeStyle = 'rgba(255, 100, 50, 0.3)';
+        ctx.lineWidth = 20;
+        ctx.stroke();
+        
+        ctx.shadowBlur = 0;
         
         // Add glow effect to trail
         ctx.shadowBlur = 20;
@@ -275,14 +280,24 @@ export default function ManiaFly() {
       
       // Draw rocket image if loaded, otherwise draw fallback
       if (rocketLoaded && rocketImageRef.current) {
-        const rocketWidth = 40;
+        // Preserve aspect ratio
+        const imgAspectRatio = rocketImageRef.current.width / rocketImageRef.current.height;
         const rocketHeight = 60;
+        const rocketWidth = rocketHeight * imgAspectRatio;
+        
+        // Add flying animation (small oscillation)
+        rocketAnimationRef.current += 0.1;
+        const wobble = Math.sin(rocketAnimationRef.current) * 2;
         
         // Add subtle glow effect
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 20;
         ctx.shadowColor = '#ff6600';
         
-        // Draw the rocket image centered
+        // Save and apply wobble
+        ctx.save();
+        ctx.translate(0, wobble);
+        
+        // Draw the rocket image centered with proper aspect ratio
         ctx.drawImage(
           rocketImageRef.current,
           -rocketWidth / 2,
@@ -290,6 +305,8 @@ export default function ManiaFly() {
           rocketWidth,
           rocketHeight
         );
+        
+        ctx.restore();
         
         // Reset shadow
         ctx.shadowBlur = 0;
@@ -312,30 +329,32 @@ export default function ManiaFly() {
       
       ctx.restore();
       
-      // Draw multiplier with better styling
+      // Draw multiplier fixed in center
       ctx.save();
       
-      // Position multiplier near plane but not overlapping
-      const multX = planeX + 50;
-      const multY = planeY - 30;
+      // Fixed position in center of screen
+      const multX = canvas.width / 2;
+      const multY = canvas.height / 2;
       
       // Background for multiplier
       const multText = `${progressiveMultiplier.toFixed(2)}x`;
-      ctx.font = 'bold 42px Arial';
+      ctx.font = 'bold 56px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
       const metrics = ctx.measureText(multText);
       
       // Draw background box
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
       ctx.strokeStyle = '#00ff88';
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.roundRect(multX - 10, multY - 35, metrics.width + 20, 50, 10);
+      ctx.roundRect(multX - metrics.width / 2 - 20, multY - 35, metrics.width + 40, 70, 15);
       ctx.fill();
       ctx.stroke();
       
       // Draw multiplier text
-      ctx.fillStyle = 'white';
-      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ff88';
+      ctx.shadowBlur = 15;
       ctx.shadowColor = '#00ff88';
       ctx.fillText(multText, multX, multY);
       

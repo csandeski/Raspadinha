@@ -1,34 +1,41 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { MobileLayout } from "@/components/mobile-layout";
-import { ArrowLeft, Trophy, Coins, Target, Play, Plane, Cloud, TrendingUp } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, Plane, Play, DollarSign, History, TrendingUp, TrendingDown, Zap } from "lucide-react";
 import { formatMoney } from "@/lib/utils";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 
-interface ManiaFlyGameState {
-  multiplier: number;
-  status: 'waiting' | 'flying' | 'crashed' | 'collected';
-  prize: number;
-  altitude: number;
+// Types
+interface Bet {
+  amount: number;
+  autoCashout?: number;
+  status: 'idle' | 'placed' | 'won' | 'lost';
+  winMultiplier?: number;
+  profit?: number;
 }
 
 export default function ManiaFly() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [gameState, setGameState] = useState<ManiaFlyGameState>({
-    multiplier: 1.0,
-    status: 'waiting',
-    prize: 0,
-    altitude: 0
-  });
-  const [betAmount, setBetAmount] = useState(1);
-  const [autoCollect, setAutoCollect] = useState<number | null>(null);
-  const animationRef = useRef<number>();
-  const startTimeRef = useRef<number>(0);
+  
+  // Game state - simplified
+  const [currentMultiplier, setCurrentMultiplier] = useState(0.00);
+  const [gameStatus, setGameStatus] = useState<'waiting' | 'flying' | 'crashed'>('waiting');
+  const [history, setHistory] = useState<number[]>([2.34, 1.45, 5.67, 1.23, 3.89, 10.45, 1.56, 2.78, 1.12, 4.56]);
+  const [gameInterval, setGameInterval] = useState<NodeJS.Timeout | null>(null);
+  
+  // Betting state
+  const [bet1, setBet1] = useState<Bet>({ amount: 1, status: 'idle' });
+  const [bet2, setBet2] = useState<Bet>({ amount: 1, status: 'idle' });
+  const [bet1Input, setBet1Input] = useState("1");
+  const [bet2Input, setBet2Input] = useState("1");
+  const [autoCashout1, setAutoCashout1] = useState("");
+  const [autoCashout2, setAutoCashout2] = useState("");
   
   // Query user balance
   const { data: userWallet } = useQuery<{
@@ -40,127 +47,167 @@ export default function ManiaFly() {
 
   const balance = parseFloat(userWallet?.balance || "0");
 
-  // Start game mutation
-  const startGameMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest('/api/games/mania-fly/start', {
-        method: 'POST',
-        body: JSON.stringify({ betAmount })
+  // Place bet mutation
+  const placeBetMutation = useMutation({
+    mutationFn: async (data: { betNumber: 1 | 2; amount: number }) => {
+      return apiRequest('/api/games/mania-fly/bet', 'POST', { 
+        amount: data.amount,
+        roundId: `round-${Date.now()}`
       });
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
-      startFlight();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao iniciar jogo",
-        description: error.message || "Tente novamente",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Collect prize mutation
-  const collectPrizeMutation = useMutation({
-    mutationFn: async () => {
-      const prize = betAmount * gameState.multiplier;
-      return apiRequest('/api/games/mania-fly/collect', {
-        method: 'POST',
-        body: JSON.stringify({ 
-          multiplier: gameState.multiplier,
-          prize 
-        })
-      });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
-      const prize = betAmount * gameState.multiplier;
-      setGameState(prev => ({ ...prev, status: 'collected', prize }));
-      toast({
-        title: "Prêmio coletado!",
-        description: `Você ganhou ${formatMoney(prize)}!`,
-      });
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Erro ao coletar prêmio",
-        description: error.message || "Tente novamente",
-        variant: "destructive"
-      });
-    }
-  });
-
-  // Start flight animation
-  const startFlight = () => {
-    setGameState({
-      multiplier: 1.0,
-      status: 'flying',
-      prize: 0,
-      altitude: 0
-    });
-    startTimeRef.current = Date.now();
-    animate();
-  };
-
-  // Animation loop
-  const animate = () => {
-    const elapsed = (Date.now() - startTimeRef.current) / 1000;
-    
-    // Exponential growth with randomness
-    const baseMultiplier = Math.pow(1.15, elapsed);
-    const randomFactor = 1 + (Math.random() - 0.5) * 0.02;
-    const newMultiplier = Math.min(baseMultiplier * randomFactor, 100);
-    
-    // Random crash chance increases with multiplier
-    const crashChance = Math.min(elapsed * 0.02, 0.5); // Max 50% chance
-    if (Math.random() < crashChance / 60) { // Per frame crash check
-      setGameState(prev => ({ ...prev, status: 'crashed', multiplier: newMultiplier }));
-      toast({
-        title: "O avião voou longe demais!",
-        description: "Tente novamente",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    // Update altitude and multiplier
-    setGameState(prev => ({
-      ...prev,
-      multiplier: newMultiplier,
-      altitude: Math.min(elapsed * 50, 500)
-    }));
-    
-    // Check auto-collect
-    if (autoCollect && newMultiplier >= autoCollect) {
-      collectPrizeMutation.mutate();
-      return;
-    }
-    
-    // Continue animation if still flying
-    if (gameState.status === 'flying') {
-      animationRef.current = requestAnimationFrame(animate);
-    }
-  };
-
-  // Cleanup animation on unmount
-  useEffect(() => {
-    return () => {
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      
+      if (variables.betNumber === 1) {
+        setBet1({
+          amount: variables.amount,
+          autoCashout: autoCashout1 ? parseFloat(autoCashout1) : undefined,
+          status: 'placed'
+        });
+      } else {
+        setBet2({
+          amount: variables.amount,
+          autoCashout: autoCashout2 ? parseFloat(autoCashout2) : undefined,
+          status: 'placed'
+        });
       }
-    };
-  }, []);
-
-  // Stop animation when status changes
-  useEffect(() => {
-    if (gameState.status !== 'flying' && animationRef.current) {
-      cancelAnimationFrame(animationRef.current);
+      
+      toast({
+        title: "✅ Aposta realizada!",
+        description: `Aposta de ${formatMoney(variables.amount)} confirmada`,
+        className: "bg-green-900/90 border-green-500"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao fazer aposta",
+        description: error.message || "Tente novamente",
+        variant: "destructive"
+      });
     }
-  }, [gameState.status]);
+  });
 
-  const handleStartGame = () => {
-    if (betAmount > balance) {
+  // Cash out mutation  
+  const cashOutMutation = useMutation({
+    mutationFn: async (data: { betNumber: 1 | 2; multiplier: number }) => {
+      const bet = data.betNumber === 1 ? bet1 : bet2;
+      const profit = bet.amount * data.multiplier;
+      
+      return apiRequest('/api/games/mania-fly/cashout', 'POST', { 
+        multiplier: data.multiplier,
+        profit,
+        roundId: `round-${Date.now()}`
+      });
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/user/balance'] });
+      
+      const bet = variables.betNumber === 1 ? bet1 : bet2;
+      const profit = bet.amount * variables.multiplier;
+      
+      if (variables.betNumber === 1) {
+        setBet1(prev => ({
+          ...prev,
+          status: 'won',
+          winMultiplier: variables.multiplier,
+          profit
+        }));
+      } else {
+        setBet2(prev => ({
+          ...prev,
+          status: 'won',
+          winMultiplier: variables.multiplier,
+          profit
+        }));
+      }
+      
+      toast({
+        title: "💰 Sacou com sucesso!",
+        description: `Multiplicador ${variables.multiplier.toFixed(2)}x • Ganhou ${formatMoney(profit)}`,
+        className: "bg-green-900/90 border-green-500"
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Erro ao sacar",
+        description: error.message || "Tente novamente",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Simple game start
+  const startGame = () => {
+    // Clear any existing interval
+    if (gameInterval) {
+      clearInterval(gameInterval);
+    }
+    
+    // Generate random crash point
+    const crashPoint = 1 + Math.random() * 10;
+    
+    // Reset game state
+    setGameStatus('flying');
+    setCurrentMultiplier(1.00);
+    
+    // Simple multiplier increase
+    let multiplier = 1.00;
+    const interval = setInterval(() => {
+      multiplier += 0.05;
+      setCurrentMultiplier(multiplier);
+      
+      // Check auto cashout
+      if (bet1.status === 'placed' && bet1.autoCashout && multiplier >= bet1.autoCashout) {
+        handleCashOut(1);
+      }
+      if (bet2.status === 'placed' && bet2.autoCashout && multiplier >= bet2.autoCashout) {
+        handleCashOut(2);
+      }
+      
+      // Check crash
+      if (multiplier >= crashPoint) {
+        clearInterval(interval);
+        setGameInterval(null);
+        setGameStatus('crashed');
+        setCurrentMultiplier(crashPoint);
+        
+        // Update history
+        setHistory(prev => [crashPoint, ...prev.slice(0, 9)]);
+        
+        // Mark active bets as lost
+        if (bet1.status === 'placed') {
+          setBet1(prev => ({ ...prev, status: 'lost' }));
+        }
+        if (bet2.status === 'placed') {
+          setBet2(prev => ({ ...prev, status: 'lost' }));
+        }
+        
+        // Wait and reset
+        setTimeout(() => {
+          setGameStatus('waiting');
+          setCurrentMultiplier(0);
+          setBet1(prev => ({ ...prev, status: 'idle' }));
+          setBet2(prev => ({ ...prev, status: 'idle' }));
+        }, 3000);
+      }
+    }, 100);
+    
+    setGameInterval(interval);
+  };
+
+  const handlePlaceBet = (betNumber: 1 | 2) => {
+    const amount = betNumber === 1 ? parseFloat(bet1Input) : parseFloat(bet2Input);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast({
+        title: "Valor inválido",
+        description: "Digite um valor válido para apostar",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (amount > balance) {
       toast({
         title: "Saldo insuficiente",
         description: "Você não tem saldo suficiente para esta aposta",
@@ -168,12 +215,22 @@ export default function ManiaFly() {
       });
       return;
     }
-    startGameMutation.mutate();
+    
+    if (gameStatus === 'flying') {
+      toast({
+        title: "Aguarde o próximo round",
+        description: "Você só pode apostar antes do avião decolar",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    placeBetMutation.mutate({ betNumber, amount });
   };
 
-  const handleCollect = () => {
-    if (gameState.status === 'flying') {
-      collectPrizeMutation.mutate();
+  const handleCashOut = (betNumber: 1 | 2) => {
+    if (gameStatus === 'flying' && currentMultiplier > 0) {
+      cashOutMutation.mutate({ betNumber, multiplier: currentMultiplier });
     }
   };
 
@@ -183,228 +240,311 @@ export default function ManiaFly() {
       showBackButton
       onBackClick={() => setLocation("/")}
     >
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-gray-800 to-gray-900 text-white">
+      <div className="min-h-screen bg-[#0a0a0a] text-white">
         {/* Header */}
-        <div className="bg-gradient-to-b from-sky-900/50 to-transparent p-4">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="bg-gradient-to-b from-[#111111] to-transparent p-4">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setLocation("/")}
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors"
+              data-testid="button-back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">
-              Mania Fly
+            <h1 className="text-xl font-bold flex items-center gap-2">
+              <Plane className="w-6 h-6 text-[#00E880]" />
+              <span className="bg-gradient-to-r from-[#00E880] to-[#00FFB3] bg-clip-text text-transparent">
+                MANIA FLY
+              </span>
             </h1>
           </div>
-
-          {/* Balance Display */}
-          <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 rounded-xl p-3 backdrop-blur-sm">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-400 text-sm">Saldo:</span>
-              <span className="text-green-400 font-bold text-lg">
-                {formatMoney(balance)}
-              </span>
-            </div>
-          </div>
         </div>
 
-        {/* Game Area */}
-        <div className="relative h-[400px] bg-gradient-to-b from-sky-400 via-sky-500 to-blue-600 mx-4 rounded-2xl overflow-hidden shadow-2xl">
-          {/* Clouds Background */}
-          <div className="absolute inset-0">
-            {[...Array(5)].map((_, i) => (
-              <motion.div
-                key={i}
-                className="absolute bg-white/20 rounded-full"
-                style={{
-                  width: `${80 + i * 20}px`,
-                  height: `${40 + i * 10}px`,
-                  left: `${20 + i * 15}%`,
-                  top: `${20 + i * 15}%`,
-                }}
-                animate={{
-                  x: [-100, 500],
-                }}
-                transition={{
-                  duration: 20 + i * 5,
-                  repeat: Infinity,
-                  ease: "linear",
-                  delay: i * 2,
-                }}
-              />
+        {/* Multiplier History */}
+        <div className="px-4 py-2">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+            <History className="w-4 h-4 text-gray-500 flex-shrink-0" />
+            {history.map((item, index) => (
+              <div
+                key={index}
+                className={cn(
+                  "px-3 py-1 rounded-lg font-mono text-sm font-bold flex-shrink-0",
+                  item < 1.5 ? "bg-red-900/50 text-red-400" :
+                  item < 3 ? "bg-yellow-900/50 text-yellow-400" :
+                  item < 10 ? "bg-green-900/50 text-green-400" :
+                  "bg-purple-900/50 text-purple-400"
+                )}
+                data-testid={`history-${index}`}
+              >
+                {(item || 0).toFixed(2)}x
+              </div>
             ))}
           </div>
+        </div>
 
-          {/* Airplane */}
-          <AnimatePresence>
-            {(gameState.status === 'flying' || gameState.status === 'collected') && (
-              <motion.div
-                className="absolute left-1/2 transform -translate-x-1/2"
-                initial={{ bottom: 50 }}
-                animate={{ 
-                  bottom: 50 + gameState.altitude,
-                  rotate: gameState.status === 'flying' ? -15 : 0
-                }}
-                exit={{ bottom: 50, rotate: 45 }}
-                transition={{ type: "spring", stiffness: 50 }}
-              >
-                <Plane className="w-16 h-16 text-white drop-shadow-2xl" />
-              </motion.div>
+        {/* Game Display Area - Simplified */}
+        <div className="relative h-[300px] mx-4 rounded-xl overflow-hidden bg-gradient-to-b from-[#111111] to-[#0a0a0a] border border-[#00E880]/20 flex items-center justify-center">
+          <div className="text-center">
+            {gameStatus === 'waiting' && (
+              <>
+                <Plane className="w-20 h-20 text-[#00E880] mx-auto mb-4" />
+                <Button
+                  onClick={startGame}
+                  className="bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold px-8 py-3"
+                  data-testid="button-start-game"
+                >
+                  <Play className="w-5 h-5 mr-2" />
+                  INICIAR VOO
+                </Button>
+              </>
             )}
-          </AnimatePresence>
-
-          {/* Multiplier Display */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <AnimatePresence mode="wait">
-              {gameState.status === 'waiting' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className="text-center"
-                >
-                  <h2 className="text-3xl font-bold text-white mb-2">Pronto para voar?</h2>
-                  <p className="text-white/80">Clique em jogar para começar</p>
-                </motion.div>
-              )}
-
-              {gameState.status === 'flying' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className="text-center"
-                >
-                  <TrendingUp className="w-12 h-12 text-green-400 mx-auto mb-2" />
-                  <div className="text-6xl font-black text-white drop-shadow-2xl">
-                    {gameState.multiplier.toFixed(2)}x
-                  </div>
-                  <div className="text-2xl text-green-300 mt-2">
-                    {formatMoney(betAmount * gameState.multiplier)}
-                  </div>
-                </motion.div>
-              )}
-
-              {gameState.status === 'crashed' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5, rotate: -180 }}
-                  animate={{ opacity: 1, scale: 1, rotate: 0 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className="text-center"
-                >
-                  <div className="text-6xl mb-4">💥</div>
-                  <h2 className="text-3xl font-bold text-red-400">Crash!</h2>
-                  <p className="text-white/80 mt-2">O avião voou longe demais</p>
-                  <p className="text-red-300 mt-1">Multiplicador: {gameState.multiplier.toFixed(2)}x</p>
-                </motion.div>
-              )}
-
-              {gameState.status === 'collected' && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.5 }}
-                  className="text-center"
-                >
-                  <Trophy className="w-16 h-16 text-yellow-400 mx-auto mb-2" />
-                  <h2 className="text-3xl font-bold text-green-400">Prêmio Coletado!</h2>
-                  <p className="text-2xl text-white mt-2">
-                    {formatMoney(gameState.prize)}
-                  </p>
-                  <p className="text-green-300 mt-1">
-                    Multiplicador: {gameState.multiplier.toFixed(2)}x
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+            
+            {gameStatus === 'flying' && (
+              <>
+                <div className="text-7xl font-bold mb-4">
+                  <span className="text-[#00E880]">{currentMultiplier.toFixed(2)}x</span>
+                </div>
+                <div className="flex items-center justify-center gap-2 text-gray-400">
+                  <TrendingUp className="w-5 h-5" />
+                  <span>Voando...</span>
+                </div>
+              </>
+            )}
+            
+            {gameStatus === 'crashed' && (
+              <>
+                <div className="text-6xl font-bold text-red-500 mb-2">
+                  CRASHED
+                </div>
+                <div className="text-2xl text-gray-400">
+                  @ {(currentMultiplier || 0).toFixed(2)}x
+                </div>
+                <div className="mt-4 flex items-center gap-2 justify-center text-yellow-500">
+                  <TrendingDown className="w-5 h-5" />
+                  <span>Aguarde o próximo voo...</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
 
-        {/* Controls */}
-        <div className="p-4 space-y-4">
-          {/* Bet Amount */}
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
-            <label className="text-sm text-gray-400 mb-2 block">Valor da Aposta</label>
-            <div className="flex gap-2">
-              {[1, 5, 10, 20].map(value => (
-                <button
-                  key={value}
-                  onClick={() => setBetAmount(value)}
-                  className={`flex-1 py-2 px-3 rounded-lg font-bold transition-all ${
-                    betAmount === value
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  R$ {value}
-                </button>
-              ))}
+        {/* Betting Controls */}
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Bet Panel 1 */}
+            <div className="bg-[#111111] rounded-xl p-4 border border-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-gray-400">APOSTA 1</span>
+                {bet1.status === 'placed' && (
+                  <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-400 rounded">
+                    ATIVA
+                  </span>
+                )}
+                {bet1.status === 'won' && (
+                  <span className="text-xs px-2 py-1 bg-green-900/50 text-green-400 rounded">
+                    GANHOU {bet1.winMultiplier?.toFixed(2)}x
+                  </span>
+                )}
+                {bet1.status === 'lost' && (
+                  <span className="text-xs px-2 py-1 bg-red-900/50 text-red-400 rounded">
+                    PERDEU
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Valor da Aposta</label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={bet1Input}
+                      onChange={(e) => setBet1Input(e.target.value)}
+                      className="flex-1 bg-black/50 border-gray-700 text-white"
+                      placeholder="0.00"
+                      min="1"
+                      step="0.5"
+                      disabled={bet1.status === 'placed'}
+                      data-testid="input-bet1-amount"
+                    />
+                    <div className="flex gap-1">
+                      {[1, 5, 10].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => setBet1Input(val.toString())}
+                          className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+                          disabled={bet1.status === 'placed'}
+                          data-testid={`button-bet1-quick-${val}`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Auto Sacar em</label>
+                  <Input
+                    type="number"
+                    value={autoCashout1}
+                    onChange={(e) => setAutoCashout1(e.target.value)}
+                    className="bg-black/50 border-gray-700 text-white"
+                    placeholder="Desativado"
+                    min="1.01"
+                    step="0.1"
+                    disabled={bet1.status === 'placed'}
+                    data-testid="input-bet1-auto"
+                  />
+                </div>
+                
+                {bet1.status === 'placed' && gameStatus === 'flying' ? (
+                  <Button
+                    onClick={() => handleCashOut(1)}
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3"
+                    data-testid="button-bet1-cashout"
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    SACAR {formatMoney(bet1.amount * currentMultiplier)}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handlePlaceBet(1)}
+                    className="w-full bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold py-3"
+                    disabled={gameStatus !== 'waiting' || placeBetMutation.isPending}
+                    data-testid="button-bet1-place"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    APOSTAR {formatMoney(parseFloat(bet1Input) || 0)}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
 
-          {/* Auto Collect */}
-          <div className="bg-gray-800/50 rounded-xl p-4 backdrop-blur-sm">
-            <label className="text-sm text-gray-400 mb-2 block">Coletar Automático em:</label>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setAutoCollect(null)}
-                className={`px-3 py-2 rounded-lg font-bold transition-all ${
-                  autoCollect === null
-                    ? 'bg-gray-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                }`}
-              >
-                OFF
-              </button>
-              {[2, 3, 5, 10].map(value => (
-                <button
-                  key={value}
-                  onClick={() => setAutoCollect(value)}
-                  className={`flex-1 py-2 px-3 rounded-lg font-bold transition-all ${
-                    autoCollect === value
-                      ? 'bg-sky-500 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-                  }`}
-                >
-                  {value}x
-                </button>
-              ))}
+            {/* Bet Panel 2 */}
+            <div className="bg-[#111111] rounded-xl p-4 border border-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-gray-400">APOSTA 2</span>
+                {bet2.status === 'placed' && (
+                  <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-400 rounded">
+                    ATIVA
+                  </span>
+                )}
+                {bet2.status === 'won' && (
+                  <span className="text-xs px-2 py-1 bg-green-900/50 text-green-400 rounded">
+                    GANHOU {bet2.winMultiplier?.toFixed(2)}x
+                  </span>
+                )}
+                {bet2.status === 'lost' && (
+                  <span className="text-xs px-2 py-1 bg-red-900/50 text-red-400 rounded">
+                    PERDEU
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Valor da Aposta</label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={bet2Input}
+                      onChange={(e) => setBet2Input(e.target.value)}
+                      className="flex-1 bg-black/50 border-gray-700 text-white"
+                      placeholder="0.00"
+                      min="1"
+                      step="0.5"
+                      disabled={bet2.status === 'placed'}
+                      data-testid="input-bet2-amount"
+                    />
+                    <div className="flex gap-1">
+                      {[1, 5, 10].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => setBet2Input(val.toString())}
+                          className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+                          disabled={bet2.status === 'placed'}
+                          data-testid={`button-bet2-quick-${val}`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Auto Sacar em</label>
+                  <Input
+                    type="number"
+                    value={autoCashout2}
+                    onChange={(e) => setAutoCashout2(e.target.value)}
+                    className="bg-black/50 border-gray-700 text-white"
+                    placeholder="Desativado"
+                    min="1.01"
+                    step="0.1"
+                    disabled={bet2.status === 'placed'}
+                    data-testid="input-bet2-auto"
+                  />
+                </div>
+                
+                {bet2.status === 'placed' && gameStatus === 'flying' ? (
+                  <Button
+                    onClick={() => handleCashOut(2)}
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3"
+                    data-testid="button-bet2-cashout"
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    SACAR {formatMoney(bet2.amount * currentMultiplier)}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handlePlaceBet(2)}
+                    className="w-full bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold py-3"
+                    disabled={gameStatus !== 'waiting' || placeBetMutation.isPending}
+                    data-testid="button-bet2-place"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    APOSTAR {formatMoney(parseFloat(bet2Input) || 0)}
+                  </Button>
+                )}
+              </div>
             </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex gap-3">
-            {gameState.status === 'waiting' || gameState.status === 'crashed' || gameState.status === 'collected' ? (
-              <Button
-                onClick={handleStartGame}
-                disabled={startGameMutation.isPending || balance < betAmount}
-                className="flex-1 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-4 rounded-xl text-lg shadow-xl disabled:opacity-50"
-              >
-                <Play className="w-5 h-5 mr-2" />
-                Jogar ({formatMoney(betAmount)})
-              </Button>
-            ) : (
-              <Button
-                onClick={handleCollect}
-                disabled={gameState.status !== 'flying' || collectPrizeMutation.isPending}
-                className="flex-1 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 rounded-xl text-lg shadow-xl disabled:opacity-50 animate-pulse"
-              >
-                <Coins className="w-5 h-5 mr-2" />
-                Coletar ({formatMoney(betAmount * gameState.multiplier)})
-              </Button>
-            )}
           </div>
 
           {/* Game Info */}
-          <div className="bg-gradient-to-r from-gray-800/30 to-gray-700/30 rounded-xl p-4 backdrop-blur-sm border border-gray-700/50">
-            <h3 className="text-sm font-bold text-sky-400 mb-2">Como Jogar:</h3>
-            <ul className="text-xs text-gray-400 space-y-1">
-              <li>• O avião decola e o multiplicador aumenta</li>
-              <li>• Colete seu prêmio antes que o avião voe longe demais</li>
-              <li>• Quanto mais alto, maior o prêmio, mas maior o risco</li>
-              <li>• Configure coleta automática para garantir ganhos</li>
-            </ul>
+          <div className="mt-4 bg-gradient-to-r from-[#00E880]/10 to-[#00FFB3]/10 rounded-xl p-4 border border-[#00E880]/20">
+            <div className="flex items-center gap-2 mb-2">
+              <Zap className="w-4 h-4 text-[#00E880]" />
+              <span className="text-sm font-bold text-[#00E880]">ESTATÍSTICAS DO JOGO</span>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div>
+                <div className="text-xs text-gray-500">Último Crash</div>
+                <div className="text-lg font-bold text-white">
+                  {(history[0] || 0).toFixed(2)}x
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Média (10)</div>
+                <div className="text-lg font-bold text-white">
+                  {history.length > 0 
+                    ? (history.reduce((sum, h) => sum + (h || 0), 0) / history.length).toFixed(2)
+                    : '0.00'}x
+                </div>
+              </div>
+              <div>
+                <div className="text-xs text-gray-500">Maior (10)</div>
+                <div className="text-lg font-bold text-[#00E880]">
+                  {history.length > 0 
+                    ? Math.max(...history.filter(h => h != null)).toFixed(2)
+                    : '0.00'}x
+                </div>
+              </div>
+            </div>
+            <div className="mt-3 text-center text-xs text-gray-500">
+              RTP: 97% • Min: 1.00x • Max: 500.00x
+            </div>
           </div>
         </div>
       </div>

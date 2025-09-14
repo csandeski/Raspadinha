@@ -18790,49 +18790,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Mania Fly Game Routes
-  app.post("/api/games/mania-fly/start", authenticateToken, async (req: any, res) => {
+  app.post("/api/games/mania-fly/bet", authenticateToken, async (req: any, res) => {
     try {
-      const { betAmount = 1 } = req.body;
+      const { amount, roundId } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Valor de aposta inválido" });
+      }
       
       // Get user wallet
-      const wallet = await storage.getUserWallet(req.userId);
-      if (!wallet || parseFloat(wallet.balance) < betAmount) {
+      const wallet = await storage.getWallet(req.userId);
+      if (!wallet || parseFloat(wallet.balance) < amount) {
         return res.status(400).json({ message: "Saldo insuficiente" });
       }
       
       // Deduct bet amount
-      await storage.updateUserBalance(req.userId, -betAmount);
+      const newBalance = (parseFloat(wallet.balance) - amount).toFixed(2);
+      await storage.updateWalletBalance(req.userId, newBalance);
+      await storage.incrementTotalWagered(req.userId, amount.toString());
       
       res.json({ 
         success: true, 
-        message: "Jogo iniciado",
-        gameId: `fly_${Date.now()}`
+        message: "Aposta realizada",
+        betId: `bet_${Date.now()}`,
+        roundId,
+        amount
       });
     } catch (error) {
-      console.error("Mania Fly start error:", error);
-      res.status(500).json({ message: "Erro ao iniciar jogo" });
+      console.error("Mania Fly bet error:", error);
+      res.status(500).json({ message: "Erro ao fazer aposta" });
     }
   });
 
-  app.post("/api/games/mania-fly/collect", authenticateToken, async (req: any, res) => {
+  app.post("/api/games/mania-fly/cashout", authenticateToken, async (req: any, res) => {
     try {
-      const { multiplier, prize } = req.body;
+      const { multiplier, profit, roundId } = req.body;
       
-      if (!multiplier || !prize) {
+      if (!multiplier || !profit || multiplier < 1) {
         return res.status(400).json({ message: "Dados inválidos" });
       }
       
-      // Add prize to user balance
-      await storage.updateUserBalance(req.userId, prize);
+      // Get current wallet and add prize to user balance
+      const wallet = await storage.getWallet(req.userId);
+      if (!wallet) {
+        return res.status(400).json({ message: "Carteira não encontrada" });
+      }
+      const newBalance = (parseFloat(wallet.balance) + profit).toFixed(2);
+      await storage.updateWalletBalance(req.userId, newBalance);
+      
+      // Record game in history (optional)
+      const displayId = Math.floor(10000 + Math.random() * 90000);
+      await storage.createGamePremio({
+        userId: req.userId,
+        gameType: 'pix', // Using premio game type
+        cost: (profit / multiplier).toFixed(2),
+        prize: profit.toFixed(2),
+        won: true,
+        displayId,
+        revealedCards: [],
+        cards: [],
+        multiplier
+      });
       
       res.json({ 
         success: true, 
         message: "Prêmio coletado",
-        prize,
+        prize: profit,
         multiplier
       });
     } catch (error) {
-      console.error("Mania Fly collect error:", error);
+      console.error("Mania Fly cashout error:", error);
       res.status(500).json({ message: "Erro ao coletar prêmio" });
     }
   });

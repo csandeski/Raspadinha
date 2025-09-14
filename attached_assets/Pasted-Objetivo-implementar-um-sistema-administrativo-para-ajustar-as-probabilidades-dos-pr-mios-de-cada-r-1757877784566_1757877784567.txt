@@ -1,0 +1,43 @@
+Objetivo: implementar um sistema administrativo para ajustar as probabilidades dos prêmios de cada raspadinha/jogo do site e integrá-lo corretamente ao meu jogo usando Supabase.
+
+Requisitos funcionais:
+
+Listar todos os jogos/raspadinhas existentes no site. Para cada jogo:
+
+Listar apenas os prêmios que realmente existem naquele jogo (sem criar prêmios fictícios).
+
+Ao lado de cada prêmio, exibir um campo % (porcentagem) que representa a chance desse prêmio aparecer para o usuário quando ele jogar.
+
+A soma das porcentagens dos prêmios de um jogo deve ser 100% (validada no backend).
+
+Permitir admin editar as porcentagens em uma interface (UI) e salvar no Supabase.
+
+Quando o jogador jogar, o backend deve usar as probabilidades definidas para sortear o prêmio (random draw ponderado). Deve ser possível:
+
+Normalizar probabilidades caso não somem exatamente 100% (opcional — aceitar apenas se o admin autorizar).
+
+Respeitar limites de estoque/invento de prêmios (se aplicável).
+
+Não quero nenhum prêmio na lista que não exista no jogo. O sistema deve carregar prêmios do modelo de dados real (tabelas existentes) e ignorar itens inativos/obsoletos.
+
+Integrar/alterar o que for necessário no Supabase (schema, funções RPC, triggers) para que tudo funcione de forma segura e auditável.
+
+Registrar logs de alteração de probabilidades (quem alterou, timestamp, valores antigos/novos).
+
+Testes automatizados básicos (unitários/integration) que provem que o sorteio segue as probabilidades.
+
+Requisitos não funcionais / segurança:
+
+Operações de edição devem ser autenticadas e autorizadas (apenas contas admin).
+
+Alterações críticas (ex.: probabilidades) devem ficar atômicas e registrar auditoria.
+
+Evitar manipulação por cliente — draw (sorteio) sempre no backend/Supabase.
+
+Entrega mínima:
+
+Mudanças no schema do Supabase (ex.: tabelas e funções).
+
+Endpoints/API (ou RPC Supabase) para: listar jogos + prêmios, editar probabilidades, executar draw.
+
+UI admin simples para editar e salvar probabilidades (pode ser uma página React/Next/Remix).

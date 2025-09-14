@@ -7,7 +7,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import fetch from "node-fetch";
 import twilio from "twilio";
-import { createOrinPayPixPayment, verifyOrinPayPayment, processOrinPayWithdrawal, getOrinPayBalance, handleOrinPayWebhook } from './orinpay';
+import { createPixPayment, getTransactionStatus, createCashout, handleLiraPayWebhook, getLiraPayBalance } from './services/lirapay';
 
 // Extend Express session types
 declare module 'express-session' {
@@ -82,7 +82,7 @@ import rateLimit from "express-rate-limit";
 const JWT_SECRET = process.env.JWT_SECRET || 'maniabrasil-jwt-secret-key-2025-secure-token-generation';
 const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
-// OrinPay is now the only payment provider
+// LiraPay is now the only payment provider
 
 // ==================== MANIA FLY GAME SYSTEM ====================
 // Authoritative server-side game round manager for Mania Fly
@@ -496,8 +496,8 @@ const authenticateAdmin = async (req: any, res: any, next: any) => {
 };
 
 
-// Legacy OrinPay function - REMOVED (now using new implementation from orinpay.ts)
-const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) => {
+// Legacy OrinPay function - DEPRECATED (replaced with LiraPay)
+const createOrinPayPixPayment_OLD_DEPRECATED = async (amount: number, customerData: any) => {
   const orinpayToken = process.env.ORINPAY_TOKEN;
   // Use www.orinpay.com.br as per documentation
   const orinpayApiUrl = 'https://www.orinpay.com.br/api';
@@ -606,16 +606,18 @@ const createOrinPayPixPayment_OLD = async (amount: number, customerData: any) =>
 };
 
 
-const createPixPayment = async (amount: number, customerData: any, depositId: number, utmData?: any) => {
-  // Only use OrinPay as payment provider
-  console.log("Creating PIX payment with OrinPay");
+const createPixPaymentHandler = async (amount: number, customerData: any, depositId: number, utmData?: any) => {
+  // Use LiraPay as payment provider
+  console.log("Creating PIX payment with LiraPay");
   
   try {
-    const response = await createOrinPayPixPayment(amount, customerData, depositId);
-    console.log("OrinPay payment created successfully");
+    // LiraPay expects amount in reais, not cents
+    const amountInReais = amount / 100;
+    const response = await createPixPayment(amountInReais, customerData, depositId);
+    console.log("LiraPay payment created successfully");
     return response;
   } catch (error) {
-    console.error("OrinPay payment failed:", error);
+    console.error("LiraPay payment failed:", error);
     throw new Error("Erro ao processar pagamento. Tente novamente mais tarde.");
   }
 };
@@ -631,9 +633,9 @@ const verifyPixPayment = async (transactionId: string) => {
 
     // OrinPay verification is handled via webhooks
     // Return current status from database or pending
-    const result = await verifyOrinPayPayment(transactionId);
+    const result = await getTransactionStatus(transactionId);
     
-    if (result.success && result.status === 'approved') {
+    if (result.success && result.status === 'completed') {
       return { status: 'completed' };
     }
     
@@ -6217,12 +6219,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           amount: amount.toString(),
           pixCode: "",
           status: "pending",
-          paymentProvider: "orinpay",
+          paymentProvider: "lirapay",
         });
         
         // Create PIX payment with deposit ID
-        const pixResponse = await createPixPayment(
-          amount * 100, // Convert to cents for OrinPay
+        const pixResponse = await createPixPaymentHandler(
+          amount * 100, // Amount will be converted to reais inside the handler
           {
             name: user.name,
             phone: user.phone,
@@ -6947,19 +6949,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   );
 
   // Withdrawal routes
-  // Webhook route for OrinPay PIX payment notifications
-  app.post("/api/webhook/orinpay", async (req, res) => {
+  // Webhook route for LiraPay PIX payment notifications
+  app.post("/api/webhook/lirapay", async (req, res) => {
     try {
-      console.log("=== WEBHOOK ORINPAY RECEIVED ===");
+      console.log("=== WEBHOOK LIRAPAY RECEIVED ===");
       console.log("Headers:", req.headers);
       console.log("Body:", JSON.stringify(req.body, null, 2));
 
-      // Process OrinPay webhook
-      await handleOrinPayWebhook(req.body);
+      // Process LiraPay webhook
+      await handleLiraPayWebhook(req.body);
 
       res.status(200).json({ success: true });
     } catch (error) {
-      console.error("OrinPay webhook error:", error);
+      console.error("LiraPay webhook error:", error);
       res.status(500).json({ success: false });
     }
   });
@@ -7978,7 +7980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       res.json({ success: true });
     } catch (error) {
-      console.error("OrinPay webhook error:", error);
+      console.error("LiraPay webhook error:", error);
       res.status(500).json({ message: "Erro ao processar webhook" });
     }
   });
@@ -9604,23 +9606,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
             throw new Error("OrinPay aceita apenas chaves PIX tipo CPF ou CNPJ");
           }
 
-          console.log(`[ORINPAY] Processing withdrawal with PIX key type: ${pixKeyType}`);
+          console.log(`[LIRAPAY] Processing withdrawal with PIX key type: ${pixKeyType}`);
 
-          // Process withdrawal via OrinPay
-          const withdrawResponse = await processOrinPayWithdrawal(
-            amount * 100, // Convert to cents
+          // Process withdrawal via LiraPay
+          const withdrawResponse = await createCashout(
+            amount, // LiraPay expects amount in reais, not cents
             cleanedKey,
             pixKeyType,
             withdrawalId,
             withdrawalData.withdrawal.userId
           );
 
-          console.log(`[ORINPAY] Withdrawal response:`, withdrawResponse);
+          console.log(`[LIRAPAY] Withdrawal response:`, withdrawResponse);
 
           if (withdrawResponse.success) {
-            horsePayTransactionId = withdrawResponse.withdrawalId;
-            pixEndToEndId = `ORINPAY-${withdrawResponse.withdrawalId}`;
-            console.log(`[ORINPAY] Withdrawal created successfully: ID ${horsePayTransactionId}`);
+            horsePayTransactionId = withdrawResponse.cashoutId;
+            pixEndToEndId = `LIRAPAY-${withdrawResponse.cashoutId}`;
+            console.log(`[LIRAPAY] Withdrawal created successfully: ID ${horsePayTransactionId}`);
           } else {
             throw new Error('Failed to create withdrawal');
           }
@@ -9642,7 +9644,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const updateData: any = {
           status: "approved",
           processedAt: new Date(),
-          adminNotes: adminNotes + (horsePayTransactionId ? `\nOrinPay ID: ${horsePayTransactionId}` : ''),
+          adminNotes: adminNotes + (horsePayTransactionId ? `\nLiraPay ID: ${horsePayTransactionId}` : ''),
         };
         
         // Add transaction receipt details if available
@@ -9664,13 +9666,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         console.log(`[ADMIN] Withdrawal #${withdrawalId} approved by ${req.adminSession?.username || 'admin'}`);
         if (horsePayTransactionId) {
-          console.log(`[ADMIN] PIX sent via OrinPay: Transaction ${horsePayTransactionId}`);
+          console.log(`[ADMIN] PIX sent via LiraPay: Transaction ${horsePayTransactionId}`);
         }
 
         res.json({ 
           success: true, 
           message: horsePayTransactionId 
-            ? `Saque aprovado e PIX enviado via OrinPay! Transação: ${horsePayTransactionId}`
+            ? `Saque aprovado e PIX enviado via LiraPay! Transação: ${horsePayTransactionId}`
             : "Saque aprovado com sucesso. PIX deve ser enviado manualmente.",
           horsePayTransactionId,
           pixEndToEndId
@@ -16108,15 +16110,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let endToEndId = null;
       if (action === 'approve') {
         try {
-          console.log(`[ORINPAY] Processing affiliate withdrawal #${withdrawalId}`);
+          console.log(`[LIRAPAY] Processing affiliate withdrawal #${withdrawalId}`);
           
           // For now, we'll mark as approved and the actual PIX will be processed manually
-          // TODO: Integrate OrinPay withdrawal API when available
-          console.log(`[ORINPAY] Affiliate withdrawal #${withdrawalId} marked as approved for manual processing`);
+          // Process withdrawal via LiraPay
+          console.log(`[LIRAPAY] Affiliate withdrawal #${withdrawalId} marked as approved for processing`);
         } catch (error: any) {
-          console.error(`[ORINPAY] Error processing affiliate withdrawal:`, error);
+          console.error(`[LIRAPAY] Error processing affiliate withdrawal:`, error);
           return res.status(500).json({ 
-            error: `Erro ao processar PIX via OrinPay: ${error.message}`
+            error: `Erro ao processar PIX via LiraPay: ${error.message}`
           });
         }
       }

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { MobileLayout } from "@/components/mobile-layout";
 import { ArrowLeft, Plane, Play, DollarSign, History, TrendingUp, TrendingDown, Zap, Clock } from "lucide-react";
@@ -28,9 +28,22 @@ interface Bet {
   profit?: number;
 }
 
+interface TrailPoint {
+  x: number;
+  y: number;
+  time: number;
+}
+
 export default function ManiaFly() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  
+  // Canvas refs
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animationRef = useRef<number>();
+  const gameStartTimeRef = useRef<number>(0);
+  const trailPointsRef = useRef<TrailPoint[]>([]);
+  const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
   
   // Game state from server
   const [gameStatus, setGameStatus] = useState<GameStatus>({
@@ -48,6 +61,353 @@ export default function ManiaFly() {
   const [bet2Input, setBet2Input] = useState("1");
   const [autoCashout1, setAutoCashout1] = useState("");
   const [autoCashout2, setAutoCashout2] = useState("");
+  
+  // Resize canvas
+  useEffect(() => {
+    const handleResize = () => {
+      const container = canvasRef.current?.parentElement;
+      if (container) {
+        setCanvasSize({
+          width: container.clientWidth,
+          height: 400
+        });
+      }
+    };
+    
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  // Canvas drawing functions
+  const drawGame = useCallback(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw sky gradient background
+    const skyGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGradient.addColorStop(0, '#0a1929'); // Very dark blue at top
+    skyGradient.addColorStop(0.3, '#1e3a5f'); // Dark blue
+    skyGradient.addColorStop(0.5, '#2e5c8a'); // Mid blue
+    skyGradient.addColorStop(0.7, '#4a8bc2'); // Light blue
+    skyGradient.addColorStop(1, '#87ceeb'); // Sky blue at bottom
+    ctx.fillStyle = skyGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw sunburst effect
+    const sunX = canvas.width * 0.85;
+    const sunY = canvas.height * 0.15;
+    
+    // Sun glow
+    const sunGradient = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 250);
+    sunGradient.addColorStop(0, 'rgba(255, 220, 100, 0.6)');
+    sunGradient.addColorStop(0.3, 'rgba(255, 200, 50, 0.3)');
+    sunGradient.addColorStop(0.6, 'rgba(255, 180, 0, 0.1)');
+    sunGradient.addColorStop(1, 'rgba(255, 180, 0, 0)');
+    ctx.fillStyle = sunGradient;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Draw subtle clouds
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+    for (let i = 0; i < 5; i++) {
+      const cloudX = (i * 150 + 50) % canvas.width;
+      const cloudY = 50 + Math.sin(i) * 30;
+      
+      // Cloud shape with multiple circles
+      ctx.beginPath();
+      ctx.arc(cloudX, cloudY, 35, 0, Math.PI * 2);
+      ctx.arc(cloudX + 25, cloudY - 5, 30, 0, Math.PI * 2);
+      ctx.arc(cloudX + 50, cloudY, 28, 0, Math.PI * 2);
+      ctx.arc(cloudX + 20, cloudY + 10, 25, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    
+    // Draw horizon line
+    const horizonGradient = ctx.createLinearGradient(0, canvas.height - 50, 0, canvas.height);
+    horizonGradient.addColorStop(0, 'rgba(255, 255, 255, 0)');
+    horizonGradient.addColorStop(1, 'rgba(255, 255, 255, 0.1)');
+    ctx.fillStyle = horizonGradient;
+    ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+    
+    if (gameStatus.state === 'playing') {
+      const elapsed = (Date.now() - gameStartTimeRef.current) / 1000;
+      
+      // Progressive multiplier - starts VERY slow then accelerates
+      let progressiveMultiplier;
+      if (elapsed < 2) {
+        // Very slow start for first 2 seconds
+        progressiveMultiplier = 1.0 + (elapsed * 0.05);
+      } else if (elapsed < 5) {
+        // Gradual acceleration
+        progressiveMultiplier = 1.1 + Math.pow(elapsed - 2, 1.3) * 0.15;
+      } else {
+        // Faster acceleration after 5 seconds
+        progressiveMultiplier = 1.5 + Math.pow(elapsed - 5, 1.6) * 0.25;
+      }
+      
+      // Plane position - moves right and up
+      const startX = 80;
+      const startY = canvas.height - 80;
+      const endX = canvas.width - 100;
+      const endY = 50;
+      
+      // Non-linear movement that matches multiplier growth
+      const progress = Math.min(elapsed / 30, 1); // 30 seconds to reach top
+      const easedProgress = 1 - Math.pow(1 - progress, 2.5); // Smooth acceleration
+      
+      const planeX = startX + (endX - startX) * easedProgress;
+      const planeY = startY - (startY - endY) * easedProgress;
+      
+      // Add to trail with more frequent points
+      const now = Date.now();
+      if (trailPointsRef.current.length === 0 || 
+          now - trailPointsRef.current[trailPointsRef.current.length - 1].time > 15) {
+        trailPointsRef.current.push({ x: planeX, y: planeY, time: now });
+        
+        // Keep trail limited to last 150 points for longer trail
+        if (trailPointsRef.current.length > 150) {
+          trailPointsRef.current.shift();
+        }
+      }
+      
+      // Draw trail with gradient effect
+      if (trailPointsRef.current.length > 1) {
+        // Create gradient for trail
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        
+        // Draw multiple trail layers for thickness
+        for (let layer = 0; layer < 3; layer++) {
+          ctx.beginPath();
+          
+          const baseWidth = 8 - layer * 2;
+          const opacity = 0.8 - layer * 0.2;
+          
+          for (let i = 1; i < trailPointsRef.current.length; i++) {
+            const point = trailPointsRef.current[i];
+            const prevPoint = trailPointsRef.current[i - 1];
+            const age = (now - point.time) / 2000; // Age in seconds
+            
+            // Fade out older parts of trail
+            const fadeOpacity = Math.max(0, opacity * (1 - age));
+            
+            // Trail color transitions from pink to red
+            const r = 255;
+            const g = Math.floor(20 + (235 - 20) * (1 - i / trailPointsRef.current.length));
+            const b = Math.floor(147 - (147 - 71) * (i / trailPointsRef.current.length));
+            
+            ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${fadeOpacity})`;
+            ctx.lineWidth = baseWidth * (1 - i / trailPointsRef.current.length * 0.5);
+            
+            if (i === 1) {
+              ctx.moveTo(prevPoint.x, prevPoint.y);
+            }
+            
+            // Smooth curve between points
+            const cpx = (prevPoint.x + point.x) / 2;
+            const cpy = (prevPoint.y + point.y) / 2;
+            ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, cpx, cpy);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(point.x, point.y);
+          }
+        }
+        
+        // Add glow effect to trail
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff1493';
+        ctx.strokeStyle = 'rgba(255, 20, 147, 0.3)';
+        ctx.lineWidth = 15;
+        
+        ctx.beginPath();
+        ctx.moveTo(trailPointsRef.current[0].x, trailPointsRef.current[0].y);
+        for (let i = 1; i < trailPointsRef.current.length; i++) {
+          const point = trailPointsRef.current[i];
+          const prevPoint = trailPointsRef.current[i - 1];
+          const cpx = (prevPoint.x + point.x) / 2;
+          const cpy = (prevPoint.y + point.y) / 2;
+          ctx.quadraticCurveTo(prevPoint.x, prevPoint.y, cpx, cpy);
+        }
+        ctx.stroke();
+        
+        // Reset shadow
+        ctx.shadowBlur = 0;
+      }
+      
+      // Draw plane with better graphics
+      ctx.save();
+      ctx.translate(planeX, planeY);
+      
+      // Calculate rotation based on movement direction
+      let rotation;
+      if (trailPointsRef.current.length >= 2) {
+        const lastPoint = trailPointsRef.current[trailPointsRef.current.length - 1];
+        const prevPoint = trailPointsRef.current[trailPointsRef.current.length - 2];
+        const dx = lastPoint.x - prevPoint.x;
+        const dy = lastPoint.y - prevPoint.y;
+        rotation = Math.atan2(dy, dx) - Math.PI / 8; // Slight upward angle
+      } else {
+        rotation = -Math.PI / 6; // Default 30 degrees upward
+      }
+      ctx.rotate(rotation);
+      
+      // Draw plane with glow effect
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = '#00ff88';
+      ctx.fillStyle = '#00ff88';
+      
+      // Scale plane
+      const scale = 1.5;
+      ctx.scale(scale, scale);
+      
+      // Plane body
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(15, -3);
+      ctx.lineTo(20, 0);
+      ctx.lineTo(15, 3);
+      ctx.lineTo(-18, 0);
+      ctx.fill();
+      
+      // Main wings
+      ctx.beginPath();
+      ctx.moveTo(-5, 0);
+      ctx.lineTo(2, -18);
+      ctx.lineTo(8, -16);
+      ctx.lineTo(8, 0);
+      ctx.fill();
+      
+      ctx.beginPath();
+      ctx.moveTo(-5, 0);
+      ctx.lineTo(2, 18);
+      ctx.lineTo(8, 16);
+      ctx.lineTo(8, 0);
+      ctx.fill();
+      
+      // Tail fin
+      ctx.beginPath();
+      ctx.moveTo(-18, 0);
+      ctx.lineTo(-22, -10);
+      ctx.lineTo(-15, -8);
+      ctx.lineTo(-15, 0);
+      ctx.fill();
+      
+      // Engine glow
+      ctx.fillStyle = '#ffff00';
+      ctx.shadowColor = '#ffaa00';
+      ctx.beginPath();
+      ctx.arc(-20, 0, 4, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.restore();
+      
+      // Draw multiplier with better styling
+      ctx.save();
+      
+      // Position multiplier near plane but not overlapping
+      const multX = planeX + 50;
+      const multY = planeY - 30;
+      
+      // Background for multiplier
+      const multText = `${progressiveMultiplier.toFixed(2)}x`;
+      ctx.font = 'bold 42px Arial';
+      const metrics = ctx.measureText(multText);
+      
+      // Draw background box
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(multX - 10, multY - 35, metrics.width + 20, 50, 10);
+      ctx.fill();
+      ctx.stroke();
+      
+      // Draw multiplier text
+      ctx.fillStyle = 'white';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = '#00ff88';
+      ctx.fillText(multText, multX, multY);
+      
+      ctx.restore();
+      
+    } else if (gameStatus.state === 'crashed') {
+      // Draw explosion effect at last plane position
+      if (trailPointsRef.current.length > 0) {
+        const lastPoint = trailPointsRef.current[trailPointsRef.current.length - 1];
+        
+        // Explosion effect
+        ctx.save();
+        ctx.translate(lastPoint.x, lastPoint.y);
+        
+        // Draw explosion circles
+        for (let i = 0; i < 3; i++) {
+          ctx.strokeStyle = `rgba(255, 0, 0, ${0.6 - i * 0.2})`;
+          ctx.lineWidth = 3 - i;
+          ctx.beginPath();
+          ctx.arc(0, 0, 20 + i * 15, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        
+        ctx.restore();
+      }
+      
+      // Draw crashed text with style
+      ctx.save();
+      ctx.font = 'bold 56px Arial';
+      ctx.textAlign = 'center';
+      
+      // Text shadow
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = 'rgba(255, 0, 0, 0.8)';
+      
+      // Crashed text
+      ctx.fillStyle = '#ff0000';
+      ctx.fillText('CRASHED', canvas.width / 2, canvas.height / 2);
+      
+      // Multiplier text
+      ctx.font = 'bold 36px Arial';
+      ctx.fillStyle = 'white';
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillText(`@ ${gameStatus.multiplier.toFixed(2)}x`, canvas.width / 2, canvas.height / 2 + 50);
+      
+      ctx.restore();
+    } else {
+      // Clear trail when waiting
+      trailPointsRef.current = [];
+    }
+  }, [gameStatus, canvasSize]);
+  
+  // Animation loop
+  useEffect(() => {
+    const animate = () => {
+      drawGame();
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [drawGame]);
+  
+  // Track game start time
+  useEffect(() => {
+    if (gameStatus.state === 'playing' && gameStartTimeRef.current === 0) {
+      gameStartTimeRef.current = Date.now();
+      trailPointsRef.current = []; // Clear trail on new round
+    } else if (gameStatus.state !== 'playing') {
+      gameStartTimeRef.current = 0;
+    }
+  }, [gameStatus.state]);
   
   // Polling for game status
   useEffect(() => {
@@ -273,59 +633,30 @@ export default function ManiaFly() {
           </div>
         </div>
 
-        {/* Game Display Area - With Automatic Rounds */}
-        <div className="relative h-[300px] mx-4 rounded-xl overflow-hidden bg-gradient-to-b from-[#111111] to-[#0a0a0a] border border-[#00E880]/20 flex items-center justify-center">
-          <div className="text-center">
-            {gameStatus.state === 'waiting' && (
-              <>
+        {/* Game Display Area - Canvas Based */}
+        <div className="relative h-[400px] mx-4 rounded-xl overflow-hidden border border-[#00E880]/20">
+          <canvas
+            ref={canvasRef}
+            width={canvasSize.width}
+            height={canvasSize.height}
+            className="w-full h-full"
+            style={{ display: 'block' }}
+          />
+          
+          {/* Overlay for waiting state */}
+          {gameStatus.state === 'waiting' && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+              <div className="text-center bg-black/60 p-8 rounded-2xl border border-[#00E880]/30">
                 <Clock className="w-20 h-20 text-[#00E880] mx-auto mb-4 animate-pulse" />
-                <div className="text-5xl font-bold text-white mb-2">
+                <div className="text-6xl font-bold text-white mb-2 tabular-nums">
                   {gameStatus.countdown}s
                 </div>
-                <div className="text-gray-400">
+                <div className="text-gray-300 text-lg">
                   Próximo voo começando...
                 </div>
-              </>
-            )}
-            
-            {gameStatus.state === 'playing' && (
-              <>
-                <div 
-                  className="absolute"
-                  style={{
-                    bottom: `${Math.min(80, gameStatus.multiplier * 10)}%`,
-                    left: `${Math.min(80, gameStatus.multiplier * 8)}%`,
-                    transform: `rotate(-${Math.min(45, gameStatus.multiplier * 3)}deg)`,
-                    transition: 'all 0.1s'
-                  }}
-                >
-                  <Plane className="w-16 h-16 text-[#00E880]" />
-                </div>
-                <div className="text-7xl font-bold mb-4">
-                  <span className="text-[#00E880]">{gameStatus.multiplier.toFixed(2)}x</span>
-                </div>
-                <div className="flex items-center justify-center gap-2 text-gray-400">
-                  <TrendingUp className="w-5 h-5" />
-                  <span>Voando...</span>
-                </div>
-              </>
-            )}
-            
-            {gameStatus.state === 'crashed' && (
-              <>
-                <div className="text-6xl font-bold text-red-500 mb-2 animate-pulse">
-                  CRASHED
-                </div>
-                <div className="text-2xl text-gray-400">
-                  @ {gameStatus.multiplier.toFixed(2)}x
-                </div>
-                <div className="mt-4 flex items-center gap-2 justify-center text-yellow-500">
-                  <TrendingDown className="w-5 h-5" />
-                  <span>Próximo voo em breve...</span>
-                </div>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Betting Controls */}

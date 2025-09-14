@@ -158,22 +158,13 @@ export default function Home() {
                 <span className="relative">
                   {/* Main gradient text */}
                   <span className="bg-gradient-to-r from-[#00E880] via-[#00FFB3] to-[#00E880] bg-clip-text text-transparent">
-                    ESCOLHA
-                  </span>
-                  <span className="text-white mx-2">SEU</span>
-                  <span className="bg-gradient-to-r from-[#00FFB3] via-[#00E880] to-[#00FFB3] bg-clip-text text-transparent">
-                    MODO
+                    ESCOLHA SEU MODO
                   </span>
                   
                   {/* Decorative underline */}
                   <div className="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-24 md:w-40 h-1 bg-gradient-to-r from-transparent via-[#00E880] to-transparent rounded-full" />
                 </span>
               </h2>
-              
-              {/* Subtitle */}
-              <p className="text-gray-400 text-[10px] md:text-xs mt-3 font-medium tracking-wider uppercase">
-                ✨ Escolha sua experiência preferida ✨
-              </p>
             </div>
             
             {/* Mode Selector Navigation - Mobile & Desktop */}

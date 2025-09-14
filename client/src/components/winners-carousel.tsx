@@ -40,7 +40,7 @@ const lastNames = [
 // Generate winners only for premio games with images - Reduced for better performance
 const generateWinners = () => {
   const winners = [];
-  const games = ['pix', 'me_mimei', 'eletronicos', 'super'];
+  const games = ['pix', 'me_mimei', 'eletronicos', 'super', 'esquilo'];
   
   // Define prizes with exact values and names from the actual games
   const gamePrizes = {
@@ -122,7 +122,21 @@ const generateWinners = () => {
       { value: 200000, name: 'Jeep Compass' },
       { value: 500000, name: 'Super Sorte' }
     ],
-    // Esquilo removed - game was causing errors
+    esquilo: [
+      // Esquilo tem multiplicadores: 0.3x, 0.5x, 0.8x, 2x, 5x
+      // Com apostas de 0.50 a 1000, valores comuns do jogo
+      { value: 3, name: 'R$ 3,00' },     // 0.3x * 10
+      { value: 5, name: 'R$ 5,00' },     // 0.5x * 10
+      { value: 8, name: 'R$ 8,00' },     // 0.8x * 10
+      { value: 20, name: 'R$ 20,00' },   // 2x * 10
+      { value: 50, name: 'R$ 50,00' },   // 5x * 10
+      { value: 100, name: 'R$ 100,00' }, // 2x * 50
+      { value: 250, name: 'R$ 250,00' }, // 5x * 50
+      { value: 500, name: 'R$ 500,00' }, // 5x * 100
+      { value: 1000, name: 'R$ 1.000,00' }, // 2x * 500
+      { value: 2500, name: 'R$ 2.500,00' }, // 5x * 500
+      { value: 5000, name: 'R$ 5.000,00' }  // 5x * 1000
+    ]
   };
 
   // Generate 30 winners - intercalate big and medium prizes as requested
@@ -204,7 +218,8 @@ const getGameName = (game: string) => {
     pix: 'PIX na Conta',
     me_mimei: 'Me Mimei',
     eletronicos: 'Eletrônicos',
-    super: 'Super Prêmios'
+    super: 'Super Prêmios',
+    esquilo: 'Esquilo Mania'
   };
   return names[game] || game;
 };
@@ -303,7 +318,22 @@ const getPrizeImage = (game: string, value: number) => {
     return '/premios/super-premios/100.webp';
   }
   
-  // Removed esquilo game case
+  if (game === 'esquilo') {
+    // Esquilo uses PIX images as its prizes are money values
+    // Map values to appropriate PIX images
+    if (value === 3) return '/premios/pix/3.webp';
+    if (value === 5) return '/premios/pix/5.webp';
+    if (value === 8) return '/premios/pix/10.webp'; // Use 10 for 8
+    if (value === 20) return '/premios/pix/20.webp';
+    if (value === 50) return '/premios/pix/50.webp';
+    if (value === 100) return '/premios/pix/100.webp';
+    if (value === 250) return '/premios/pix/200.webp'; // Use 200 for 250
+    if (value === 500) return '/premios/pix/500.webp';
+    if (value === 1000) return '/premios/pix/1000.webp';
+    if (value === 2500) return '/premios/pix/2000.webp'; // Use 2000 for 2500
+    if (value === 5000) return '/premios/pix/5000.webp';
+    return '/premios/pix/100.webp';
+  }
   
   // For minigames (sorte, mines, double, infect) use raspadinha image
   return '/premios/raspadinha.webp';
@@ -338,7 +368,8 @@ export default function WinnersCarousel() {
         return '/game/premio-eletronicos';
       case 'super':
         return '/game/premio-super-premios';
-      // Removed esquilo route
+      case 'esquilo':
+        return '/game/jogo-esquilo';
       default:
         return '/';
     }
@@ -405,7 +436,7 @@ export default function WinnersCarousel() {
                         winner.game === 'pix' ? 'bg-blue-400' :
                         winner.game === 'me_mimei' ? 'bg-pink-400' :
                         winner.game === 'eletronicos' ? 'bg-orange-400' :
-                        // esquilo removed
+                        winner.game === 'esquilo' ? 'bg-amber-400' :
                         'bg-green-400'
                       }`}></div>
                     </div>

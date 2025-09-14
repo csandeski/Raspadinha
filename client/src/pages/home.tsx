@@ -192,10 +192,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
-                      {/* Glow Effect */}
+                      {/* Subtle Background Effect */}
                       {gameSection === 'raspadinhas' && (
-                        <div className="absolute inset-0 -z-10">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        <div className="absolute inset-0 -z-10 scale-125">
+                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
+                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
                         </div>
                       )}
                       {/* Image Container */}
@@ -228,10 +230,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
-                      {/* Glow Effect */}
+                      {/* Subtle Background Effect */}
                       {gameSection === 'minigames' && (
-                        <div className="absolute inset-0 -z-10">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        <div className="absolute inset-0 -z-10 scale-125">
+                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
+                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
                         </div>
                       )}
                       {/* Image Container */}
@@ -264,10 +268,12 @@ export default function Home() {
                           : 'scale-100 opacity-70 hover:opacity-90 hover:scale-105'
                       }`}
                     >
-                      {/* Glow Effect */}
+                      {/* Subtle Background Effect */}
                       {gameSection === 'baus' && (
-                        <div className="absolute inset-0 -z-10">
-                          <div className="absolute inset-0 bg-gradient-to-r from-[#00E880] to-[#00FFB3] opacity-60 blur-xl rounded-2xl animate-pulse" />
+                        <div className="absolute inset-0 -z-10 scale-125">
+                          <div className="absolute inset-0 bg-gradient-to-b from-gray-800/30 to-gray-900/30 rounded-2xl" />
+                          <div className="absolute inset-0 bg-[#00E880]/5 rounded-2xl" />
+                          <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-[#00E880] to-transparent" />
                         </div>
                       )}
                       {/* Image Container */}

@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import rocketImg from "@assets/rocket.png";
 
 // Types
 interface GameStatus {
@@ -43,7 +44,9 @@ export default function ManiaFly() {
   const animationRef = useRef<number>();
   const gameStartTimeRef = useRef<number>(0);
   const trailPointsRef = useRef<TrailPoint[]>([]);
+  const rocketImageRef = useRef<HTMLImageElement | null>(null);
   const [canvasSize, setCanvasSize] = useState({ width: 800, height: 400 });
+  const [rocketLoaded, setRocketLoaded] = useState(false);
   
   // Game state from server
   const [gameStatus, setGameStatus] = useState<GameStatus>({
@@ -61,6 +64,19 @@ export default function ManiaFly() {
   const [bet2Input, setBet2Input] = useState("1");
   const [autoCashout1, setAutoCashout1] = useState("");
   const [autoCashout2, setAutoCashout2] = useState("");
+  
+  // Load rocket image
+  useEffect(() => {
+    const image = new Image();
+    image.src = rocketImg;
+    image.onload = () => {
+      rocketImageRef.current = image;
+      setRocketLoaded(true);
+    };
+    image.onerror = () => {
+      console.error('Failed to load rocket image');
+    };
+  }, []);
   
   // Resize canvas
   useEffect(() => {
@@ -240,7 +256,7 @@ export default function ManiaFly() {
         ctx.shadowBlur = 0;
       }
       
-      // Draw plane with better graphics
+      // Draw rocket with image
       ctx.save();
       ctx.translate(planeX, planeY);
       
@@ -251,59 +267,48 @@ export default function ManiaFly() {
         const prevPoint = trailPointsRef.current[trailPointsRef.current.length - 2];
         const dx = lastPoint.x - prevPoint.x;
         const dy = lastPoint.y - prevPoint.y;
-        rotation = Math.atan2(dy, dx) - Math.PI / 8; // Slight upward angle
+        rotation = Math.atan2(dy, dx) + Math.PI / 2; // Adjust rotation for vertical rocket
       } else {
-        rotation = -Math.PI / 6; // Default 30 degrees upward
+        rotation = Math.PI / 3; // Default angle (60 degrees)
       }
       ctx.rotate(rotation);
       
-      // Draw plane with glow effect
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = '#00ff88';
-      ctx.fillStyle = '#00ff88';
-      
-      // Scale plane
-      const scale = 1.5;
-      ctx.scale(scale, scale);
-      
-      // Plane body
-      ctx.beginPath();
-      ctx.moveTo(-18, 0);
-      ctx.lineTo(15, -3);
-      ctx.lineTo(20, 0);
-      ctx.lineTo(15, 3);
-      ctx.lineTo(-18, 0);
-      ctx.fill();
-      
-      // Main wings
-      ctx.beginPath();
-      ctx.moveTo(-5, 0);
-      ctx.lineTo(2, -18);
-      ctx.lineTo(8, -16);
-      ctx.lineTo(8, 0);
-      ctx.fill();
-      
-      ctx.beginPath();
-      ctx.moveTo(-5, 0);
-      ctx.lineTo(2, 18);
-      ctx.lineTo(8, 16);
-      ctx.lineTo(8, 0);
-      ctx.fill();
-      
-      // Tail fin
-      ctx.beginPath();
-      ctx.moveTo(-18, 0);
-      ctx.lineTo(-22, -10);
-      ctx.lineTo(-15, -8);
-      ctx.lineTo(-15, 0);
-      ctx.fill();
-      
-      // Engine glow
-      ctx.fillStyle = '#ffff00';
-      ctx.shadowColor = '#ffaa00';
-      ctx.beginPath();
-      ctx.arc(-20, 0, 4, 0, Math.PI * 2);
-      ctx.fill();
+      // Draw rocket image if loaded, otherwise draw fallback
+      if (rocketLoaded && rocketImageRef.current) {
+        const rocketWidth = 40;
+        const rocketHeight = 60;
+        
+        // Add subtle glow effect
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff6600';
+        
+        // Draw the rocket image centered
+        ctx.drawImage(
+          rocketImageRef.current,
+          -rocketWidth / 2,
+          -rocketHeight / 2,
+          rocketWidth,
+          rocketHeight
+        );
+        
+        // Reset shadow
+        ctx.shadowBlur = 0;
+      } else {
+        // Fallback: simple rocket shape if image not loaded
+        ctx.fillStyle = '#ff6600';
+        ctx.shadowBlur = 15;
+        ctx.shadowColor = '#ff6600';
+        
+        // Simple rocket body
+        ctx.beginPath();
+        ctx.moveTo(0, -25);
+        ctx.lineTo(10, 10);
+        ctx.lineTo(5, 25);
+        ctx.lineTo(-5, 25);
+        ctx.lineTo(-10, 10);
+        ctx.closePath();
+        ctx.fill();
+      }
       
       ctx.restore();
       

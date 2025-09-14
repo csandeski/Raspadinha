@@ -47,6 +47,7 @@ import { MarketingLinksManagement } from "@/components/admin/marketing-links-man
 import { ChatManagement } from "@/components/admin/chat-management";
 import { ReferralConfig } from "@/components/admin/referral-config";
 import { AffiliatesPartnersManagement } from "@/components/admin/affiliates-partners-management";
+import { ProbabilityManagement } from "@/components/admin/probability-management";
 
 // Custom apiRequest for admin routes that includes session ID
 const apiRequest = async (url: string, method: string = "GET", data?: any) => {
@@ -144,12 +145,15 @@ export default function AdminPanel() {
   const tabRoutes: Record<string, string> = {
     dashboard: "Dashboard",
     users: "Usuários",
-    games: "Jogos", 
+    games: "Jogos",
+    probabilities: "Probabilidades",
     deposits: "Depósitos",
     transactions: "Transações",
     "bonus-codes": "Códigos Bônus",
     coupons: "Cupons",
     marketing: "Marketing",
+    referrals: "Indicação",
+    affiliates: "Afiliados",
     chat: "Chat Suporte"
   };
 
@@ -293,10 +297,11 @@ export default function AdminPanel() {
 
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-10 w-full max-w-6xl">
+          <TabsList className="grid grid-cols-12 w-full max-w-7xl">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="games">Jogos</TabsTrigger>
+            <TabsTrigger value="probabilities">Probabilidades</TabsTrigger>
             <TabsTrigger value="deposits">Depósitos</TabsTrigger>
             <TabsTrigger value="transactions">Transações</TabsTrigger>
             <TabsTrigger value="bonus-codes">Códigos</TabsTrigger>
@@ -815,6 +820,11 @@ export default function AdminPanel() {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          {/* Probabilities Tab */}
+          <TabsContent value="probabilities" className="space-y-6">
+            <ProbabilityManagement />
           </TabsContent>
 
           {/* Deposits Tab */}

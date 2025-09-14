@@ -53,7 +53,6 @@ const BottomNav = lazy(() => import("./components/bottom-nav"));
 const SettingsPage = lazy(() => import("./pages/settings").then(m => ({ default: m.SettingsPage })));
 const AdminDashboard = lazy(() => import("./pages/admin/dashboard"));
 const AdminProbabilityTestPage = lazy(() => import("./pages/admin/probability-test").then(m => ({ default: m.AdminProbabilityTestPage })));
-const AdminProbabilities = lazy(() => import("./pages/admin-probabilities"));
 
 const ForgotPassword = lazy(() => import("./pages/forgot-password"));
 const Termos = lazy(() => import("./pages/termos").then(m => ({ default: m.Termos })));
@@ -197,7 +196,6 @@ function Router() {
             <Route path="/admin/login" component={AdminLogin} />
             <Route path="/admin/dashboard" component={AdminDashboard} />
             <Route path="/admin/probability-test" component={AdminProbabilityTestPage} />
-            <Route path="/admin/probabilities" component={AdminProbabilities} />
 
             <Route path="/games" component={Games} />
             <Route path="/game/premio-pix" component={GamePremioPix} />

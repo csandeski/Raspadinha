@@ -45,6 +45,7 @@ const GameBauMeMimei = lazy(() => import("./pages/game-bau-me-mimei"));
 const GameBauEletronicos = lazy(() => import("./pages/game-bau-eletronicos"));
 const GameBauSuperPremios = lazy(() => import("./pages/game-bau-super-premios"));
 const JogoEsquilo = lazy(() => import("./components/games/jogo-esquilo"));
+const ManiaFly = lazy(() => import("./pages/mania-fly"));
 const Rewards = lazy(() => import("./pages/rewards"));
 const ReferralPage = lazy(() => import("./pages/referral"));
 const Header = lazy(() => import("./components/header"));
@@ -204,6 +205,7 @@ function Router() {
             <Route path="/game/premio-eletronicos" component={GamePremioEletronicos} />
             <Route path="/game/premio-super-premios" component={GamePremioSuperPremios} />
             <Route path="/game/jogo-esquilo" component={JogoEsquilo} />
+            <Route path="/game/mania-fly" component={ManiaFly} />
             <Route path="/game/:type" component={Game} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/macaco123" component={SupportAgentLogin} />
@@ -355,6 +357,7 @@ function Router() {
           <Route path="/game/bau-eletronicos" component={GameBauEletronicos} />
           <Route path="/game/bau-super-premios" component={GameBauSuperPremios} />
           <Route path="/game/jogo-esquilo" component={JogoEsquilo} />
+          <Route path="/game/mania-fly" component={ManiaFly} />
           <Route path="/game/:type" component={Game} />
           <Route path="/profile" component={Profile} />
           <Route path="/deposit" component={Deposit} />

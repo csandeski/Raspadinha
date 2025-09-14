@@ -18789,6 +18789,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Mania Fly Game Routes
+  app.post("/api/games/mania-fly/start", authenticateToken, async (req: any, res) => {
+    try {
+      const { betAmount = 1 } = req.body;
+      
+      // Get user wallet
+      const wallet = await storage.getUserWallet(req.userId);
+      if (!wallet || parseFloat(wallet.balance) < betAmount) {
+        return res.status(400).json({ message: "Saldo insuficiente" });
+      }
+      
+      // Deduct bet amount
+      await storage.updateUserBalance(req.userId, -betAmount);
+      
+      res.json({ 
+        success: true, 
+        message: "Jogo iniciado",
+        gameId: `fly_${Date.now()}`
+      });
+    } catch (error) {
+      console.error("Mania Fly start error:", error);
+      res.status(500).json({ message: "Erro ao iniciar jogo" });
+    }
+  });
+
+  app.post("/api/games/mania-fly/collect", authenticateToken, async (req: any, res) => {
+    try {
+      const { multiplier, prize } = req.body;
+      
+      if (!multiplier || !prize) {
+        return res.status(400).json({ message: "Dados inválidos" });
+      }
+      
+      // Add prize to user balance
+      await storage.updateUserBalance(req.userId, prize);
+      
+      res.json({ 
+        success: true, 
+        message: "Prêmio coletado",
+        prize,
+        multiplier
+      });
+    } catch (error) {
+      console.error("Mania Fly collect error:", error);
+      res.status(500).json({ message: "Erro ao coletar prêmio" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

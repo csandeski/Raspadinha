@@ -192,14 +192,12 @@ export default function Home() {
                     }`}
                   >
                     {/* Image Container */}
-                    <div className="relative w-[80px] h-[80px] md:w-[100px] md:h-[100px] rounded-2xl overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-500 to-green-600" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="absolute top-2 right-2 bg-orange-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
-                          QUENTE
-                        </div>
-                        <Grid3X3 className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
-                      </div>
+                    <div className="relative w-[90px] h-[60px] md:w-[120px] md:h-[80px]">
+                      <img 
+                        src="/images/raspadinhas-selector.png" 
+                        alt="Raspadinhas"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                   </button>
                   <span className={`text-[11px] md:text-[13px] font-bold uppercase tracking-wider transition-all duration-300 ${

@@ -64,6 +64,7 @@ import { ChatManagement } from "@/components/admin/chat-management";
 import { MarketingLinksManagement } from "@/components/admin/marketing-links-management";
 import CashbackManagement from "@/components/admin/cashback-management";
 import ApiManagement from "@/components/admin/api-management";
+import PrizeProbabilityManagement from "@/components/admin/prize-probability-management";
 import { 
   LineChart, 
   Line, 
@@ -656,22 +657,7 @@ function AdminDashboardContent() {
                 transition={{ duration: 0.3 }}
               >
                 {activeSection === "overview" && <EnhancedDashboard stats={stats} />}
-                {activeSection === "probabilidades" && (
-                  <Card className="bg-gradient-to-br from-zinc-900 to-black border-zinc-800">
-                    <CardHeader>
-                      <CardTitle className="text-xl text-white">Gerenciamento de Probabilidades</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex items-center justify-center h-64">
-                        <div className="text-center">
-                          <Activity className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-                          <p className="text-zinc-400 text-lg">Sistema de Probabilidades</p>
-                          <p className="text-zinc-500 text-sm mt-2">Configuração de probabilidades dos jogos</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
+                {activeSection === "probabilidades" && <PrizeProbabilityManagement />}
                 {activeSection === "api" && <ApiManagement />}
                 {activeSection === "users" && <UsersManagement />}
                 {activeSection === "deposits" && <DepositsManagement />}

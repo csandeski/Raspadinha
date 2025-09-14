@@ -3255,38 +3255,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
         }
 
-        // Define prize values based on game type (simplified without probabilities)
-        let prizeValues: string[] = [];
-        if (mappedType === 'premio-pix') {
-          prizeValues = ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
-        } else if (mappedType === 'premio-me-mimei') {
-          prizeValues = ["1", "2", "3", "5", "10", "20", "50", "100", "200", "500", "1000", "5000"];
-        } else if (mappedType === 'premio-eletronicos') {
-          prizeValues = ["1", "2", "5", "10", "20", "50", "100", "200", "500", "1000", "2000", "5000"];
-        } else if (mappedType === 'premio-super-premios') {
-          prizeValues = ["10.00", "20.00", "40.00", "60.00", "80.00", "100.00", "200.00", "300.00", "400.00", "1000.00", "2000.00", "4000.00", "10000.00", "20000.00", "200000.00", "500000.00"];
-        } else {
-          // Return error if no prize values available for game type
-          return res.status(500).json({ error: "Tipo de jogo inválido" });
+        // Get prize probabilities from database
+        const gameKey = mappedType.replace(/-/g, '_');
+        const { probabilities } = await storage.getGameProbabilities(gameKey);
+        
+        if (!probabilities || probabilities.length === 0) {
+          console.error(`No probabilities configured for game: ${gameKey}`);
+          return res.status(500).json({ error: "Jogo não configurado corretamente" });
         }
+
+        // Extract prize values from probabilities
+        const prizeValues = probabilities.map(p => p.value);
 
         // Check if this is the test account
         const user = await storage.getUser(userId);
         const isTestAccount = user?.email === "teste@gmail.com";
 
-        // Determine if the player wins (simplified random selection)
+        // Determine if the player wins using configured probabilities
         let winningValue: string | null = null;
         
         if (isTestAccount) {
           // Test account always wins a random prize
           winningValue = prizeValues[Math.floor(Math.random() * prizeValues.length)];
         } else {
-          // Regular players have a 30% chance to win
-          const winChance = Math.random();
-          if (winChance < 0.30) {
-            // Select a random prize with weighted selection (lower value prizes more common)
-            const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
-            winningValue = prizeValues[weightedIndex];
+          // Use weighted random selection based on configured probabilities
+          const random = Math.random() * 100;
+          let cumulativeProbability = 0;
+          
+          for (const prize of probabilities) {
+            cumulativeProbability += prize.probability;
+            if (random <= cumulativeProbability) {
+              winningValue = prize.value;
+              break;
+            }
           }
         }
 
@@ -7779,6 +7780,161 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Claim cashback error:", error);
       res.status(500).json({ error: "Erro ao resgatar cashback" });
+    }
+  });
+
+  // Admin probability management routes
+  app.get("/api/admin/probabilities", authenticateAdmin, async (req: any, res) => {
+    try {
+      // Get all scratch games with their probabilities
+      const games = await storage.listScratchGames();
+      
+      // Get prize probabilities for each game
+      const gamesWithProbabilities = await Promise.all(games.map(async (game) => {
+        const { probabilities } = await storage.getGameProbabilities(game.game_key);
+        return {
+          gameKey: game.game_key,
+          name: game.name,
+          cost: game.cost,
+          image: game.image_url,
+          isActive: game.is_active,
+          prizes: probabilities || []
+        };
+      }));
+      
+      res.json(gamesWithProbabilities);
+    } catch (error) {
+      console.error("Get probabilities error:", error);
+      res.status(500).json({ error: "Erro ao buscar probabilidades" });
+    }
+  });
+
+  app.put("/api/admin/probabilities/:gameKey", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { gameKey } = req.params;
+      const { probabilities } = req.body;
+      
+      if (!probabilities || !Array.isArray(probabilities)) {
+        return res.status(400).json({ message: "Probabilidades inválidas" });
+      }
+      
+      // Validate that probabilities sum to 100%
+      const total = probabilities.reduce((sum, p) => sum + (parseFloat(p.probability) || 0), 0);
+      if (Math.abs(total - 100) > 0.01) {
+        return res.status(400).json({ 
+          message: `Soma das probabilidades deve ser 100% (atual: ${total.toFixed(2)}%)`
+        });
+      }
+      
+      // Update probabilities
+      await storage.updateGameProbabilities(gameKey, probabilities);
+      
+      res.json({ success: true, message: "Probabilidades atualizadas com sucesso" });
+    } catch (error) {
+      console.error("Update probabilities error:", error);
+      res.status(500).json({ error: "Erro ao atualizar probabilidades" });
+    }
+  });
+
+  app.post("/api/admin/probabilities/:gameKey/distribute", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { gameKey } = req.params;
+      
+      await storage.distributeEqually(gameKey);
+      
+      res.json({ success: true, message: "Probabilidades distribuídas igualmente" });
+    } catch (error) {
+      console.error("Distribute probabilities error:", error);
+      res.status(500).json({ error: "Erro ao distribuir probabilidades" });
+    }
+  });
+
+  app.post("/api/admin/probabilities/:gameKey/reset", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { gameKey } = req.params;
+      
+      await storage.resetToDefaults(gameKey);
+      
+      res.json({ success: true, message: "Probabilidades restauradas ao padrão" });
+    } catch (error) {
+      console.error("Reset probabilities error:", error);
+      res.status(500).json({ error: "Erro ao restaurar probabilidades" });
+    }
+  });
+
+  app.get("/api/admin/probabilities/history", authenticateAdmin, async (req: any, res) => {
+    try {
+      // Get history of probability changes
+      const history = await db
+        .select({
+          gameKey: prizeProbabilities.gameType,
+          updatedBy: prizeProbabilities.updatedBy,
+          createdAt: prizeProbabilities.createdAt,
+          updatedAt: prizeProbabilities.updatedAt
+        })
+        .from(prizeProbabilities)
+        .orderBy(desc(prizeProbabilities.updatedAt))
+        .limit(50);
+      
+      res.json(history);
+    } catch (error) {
+      console.error("Get probability history error:", error);
+      res.status(500).json({ error: "Erro ao buscar histórico" });
+    }
+  });
+
+  // Admin stats endpoint
+  app.get("/api/admin/stats", authenticateAdmin, async (req: any, res) => {
+    try {
+      const userStats = await storage.getUserStats();
+      const revenueStats = await storage.getRevenueStats();
+      const gameStats = await storage.getGameStats();
+      const withdrawalStats = await storage.getWithdrawalStats();
+      
+      // Get active affiliates count
+      const activeAffiliates = await db
+        .select({ count: count() })
+        .from(affiliates)
+        .where(eq(affiliates.status, 'active'));
+      
+      // Get today's deposits
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayDeposits = await db
+        .select({ count: count() })
+        .from(deposits)
+        .where(
+          and(
+            gte(deposits.createdAt, today),
+            eq(deposits.status, 'completed')
+          )
+        );
+      
+      // Get pending cashbacks
+      const pendingCashbacks = await db
+        .select({ count: count() })
+        .from(dailyCashback)
+        .where(eq(dailyCashback.status, 'pending'));
+      
+      // Get active chats
+      const activeChats = await db
+        .select({ count: count() })
+        .from(supportChats)
+        .where(eq(supportChats.status, 'active'));
+      
+      res.json({
+        ...userStats,
+        ...revenueStats,
+        ...gameStats,
+        ...withdrawalStats,
+        activeAffiliates: activeAffiliates[0]?.count || 0,
+        todayDeposits: todayDeposits[0]?.count || 0,
+        pendingCashbacks: pendingCashbacks[0]?.count || 0,
+        activeChats: activeChats[0]?.count || 0
+      });
+    } catch (error) {
+      console.error("Get admin stats error:", error);
+      res.status(500).json({ error: "Erro ao buscar estatísticas" });
     }
   });
 

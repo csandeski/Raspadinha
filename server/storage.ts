@@ -394,6 +394,99 @@ export class DatabaseStorage implements IStorage {
       is_active: true
     }
   ];
+  
+  // Prize Probability Management Methods
+  async listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]> {
+    const games = this.SCRATCH_GAMES.map(async (game) => {
+      const { probabilities } = await this.getGameProbabilities(game.game_key);
+      return {
+        ...game,
+        probabilities
+      };
+    });
+    return Promise.all(games);
+  }
+
+  async getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }> {
+    try {
+      // Map game key to proper format
+      const mappedKey = gameKey.replace(/-/g, '_');
+      
+      // Try to get from database first
+      const dbProbabilities = await db
+        .select()
+        .from(prizeProbabilities)
+        .where(eq(prizeProbabilities.gameType, mappedKey))
+        .orderBy(asc(prizeProbabilities.order));
+      
+      if (dbProbabilities.length > 0) {
+        return {
+          probabilities: dbProbabilities.map(p => ({
+            value: p.prizeValue || p.amount?.toString() || '',
+            name: p.prizeName || '',
+            probability: parseFloat(p.probability?.toString() || '0'),
+            order: p.order || 0
+          }))
+        };
+      }
+      
+      // Return defaults if none in database
+      const defaults = this.DEFAULT_PROBABILITIES[mappedKey] || [];
+      return { probabilities: defaults };
+    } catch (error) {
+      console.error('Error getting game probabilities:', error);
+      const defaults = this.DEFAULT_PROBABILITIES[gameKey] || [];
+      return { probabilities: defaults };
+    }
+  }
+
+  async updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void> {
+    try {
+      const mappedKey = gameKey.replace(/-/g, '_');
+      
+      // Delete existing probabilities
+      await db
+        .delete(prizeProbabilities)
+        .where(eq(prizeProbabilities.gameType, mappedKey));
+      
+      // Insert new probabilities
+      for (const prob of probabilities) {
+        await db.insert(prizeProbabilities).values({
+          gameType: mappedKey,
+          prizeValue: prob.value,
+          prizeName: prob.name,
+          probability: prob.probability.toString(),
+          order: prob.order,
+          updatedAt: new Date(),
+          updatedBy: 'admin'
+        });
+      }
+    } catch (error) {
+      console.error('Error updating game probabilities:', error);
+      throw error;
+    }
+  }
+
+  async distributeEqually(gameKey: string): Promise<void> {
+    const { probabilities } = await this.getGameProbabilities(gameKey);
+    if (probabilities.length === 0) return;
+    
+    const equalProb = 100 / probabilities.length;
+    const updatedProbs = probabilities.map((p, index) => ({
+      ...p,
+      probability: equalProb,
+      order: index
+    }));
+    
+    await this.updateGameProbabilities(gameKey, updatedProbs);
+  }
+
+  async resetToDefaults(gameKey: string): Promise<void> {
+    const mappedKey = gameKey.replace(/-/g, '_');
+    const defaults = this.DEFAULT_PROBABILITIES[mappedKey] || [];
+    await this.updateGameProbabilities(gameKey, defaults);
+  }
+  
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     // Use raw SQL to avoid Drizzle issue with app_users table

@@ -1049,9 +1049,9 @@ export class DatabaseStorage implements IStorage {
     );
     
     const [activeResult] = await db
-      .select({ count: sql<number>`count(distinct ${gamePremios.userId})` })
+      .select({ count: sql<number>`count(distinct user_id)` })
       .from(gamePremios)
-      .where(sql`${gamePremios.playedAt} > NOW() - INTERVAL '30 days'`);
+      .where(sql`played_at > NOW() - INTERVAL '30 days'`);
     
     return {
       totalUsers: parseInt(totalResult.rows[0].count),
@@ -1061,13 +1061,13 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueStats(): Promise<{ totalRevenue: string; todayRevenue: string }> {
     const [totalResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
+      .select({ sum: sql<string>`COALESCE(SUM(cost), 0)` })
       .from(gamePremios);
     
     const [todayResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
+      .select({ sum: sql<string>`COALESCE(SUM(cost), 0)` })
       .from(gamePremios)
-      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
+      .where(sql`DATE(played_at) = CURRENT_DATE`);
     
     return {
       totalRevenue: totalResult.sum || "0.00",
@@ -1083,7 +1083,7 @@ export class DatabaseStorage implements IStorage {
     const [todayResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(gamePremios)
-      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
+      .where(sql`DATE(played_at) = CURRENT_DATE`);
     
     return {
       totalGames: totalResult.count,

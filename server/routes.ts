@@ -7893,7 +7893,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get active affiliates count
       const activeAffiliates = await db
-        .select({ count: count() })
+        .select({ count: sql<number>`count(*)` })
         .from(affiliates)
         .where(eq(affiliates.status, 'active'));
       
@@ -7901,7 +7901,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       const todayDeposits = await db
-        .select({ count: count() })
+        .select({ count: sql<number>`count(*)` })
         .from(deposits)
         .where(
           and(
@@ -7912,13 +7912,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get pending cashbacks
       const pendingCashbacks = await db
-        .select({ count: count() })
+        .select({ count: sql<number>`count(*)` })
         .from(dailyCashback)
         .where(eq(dailyCashback.status, 'pending'));
       
       // Get active chats
       const activeChats = await db
-        .select({ count: count() })
+        .select({ count: sql<number>`count(*)` })
         .from(supportChats)
         .where(eq(supportChats.status, 'active'));
       

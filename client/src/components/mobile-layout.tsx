@@ -948,69 +948,127 @@ export function MobileLayout({ children, showBackButton, onBackClick, title, onB
           
           {/* Main Bottom Navigation Bar */}
           {user ? (
-            <div className="bg-[#0E1015] backdrop-blur-2xl border border-white/10 shadow-2xl shadow-black/50 rounded-[2.5rem] mb-2 mx-4">
-              <div className="flex items-center justify-around px-4 py-2">
+            <div className="relative mx-4 mb-2">
+              {/* Glass morphism background with gradient */}
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-900/40 via-gray-800/40 to-gray-900/40 backdrop-blur-3xl rounded-[2rem] border border-white/5" />
+              
+              {/* Subtle glow effect */}
+              <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+              
+              <div className="relative flex items-center justify-around px-3 py-3">
                 {/* Home */}
                 <button
                   onClick={() => setLocation("/")}
-                  className="flex flex-col items-center space-y-0.5 p-0.5 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                  className="group relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
-                  <div className={`p-1 rounded-lg transition-all duration-300 ${
+                  {/* Active indicator */}
+                  {location === "/" && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00E880]/10 to-transparent rounded-xl blur-sm" />
+                  )}
+                  
+                  <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                     location === "/" 
-                      ? "bg-[#00E880]/20 shadow-lg shadow-[#00E880]/30" 
-                      : "hover:bg-white/10"
+                      ? "bg-gradient-to-br from-[#00E880]/20 to-[#00E880]/10 shadow-lg" 
+                      : "group-hover:bg-white/5"
                   }`}>
-                    <Home className={`w-5 h-5 ${location === "/" ? "text-[#00E880]" : "text-gray-400"}`} />
+                    <Home className={`w-5 h-5 transition-all duration-300 ${
+                      location === "/" 
+                        ? "text-[#00E880] drop-shadow-[0_0_8px_rgba(0,232,128,0.5)]" 
+                        : "text-gray-400 group-hover:text-gray-300"
+                    }`} />
                   </div>
-                  <span className={`text-[9px] font-medium ${location === "/" ? "text-[#00E880]" : "text-gray-400"}`}>Início</span>
+                  <span className={`text-[10px] font-semibold tracking-wide transition-all duration-300 ${
+                    location === "/" 
+                      ? "text-[#00E880]" 
+                      : "text-gray-500 group-hover:text-gray-400"
+                  }`}>Início</span>
                 </button>
 
                 {/* Rewards */}
                 <button
                   onClick={() => handleAuthenticatedAction("/rewards")}
-                  className="flex flex-col items-center space-y-0.5 p-0.5 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                  className="group relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
-                  <div className={`p-1 rounded-lg transition-all duration-300 ${
+                  {/* Active indicator */}
+                  {location === "/rewards" && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00E880]/10 to-transparent rounded-xl blur-sm" />
+                  )}
+                  
+                  <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                     location === "/rewards" 
-                      ? "bg-[#00E880]/20 shadow-lg shadow-[#00E880]/30" 
-                      : "hover:bg-white/10"
+                      ? "bg-gradient-to-br from-[#00E880]/20 to-[#00E880]/10 shadow-lg" 
+                      : "group-hover:bg-white/5"
                   }`}>
-                    <Gift className={`w-5 h-5 ${location === "/rewards" ? "text-[#00E880]" : "text-gray-400"}`} />
+                    <Gift className={`w-5 h-5 transition-all duration-300 ${
+                      location === "/rewards" 
+                        ? "text-[#00E880] drop-shadow-[0_0_8px_rgba(0,232,128,0.5)]" 
+                        : "text-gray-400 group-hover:text-gray-300"
+                    }`} />
                   </div>
-                  <span className={`text-[9px] font-medium ${location === "/rewards" ? "text-[#00E880]" : "text-gray-400"}`}>Recompensas</span>
+                  <span className={`text-[10px] font-semibold tracking-wide transition-all duration-300 ${
+                    location === "/rewards" 
+                      ? "text-[#00E880]" 
+                      : "text-gray-500 group-hover:text-gray-400"
+                  }`}>Recompensas</span>
                 </button>
 
                 {/* PIX - Central larger button (space for it) */}
-                <div className="w-12"></div>
+                <div className="w-14"></div>
 
                 {/* Wallet */}
                 <button
                   onClick={() => handleAuthenticatedAction("/wallet")}
-                  className="flex flex-col items-center space-y-0.5 p-0.5 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                  className="group relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
-                  <div className={`p-1 rounded-lg transition-all duration-300 ${
+                  {/* Active indicator */}
+                  {location === "/wallet" && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00E880]/10 to-transparent rounded-xl blur-sm" />
+                  )}
+                  
+                  <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                     location === "/wallet" 
-                      ? "bg-[#00E880]/20 shadow-lg shadow-[#00E880]/30" 
-                      : "hover:bg-white/10"
+                      ? "bg-gradient-to-br from-[#00E880]/20 to-[#00E880]/10 shadow-lg" 
+                      : "group-hover:bg-white/5"
                   }`}>
-                    <Wallet className={`w-5 h-5 ${location === "/wallet" ? "text-[#00E880]" : "text-gray-400"}`} />
+                    <Wallet className={`w-5 h-5 transition-all duration-300 ${
+                      location === "/wallet" 
+                        ? "text-[#00E880] drop-shadow-[0_0_8px_rgba(0,232,128,0.5)]" 
+                        : "text-gray-400 group-hover:text-gray-300"
+                    }`} />
                   </div>
-                  <span className={`text-[9px] font-medium ${location === "/wallet" ? "text-[#00E880]" : "text-gray-400"}`}>Carteira</span>
+                  <span className={`text-[10px] font-semibold tracking-wide transition-all duration-300 ${
+                    location === "/wallet" 
+                      ? "text-[#00E880]" 
+                      : "text-gray-500 group-hover:text-gray-400"
+                  }`}>Carteira</span>
                 </button>
 
                 {/* Profile */}
                 <button
                   onClick={() => handleAuthenticatedAction("/profile")}
-                  className="flex flex-col items-center space-y-0.5 p-0.5 transition-all duration-300 transform hover:scale-110 active:scale-95"
+                  className="group relative flex flex-col items-center gap-1 px-3 py-1 transition-all duration-300 transform hover:scale-105 active:scale-95"
                 >
-                  <div className={`p-1 rounded-lg transition-all duration-300 ${
+                  {/* Active indicator */}
+                  {location === "/profile" && (
+                    <div className="absolute inset-0 bg-gradient-to-b from-[#00E880]/10 to-transparent rounded-xl blur-sm" />
+                  )}
+                  
+                  <div className={`relative p-2 rounded-xl transition-all duration-300 ${
                     location === "/profile" 
-                      ? "bg-[#00E880]/20 shadow-lg shadow-[#00E880]/30" 
-                      : "hover:bg-white/10"
+                      ? "bg-gradient-to-br from-[#00E880]/20 to-[#00E880]/10 shadow-lg" 
+                      : "group-hover:bg-white/5"
                   }`}>
-                    <User className={`w-5 h-5 ${location === "/profile" ? "text-[#00E880]" : "text-gray-400"}`} />
+                    <User className={`w-5 h-5 transition-all duration-300 ${
+                      location === "/profile" 
+                        ? "text-[#00E880] drop-shadow-[0_0_8px_rgba(0,232,128,0.5)]" 
+                        : "text-gray-400 group-hover:text-gray-300"
+                    }`} />
                   </div>
-                  <span className={`text-[9px] font-medium ${location === "/profile" ? "text-[#00E880]" : "text-gray-400"}`}>Perfil</span>
+                  <span className={`text-[10px] font-semibold tracking-wide transition-all duration-300 ${
+                    location === "/profile" 
+                      ? "text-[#00E880]" 
+                      : "text-gray-500 group-hover:text-gray-400"
+                  }`}>Perfil</span>
                 </button>
               </div>
             </div>

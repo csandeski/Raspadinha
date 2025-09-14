@@ -56,10 +56,6 @@ import SupportManagement from "@/components/admin/support-management";
 import GamesManagement from "@/components/admin/games-management";
 import DepositsManagement from "@/components/admin/deposits-management";
 import EnhancedDashboard from "@/components/admin/enhanced-dashboard";
-import { PrizeProbabilityEnhanced } from "@/components/admin/prize-probability-enhanced";
-import { ChestProbabilityManagement } from "@/components/admin/chest-probability-management";
-import { EsquiloProbabilityManagement } from "@/components/admin/esquilo-probability-management";
-import { EsquiloBonusManagement } from "@/components/admin/esquilo-bonus-management";
 import { CouponsManagement } from "@/components/admin/coupons-management";
 import ReferralsManagement from "@/components/admin/referrals-management";
 import AffiliatesManagementPremium from "@/components/admin/affiliates-management-premium";
@@ -176,7 +172,6 @@ function AdminDashboardContent() {
     { id: "withdrawals", label: "Saques", icon: CreditCard, badge: stats?.pendingWithdrawals },
     { id: "games", label: "Jogos", icon: Trophy, badge: null },
     { id: "support", label: "Suporte", icon: MessageSquare, badge: stats?.activeChats },
-    { id: "probabilities", label: "Probabilidades", icon: Settings, badge: null },
     { id: "coupons", label: "Cupons", icon: Gift, badge: null },
     { id: "referrals", label: "Indique e Ganhe", icon: UserPlus, badge: null },
     { id: "affiliates", label: "Afiliados", icon: Zap, badge: stats?.activeAffiliates },
@@ -667,14 +662,6 @@ function AdminDashboardContent() {
                 {activeSection === "withdrawals" && <WithdrawalsManagement />}
                 {activeSection === "games" && <GamesManagement />}
                 {activeSection === "support" && <SupportManagement />}
-                {activeSection === "probabilities" && (
-                  <div className="space-y-6">
-                    <PrizeProbabilityEnhanced />
-                    <ChestProbabilityManagement />
-                    <EsquiloProbabilityManagement />
-                    <EsquiloBonusManagement />
-                  </div>
-                )}
                 {activeSection === "coupons" && <CouponsManagement />}
                 {activeSection === "referrals" && <ReferralsManagement />}
                 {activeSection === "affiliates" && <AffiliatesManagementPremium />}

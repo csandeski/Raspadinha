@@ -612,225 +612,6 @@ export default function ManiaFly() {
     }
   };
 
-  // Helper function to render betting panel
-  const renderBettingPanel = (betNumber: 1 | 2) => {
-    const bet = betNumber === 1 ? bet1 : bet2;
-    const betInput = betNumber === 1 ? bet1Input : bet2Input;
-    const setBetInput = betNumber === 1 ? setBet1Input : setBet2Input;
-    const autoCashout = betNumber === 1 ? autoCashout1 : autoCashout2;
-    const setAutoCashout = betNumber === 1 ? setAutoCashout1 : setAutoCashout2;
-
-    return (
-      <div className="p-4 pb-6 space-y-4">
-        {/* Bet Status Badge */}
-        <div className="flex justify-between items-center">
-          <span className="text-xs font-medium text-gray-400">
-            Saldo: {formatMoney(balance)}
-          </span>
-          {bet.status === 'placed' && (
-            <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium">
-              APOSTA ATIVA
-            </span>
-          )}
-          {bet.status === 'won' && (
-            <span className="px-3 py-1 bg-[#00E880]/20 text-[#00E880] rounded-full text-xs font-medium">
-              GANHOU {bet.winMultiplier?.toFixed(2)}x
-            </span>
-          )}
-          {bet.status === 'lost' && (
-            <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-xs font-medium">
-              PERDEU
-            </span>
-          )}
-        </div>
-
-        {/* Value Section */}
-        <div className="space-y-3">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Valor da Aposta
-          </label>
-          
-          {/* Amount Input with +/- */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => {
-                const current = parseFloat(betInput) || 0;
-                const newVal = Math.max(1, current - 1);
-                setBetInput(newVal.toString());
-              }}
-              className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold transition-colors"
-              disabled={bet.status === 'placed'}
-              data-testid={`button-bet${betNumber}-decrease`}
-            >
-              -
-            </button>
-            
-            <div className="flex-1 relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg">
-                R$
-              </span>
-              <Input
-                type="number"
-                value={betInput}
-                onChange={(e) => setBetInput(e.target.value)}
-                className="h-12 pl-12 pr-4 text-lg font-semibold bg-black/30 border-gray-700 text-white text-center"
-                placeholder="0.00"
-                min="1"
-                step="0.5"
-                disabled={bet.status === 'placed'}
-                data-testid={`input-bet${betNumber}-amount`}
-              />
-            </div>
-            
-            <button
-              onClick={() => {
-                const current = parseFloat(betInput) || 0;
-                const newVal = current + 1;
-                setBetInput(newVal.toString());
-              }}
-              className="w-12 h-12 bg-white/5 hover:bg-white/10 rounded-xl flex items-center justify-center text-xl font-bold transition-colors"
-              disabled={bet.status === 'placed'}
-              data-testid={`button-bet${betNumber}-increase`}
-            >
-              +
-            </button>
-          </div>
-
-          {/* Quick Value Chips */}
-          <div className="grid grid-cols-4 gap-2">
-            {[1, 2, 5, 10].map(val => (
-              <button
-                key={val}
-                onClick={() => setBetInput(val.toString())}
-                className="h-10 bg-white/5 hover:bg-white/10 rounded-lg font-semibold text-sm transition-colors"
-                disabled={bet.status === 'placed'}
-                data-testid={`button-bet${betNumber}-quick-${val}`}
-              >
-                R${val}
-              </button>
-            ))}
-          </div>
-          
-          {/* Multiplier Buttons */}
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              onClick={() => {
-                const current = parseFloat(betInput) || 1;
-                const newVal = Math.max(1, current / 2);
-                setBetInput(newVal.toString());
-              }}
-              className="h-10 bg-white/5 hover:bg-white/10 rounded-lg font-semibold text-sm transition-colors"
-              disabled={bet.status === 'placed'}
-              data-testid={`button-bet${betNumber}-half`}
-            >
-              1/2
-            </button>
-            <button
-              onClick={() => {
-                const current = parseFloat(betInput) || 1;
-                const newVal = current * 2;
-                setBetInput(newVal.toString());
-              }}
-              className="h-10 bg-white/5 hover:bg-white/10 rounded-lg font-semibold text-sm transition-colors"
-              disabled={bet.status === 'placed'}
-              data-testid={`button-bet${betNumber}-double`}
-            >
-              x2
-            </button>
-            <button
-              onClick={() => {
-                setBetInput(balance.toString());
-              }}
-              className="h-10 bg-white/5 hover:bg-white/10 rounded-lg font-semibold text-sm transition-colors"
-              disabled={bet.status === 'placed'}
-              data-testid={`button-bet${betNumber}-max`}
-            >
-              MAX
-            </button>
-          </div>
-        </div>
-
-        {/* Auto Cashout Section */}
-        <div className="space-y-3">
-          <label className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-            Auto Cashout
-          </label>
-          <div className="relative">
-            <Input
-              type="number"
-              value={autoCashout}
-              onChange={(e) => setAutoCashout(e.target.value)}
-              className="h-12 pr-8 text-lg font-semibold bg-black/30 border-gray-700 text-white"
-              placeholder="Desativado"
-              min="1.01"
-              step="0.1"
-              disabled={bet.status === 'placed'}
-              data-testid={`input-bet${betNumber}-auto`}
-            />
-            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">
-              x
-            </span>
-          </div>
-          
-          {/* Auto Cashout Presets */}
-          <div className="flex gap-2">
-            {[1.5, 2, 3, 5].map(val => (
-              <button
-                key={val}
-                onClick={() => setAutoCashout(val.toString())}
-                className="flex-1 py-2 bg-white/5 hover:bg-white/10 rounded-lg text-xs font-medium transition-colors"
-                disabled={bet.status === 'placed'}
-                data-testid={`button-bet${betNumber}-auto-${val}x`}
-              >
-                {val}x
-              </button>
-            ))}
-          </div>
-          
-          <p className="text-xs text-gray-500">
-            Saque automático quando atingir o multiplicador definido
-          </p>
-        </div>
-
-        {/* Summary & CTA */}
-        <div className="space-y-3 pt-2">
-          {/* Estimated Return */}
-          {bet.status === 'idle' && (
-            <div className="flex justify-between items-center text-sm">
-              <span className="text-gray-400">Retorno estimado:</span>
-              <span className="font-semibold text-white">
-                R$ {((parseFloat(betInput) || 0) * 
-                  (parseFloat(autoCashout) || 2)).toFixed(2)}
-              </span>
-            </div>
-          )}
-          
-          {/* Main Action Button */}
-          {bet.status === 'placed' && gameStatus.state === 'playing' ? (
-            <Button
-              onClick={() => handleCashOut(betNumber)}
-              className="w-full h-14 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-bold text-lg shadow-xl transition-all duration-300"
-              data-testid={`button-bet${betNumber}-cashout`}
-            >
-              <DollarSign className="w-5 h-5 mr-2" />
-              SACAR {formatMoney(bet.amount * gameStatus.multiplier)}
-            </Button>
-          ) : (
-            <Button
-              onClick={() => handlePlaceBet(betNumber)}
-              className="w-full h-14 bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold text-lg shadow-xl transition-all duration-300 disabled:opacity-50"
-              disabled={gameStatus.state !== 'waiting' || placeBetMutation.isPending}
-              data-testid={`button-bet${betNumber}-place`}
-            >
-              <Play className="w-5 h-5 mr-2" />
-              APOSTAR {formatMoney(parseFloat(betInput) || 0)}
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  };
-
   return (
     <MobileLayout 
       title="Mania Fly"
@@ -905,115 +686,191 @@ export default function ManiaFly() {
           )}
         </div>
 
-        {/* Betting Controls - Mobile First Design */}
-        
-        {/* Mobile Layout - Fixed Bottom Card with Tabs */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-10">
-          <div className="bg-[#101814]/95 backdrop-blur-xl border-t border-[#00E880]/20 shadow-2xl rounded-t-3xl">
-            {/* Tab Selector */}
-            <div className="flex p-2 bg-black/20 rounded-t-3xl">
-              <button
-                onClick={() => setActiveTab(1)}
-                className={cn(
-                  "flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300",
-                  activeTab === 1 
-                    ? "bg-gradient-to-r from-[#00E880] to-[#00FFB3] text-black shadow-lg" 
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
-                )}
-                data-testid="button-tab-bet1"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <span>Aposta 1</span>
-                  {bet1.status === 'placed' && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  )}
-                  {bet1.status === 'won' && (
-                    <span className="text-xs">✓</span>
-                  )}
-                </div>
-              </button>
-              <button
-                onClick={() => setActiveTab(2)}
-                className={cn(
-                  "flex-1 py-3 px-4 rounded-xl font-semibold text-sm transition-all duration-300",
-                  activeTab === 2 
-                    ? "bg-gradient-to-r from-[#00E880] to-[#00FFB3] text-black shadow-lg" 
-                    : "bg-white/5 text-gray-400 hover:bg-white/10"
-                )}
-                data-testid="button-tab-bet2"
-              >
-                <div className="flex items-center justify-center gap-2">
-                  <span>Aposta 2</span>
-                  {bet2.status === 'placed' && (
-                    <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                  )}
-                  {bet2.status === 'won' && (
-                    <span className="text-xs">✓</span>
-                  )}
-                </div>
-              </button>
-            </div>
-
-            {/* Active Tab Content */}
-            {renderBettingPanel(activeTab)}
-          </div>
-        </div>
-
-        {/* Desktop Layout - Side by Side Cards */}
-        <div className="hidden md:block p-4">
-          <div className="grid grid-cols-2 gap-4">
-            {/* Desktop Bet Card 1 */}
-            <div className="bg-[#101814]/95 backdrop-blur-xl rounded-2xl p-6 border border-[#00E880]/20 shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Aposta 1</h3>
+        {/* Betting Controls */}
+        <div className="p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Bet Panel 1 */}
+            <div className="bg-[#111111] rounded-xl p-4 border border-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-gray-400">APOSTA 1</span>
                 {bet1.status === 'placed' && (
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-400 rounded">
                     ATIVA
                   </span>
                 )}
                 {bet1.status === 'won' && (
-                  <span className="px-3 py-1 bg-[#00E880]/20 text-[#00E880] rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-green-900/50 text-green-400 rounded">
                     GANHOU {bet1.winMultiplier?.toFixed(2)}x
                   </span>
                 )}
                 {bet1.status === 'lost' && (
-                  <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-red-900/50 text-red-400 rounded">
                     PERDEU
                   </span>
                 )}
               </div>
               
-              {renderBettingPanel(1)}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Valor da Aposta</label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={bet1Input}
+                      onChange={(e) => setBet1Input(e.target.value)}
+                      className="flex-1 bg-black/50 border-gray-700 text-white"
+                      placeholder="0.00"
+                      min="1"
+                      step="0.5"
+                      disabled={bet1.status === 'placed'}
+                      data-testid="input-bet1-amount"
+                    />
+                    <div className="flex gap-1">
+                      {[1, 5, 10].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => setBet1Input(val.toString())}
+                          className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+                          disabled={bet1.status === 'placed'}
+                          data-testid={`button-bet1-quick-${val}`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Auto Sacar em</label>
+                  <Input
+                    type="number"
+                    value={autoCashout1}
+                    onChange={(e) => setAutoCashout1(e.target.value)}
+                    className="bg-black/50 border-gray-700 text-white"
+                    placeholder="Desativado"
+                    min="1.01"
+                    step="0.1"
+                    disabled={bet1.status === 'placed'}
+                    data-testid="input-bet1-auto"
+                  />
+                </div>
+                
+                {bet1.status === 'placed' && gameStatus.state === 'playing' ? (
+                  <Button
+                    onClick={() => handleCashOut(1)}
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3"
+                    data-testid="button-bet1-cashout"
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    SACAR {formatMoney(bet1.amount * gameStatus.multiplier)}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handlePlaceBet(1)}
+                    className="w-full bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold py-3"
+                    disabled={gameStatus.state !== 'waiting' || placeBetMutation.isPending}
+                    data-testid="button-bet1-place"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    APOSTAR {formatMoney(parseFloat(bet1Input) || 0)}
+                  </Button>
+                )}
+              </div>
             </div>
 
-            {/* Desktop Bet Card 2 */}
-            <div className="bg-[#101814]/95 backdrop-blur-xl rounded-2xl p-6 border border-[#00E880]/20 shadow-2xl">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-bold text-white">Aposta 2</h3>
+            {/* Bet Panel 2 */}
+            <div className="bg-[#111111] rounded-xl p-4 border border-gray-800">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm font-bold text-gray-400">APOSTA 2</span>
                 {bet2.status === 'placed' && (
-                  <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-blue-900/50 text-blue-400 rounded">
                     ATIVA
                   </span>
                 )}
                 {bet2.status === 'won' && (
-                  <span className="px-3 py-1 bg-[#00E880]/20 text-[#00E880] rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-green-900/50 text-green-400 rounded">
                     GANHOU {bet2.winMultiplier?.toFixed(2)}x
                   </span>
                 )}
                 {bet2.status === 'lost' && (
-                  <span className="px-3 py-1 bg-red-500/20 text-red-400 rounded-full text-sm font-medium">
+                  <span className="text-xs px-2 py-1 bg-red-900/50 text-red-400 rounded">
                     PERDEU
                   </span>
                 )}
               </div>
               
-              {renderBettingPanel(2)}
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Valor da Aposta</label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={bet2Input}
+                      onChange={(e) => setBet2Input(e.target.value)}
+                      className="flex-1 bg-black/50 border-gray-700 text-white"
+                      placeholder="0.00"
+                      min="1"
+                      step="0.5"
+                      disabled={bet2.status === 'placed'}
+                      data-testid="input-bet2-amount"
+                    />
+                    <div className="flex gap-1">
+                      {[1, 5, 10].map(val => (
+                        <button
+                          key={val}
+                          onClick={() => setBet2Input(val.toString())}
+                          className="px-2 py-1 text-xs bg-gray-800 hover:bg-gray-700 rounded transition-colors"
+                          disabled={bet2.status === 'placed'}
+                          data-testid={`button-bet2-quick-${val}`}
+                        >
+                          {val}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="text-xs text-gray-500 mb-1 block">Auto Sacar em</label>
+                  <Input
+                    type="number"
+                    value={autoCashout2}
+                    onChange={(e) => setAutoCashout2(e.target.value)}
+                    className="bg-black/50 border-gray-700 text-white"
+                    placeholder="Desativado"
+                    min="1.01"
+                    step="0.1"
+                    disabled={bet2.status === 'placed'}
+                    data-testid="input-bet2-auto"
+                  />
+                </div>
+                
+                {bet2.status === 'placed' && gameStatus.state === 'playing' ? (
+                  <Button
+                    onClick={() => handleCashOut(2)}
+                    className="w-full bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white font-bold py-3"
+                    data-testid="button-bet2-cashout"
+                  >
+                    <DollarSign className="w-4 h-4 mr-2" />
+                    SACAR {formatMoney(bet2.amount * gameStatus.multiplier)}
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={() => handlePlaceBet(2)}
+                    className="w-full bg-gradient-to-r from-[#00E880] to-[#00FFB3] hover:from-[#00D070] hover:to-[#00EEA0] text-black font-bold py-3"
+                    disabled={gameStatus.state !== 'waiting' || placeBetMutation.isPending}
+                    data-testid="button-bet2-place"
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    APOSTAR {formatMoney(parseFloat(bet2Input) || 0)}
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
+
         </div>
-        
-        {/* Spacer for mobile fixed bottom card */}
-        <div className="md:hidden h-96" />
       </div>
     </MobileLayout>
   );

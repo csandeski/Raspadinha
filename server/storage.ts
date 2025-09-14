@@ -1733,23 +1733,52 @@ export class DatabaseStorage implements IStorage {
           id,
           game_type,
           prize_value,
-          prize_type,
-          amount,
-          probability
+          prize_name,
+          probability,
+          "order"
         FROM prize_probabilities
         WHERE game_type = $1
-        ORDER BY CAST(COALESCE(prize_value, amount) AS DECIMAL)`,
+        ORDER BY "order"`,
         [gameType]
       );
       
       // Return full objects for admin panel, mapping to expected format
-      return result.rows.map((p: any, index) => ({
+      return result.rows.map((p: any) => ({
         id: p.id,
         game_type: p.game_type,
-        prize_value: p.prize_value || p.amount || '0',
-        prize_name: p.prize_type || `R$ ${parseFloat(p.prize_value || p.amount || '0').toFixed(2)}`,
+        prize_value: p.prize_value || '0',
+        prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value || '0').toFixed(2).replace('.', ',')}`,
         probability: parseFloat(p.probability || '0'),
-        order: index
+        order: p.order || 0
+      }));
+    } finally {
+      client.release();
+    }
+  }
+
+  // Get all prize probabilities from all games
+  async getAllPrizeProbabilities(): Promise<any[]> {
+    const client = await pool.connect();
+    try {
+      const result = await client.query(
+        `SELECT 
+          id,
+          game_type,
+          prize_value,
+          prize_name,
+          probability,
+          "order"
+        FROM prize_probabilities
+        ORDER BY game_type, "order"`
+      );
+      
+      return result.rows.map((p: any) => ({
+        id: p.id,
+        game_type: p.game_type,
+        prize_value: p.prize_value || '0',
+        prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value || '0').toFixed(2).replace('.', ',')}`,
+        probability: parseFloat(p.probability || '0'),
+        order: p.order || 0
       }));
     } finally {
       client.release();

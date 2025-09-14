@@ -74,16 +74,50 @@ export default function PrizeProbabilityManagement() {
 
   // Fetch game probabilities
   const { data: games, isLoading, refetch } = useQuery({
-    queryKey: ['/api/admin/probabilities'],
+    queryKey: ['/api/admin/prize-probabilities'],
     queryFn: async () => {
       const sessionId = localStorage.getItem("adminSessionId");
-      const response = await fetch("/api/admin/probabilities", {
+      const response = await fetch("/api/admin/prize-probabilities", {
         headers: {
           Authorization: `Bearer ${sessionId}`,
         },
       });
       if (!response.ok) throw new Error("Failed to fetch probabilities");
-      return response.json();
+      const data = await response.json();
+      
+      // Transform the data to match the expected format
+      const transformedData = Object.entries(data).map(([gameType, probabilities]: [string, any]) => {
+        const gameNames: Record<string, string> = {
+          'premio-pix': 'Prêmio PIX',
+          'premio-me-mimei': 'Me Mimei',
+          'premio-eletronicos': 'Eletrônicos',
+          'premio-super-premios': 'Super Prêmios'
+        };
+        
+        const gameCosts: Record<string, string> = {
+          'premio-pix': '1.00',
+          'premio-me-mimei': '1.00',
+          'premio-eletronicos': '1.00',
+          'premio-super-premios': '20.00'
+        };
+        
+        return {
+          gameKey: gameType,
+          name: gameNames[gameType] || gameType,
+          cost: gameCosts[gameType] || '1.00',
+          image: '',
+          isActive: true,
+          prizes: probabilities.map((p: any) => ({
+            value: p.prizeValue,
+            name: p.prizeName,
+            probability: parseFloat(p.probability),
+            order: 0
+          })),
+          totalProbability: probabilities.reduce((sum: number, p: any) => sum + parseFloat(p.probability), 0)
+        };
+      });
+      
+      return transformedData;
     },
   });
 
@@ -107,17 +141,24 @@ export default function PrizeProbabilityManagement() {
   const saveMutation = useMutation({
     mutationFn: async (data: { gameKey: string; probabilities: Prize[] }) => {
       const sessionId = localStorage.getItem("adminSessionId");
-      const response = await fetch(`/api/admin/probabilities/${data.gameKey}`, {
-        method: 'PUT',
+      
+      // Transform the data to match the backend format
+      const transformedProbs = data.probabilities.map(p => ({
+        prizeValue: parseFloat(p.value),
+        probability: p.probability
+      }));
+      
+      const response = await fetch(`/api/admin/prize-probabilities/${data.gameKey}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${sessionId}`,
         },
-        body: JSON.stringify({ probabilities: data.probabilities }),
+        body: JSON.stringify({ probabilities: transformedProbs }),
       });
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to save probabilities");
+        throw new Error(error.error || "Failed to save probabilities");
       }
       return response.json();
     },

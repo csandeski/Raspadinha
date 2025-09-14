@@ -82,6 +82,45 @@ const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
 // LiraPay is now the only payment provider
 
+// Function to perform weighted random selection based on probabilities
+async function performWeightedPrizeSelection(gameType: string): Promise<string | null> {
+  try {
+    // Get probabilities from database
+    const probabilities = await storage.getPrizeProbabilitiesByGame(gameType);
+    
+    if (!probabilities || probabilities.length === 0) {
+      console.log(`No probabilities found for ${gameType}, using fallback`);
+      return null; // Fallback to old logic
+    }
+    
+    // Calculate cumulative weights
+    const cumulativeWeights: number[] = [];
+    let totalWeight = 0;
+    
+    for (const prob of probabilities) {
+      totalWeight += parseFloat(prob.probability);
+      cumulativeWeights.push(totalWeight);
+    }
+    
+    // Generate random number between 0 and totalWeight
+    const random = Math.random() * totalWeight;
+    
+    // Find which prize was selected
+    for (let i = 0; i < cumulativeWeights.length; i++) {
+      if (random < cumulativeWeights[i]) {
+        console.log(`Prize selected: ${probabilities[i].prizeValue} with probability ${probabilities[i].probability}%`);
+        return probabilities[i].prizeValue;
+      }
+    }
+    
+    // Fallback to last prize if nothing selected (shouldn't happen)
+    return probabilities[probabilities.length - 1].prizeValue;
+  } catch (error) {
+    console.error(`Error selecting prize for ${gameType}:`, error);
+    return null;
+  }
+}
+
 // ==================== MANIA FLY GAME SYSTEM ====================
 // Authoritative server-side game round manager for Mania Fly
 
@@ -3405,8 +3444,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
-        // Simple prize values for PIX (no probabilities)
-        const prizeValues = ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
+        // Get prize values from database probabilities
+        const probabilities = await storage.getPrizeProbabilitiesByGame('premio-pix');
+        const prizeValues = probabilities.length > 0 
+          ? probabilities.map(p => p.prizeValue) 
+          : ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
 
         const hiddenValues: string[] = [];
 
@@ -3414,7 +3456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = userId ? await storage.getUser(userId) : null;
         const isTestAccount = user?.email === "teste@gmail.com";
 
-        // Simple win logic (no probabilities)
+        // Use weighted probability system from database
         let winningValue: string | null = null;
         
         if (isTestAccount) {
@@ -3422,17 +3464,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningValue = prizeValues[Math.floor(Math.random() * prizeValues.length)];
           console.log("Test account detected - always wins:", winningValue);
         } else {
-          // Regular players have 30% chance to win
-          const winChance = Math.random();
+          // Use weighted random selection from database
+          const selectedPrize = await performWeightedPrizeSelection('premio-pix');
           
-          console.log(`Win chance: ${winChance}, Won: ${winChance < 0.30}`);
-          
-          // If player wins, select a prize
-          if (winChance < 0.30) {
-            // Select a random prize (weighted for lower values)
-            const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
-            winningValue = prizeValues[weightedIndex];
-            console.log(`Won ${winningValue}`);
+          if (selectedPrize) {
+            // Player wins based on weighted probability
+            winningValue = selectedPrize;
+            console.log(`Weighted selection: Won ${winningValue}`);
+          } else {
+            // Fallback to 30% chance if database selection fails
+            const winChance = Math.random();
+            console.log(`Fallback - Win chance: ${winChance}, Won: ${winChance < 0.30}`);
+            
+            if (winChance < 0.30) {
+              const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
+              winningValue = prizeValues[weightedIndex];
+              console.log(`Won ${winningValue}`);
+            }
           }
         }
 
@@ -3623,8 +3671,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
-        // Simple prize values for Me Mimei (no probabilities)
-        const prizeValues = ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
+        // Get prize values from database probabilities
+        const probabilities = await storage.getPrizeProbabilitiesByGame('premio-me-mimei');
+        const prizeValues = probabilities.length > 0 
+          ? probabilities.map(p => p.prizeValue) 
+          : ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
 
         const hiddenValues: string[] = [];
 
@@ -3632,7 +3683,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = await storage.getUser(req.userId);
         const isTestAccount = user?.email === "teste@gmail.com";
 
-        // Simple win logic (no probabilities)
+        // Use weighted probability system from database
         let winningValue: string | null = null;
         
         if (isTestAccount) {
@@ -3640,17 +3691,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningValue = prizeValues[Math.floor(Math.random() * prizeValues.length)];
           console.log("Test account detected - always wins:", winningValue);
         } else {
-          // Regular players have 30% chance to win
-          const winChance = Math.random();
+          // Use weighted random selection from database
+          const selectedPrize = await performWeightedPrizeSelection('premio-me-mimei');
           
-          console.log(`Win chance: ${winChance}, Won: ${winChance < 0.30}`);
-          
-          // If player wins, select a prize
-          if (winChance < 0.30) {
-            // Select a random prize (weighted for lower values)
-            const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
-            winningValue = prizeValues[weightedIndex];
-            console.log(`Won ${winningValue}`);
+          if (selectedPrize) {
+            // Player wins based on weighted probability
+            winningValue = selectedPrize;
+            console.log(`Weighted selection: Won ${winningValue}`);
+          } else {
+            // Fallback to 30% chance if database selection fails
+            const winChance = Math.random();
+            console.log(`Fallback - Win chance: ${winChance}, Won: ${winChance < 0.30}`);
+            
+            if (winChance < 0.30) {
+              const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
+              winningValue = prizeValues[weightedIndex];
+              console.log(`Won ${winningValue}`);
+            }
           }
         }
 
@@ -3829,8 +3886,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
-        // Simple prize values for Eletrônicos (no probabilities)
-        const prizeValues = ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
+        // Get prize values from database probabilities
+        const probabilities = await storage.getPrizeProbabilitiesByGame('premio-eletronicos');
+        const prizeValues = probabilities.length > 0 
+          ? probabilities.map(p => p.prizeValue) 
+          : ["0.50", "1.00", "2.00", "3.00", "4.00", "5.00", "10.00", "15.00", "20.00", "50.00", "100.00", "200.00", "500.00", "1000.00", "2000.00", "5000.00", "10000.00", "100000.00"];
 
         const hiddenValues: string[] = [];
 
@@ -3838,7 +3898,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = await storage.getUser(req.userId);
         const isTestAccount = user?.email === "teste@gmail.com";
 
-        // Simple win logic (no probabilities)
+        // Use weighted probability system from database
         let winningValue: string | null = null;
         
         if (isTestAccount) {
@@ -3846,17 +3906,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningValue = prizeValues[Math.floor(Math.random() * prizeValues.length)];
           console.log("Test account detected - always wins:", winningValue);
         } else {
-          // Regular players have 30% chance to win
-          const winChance = Math.random();
+          // Use weighted random selection from database
+          const selectedPrize = await performWeightedPrizeSelection('premio-eletronicos');
           
-          console.log(`Win chance: ${winChance}, Won: ${winChance < 0.30}`);
-          
-          // If player wins, select a prize
-          if (winChance < 0.30) {
-            // Select a random prize (weighted for lower values)
-            const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
-            winningValue = prizeValues[weightedIndex];
-            console.log(`Won ${winningValue}`);
+          if (selectedPrize) {
+            // Player wins based on weighted probability
+            winningValue = selectedPrize;
+            console.log(`Weighted selection: Won ${winningValue}`);
+          } else {
+            // Fallback to 30% chance if database selection fails
+            const winChance = Math.random();
+            console.log(`Fallback - Win chance: ${winChance}, Won: ${winChance < 0.30}`);
+            
+            if (winChance < 0.30) {
+              const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
+              winningValue = prizeValues[weightedIndex];
+              console.log(`Won ${winningValue}`);
+            }
           }
         }
 
@@ -4035,8 +4101,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ error: "Saldo insuficiente" });
         }
 
-        // Simple prize values for Super Prêmios (no probabilities)
-        const prizeValues = ["10.00", "20.00", "40.00", "60.00", "80.00", "100.00", "200.00", "300.00", "400.00", "1000.00", "2000.00", "4000.00", "10000.00", "20000.00", "200000.00", "500000.00"];
+        // Get prize values from database probabilities
+        const probabilities = await storage.getPrizeProbabilitiesByGame('premio-super-premios');
+        const prizeValues = probabilities.length > 0 
+          ? probabilities.map(p => p.prizeValue) 
+          : ["10.00", "20.00", "40.00", "60.00", "80.00", "100.00", "200.00", "300.00", "400.00", "1000.00", "2000.00", "4000.00", "10000.00", "20000.00", "200000.00", "500000.00"];
 
         const hiddenValues: string[] = [];
 
@@ -4044,7 +4113,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const user = await storage.getUser(req.userId);
         const isTestAccount = user?.email === "teste@gmail.com";
 
-        // Simple win logic (no probabilities)
+        // Use weighted probability system from database
         let winningValue: string | null = null;
         
         if (isTestAccount) {
@@ -4052,17 +4121,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           winningValue = prizeValues[Math.floor(Math.random() * prizeValues.length)];
           console.log("Test account detected - always wins:", winningValue);
         } else {
-          // Regular players have 30% chance to win
-          const winChance = Math.random();
+          // Use weighted random selection from database
+          const selectedPrize = await performWeightedPrizeSelection('premio-super-premios');
           
-          console.log(`Win chance: ${winChance}, Won: ${winChance < 0.30}`);
-          
-          // If player wins, select a prize
-          if (winChance < 0.30) {
-            // Select a random prize (weighted for lower values)
-            const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
-            winningValue = prizeValues[weightedIndex];
-            console.log(`Won ${winningValue}`);
+          if (selectedPrize) {
+            // Player wins based on weighted probability
+            winningValue = selectedPrize;
+            console.log(`Weighted selection: Won ${winningValue}`);
+          } else {
+            // Fallback to 30% chance if database selection fails
+            const winChance = Math.random();
+            console.log(`Fallback - Win chance: ${winChance}, Won: ${winChance < 0.30}`);
+            
+            if (winChance < 0.30) {
+              const weightedIndex = Math.floor(Math.pow(Math.random(), 2) * prizeValues.length);
+              winningValue = prizeValues[weightedIndex];
+              console.log(`Won ${winningValue}`);
+            }
           }
         }
 
@@ -7880,6 +7955,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Get probability history error:", error);
       res.status(500).json({ error: "Erro ao buscar histórico" });
+    }
+  });
+
+  // Admin Prize Probabilities endpoints
+  app.get("/api/admin/prize-probabilities", authenticateAdmin, async (req: any, res) => {
+    try {
+      const allProbabilities = await storage.getAllPrizeProbabilities();
+      
+      // Group by game type
+      const grouped = allProbabilities.reduce((acc, prob) => {
+        if (!acc[prob.gameType]) {
+          acc[prob.gameType] = [];
+        }
+        acc[prob.gameType].push(prob);
+        return acc;
+      }, {} as Record<string, typeof allProbabilities>);
+      
+      res.json(grouped);
+    } catch (error) {
+      console.error("Get prize probabilities error:", error);
+      res.status(500).json({ error: "Erro ao buscar probabilidades" });
+    }
+  });
+
+  app.post("/api/admin/prize-probabilities/:gameType", authenticateAdmin, async (req: any, res) => {
+    try {
+      const { gameType } = req.params;
+      const { probabilities } = req.body;
+      
+      // Validate that probabilities sum to 100%
+      const sum = probabilities.reduce((acc: number, p: any) => acc + p.probability, 0);
+      if (Math.abs(sum - 100) > 0.01) {
+        return res.status(400).json({ 
+          error: `A soma das probabilidades deve ser 100%. Soma atual: ${sum.toFixed(2)}%` 
+        });
+      }
+      
+      // Get admin username from session
+      const adminUsername = req.adminUsername || 'admin';
+      
+      // Update probabilities
+      await storage.updatePrizeProbabilities(gameType, probabilities, adminUsername);
+      
+      // Log the change
+      console.log(`[AUDIT] Admin ${adminUsername} updated probabilities for ${gameType}`);
+      
+      res.json({ success: true, message: "Probabilidades atualizadas com sucesso" });
+    } catch (error) {
+      console.error("Update prize probabilities error:", error);
+      res.status(500).json({ error: "Erro ao atualizar probabilidades" });
     }
   });
 

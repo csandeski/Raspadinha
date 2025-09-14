@@ -90,6 +90,8 @@ import {
   type InsertPartnerConversion,
   type PartnersWithdrawal,
   type InsertPartnersWithdrawal,
+  type PrizeProbability,
+  type InsertPrizeProbability,
   esquiloGames,
   esquiloGameStates,
   type EsquiloGame,
@@ -3574,6 +3576,42 @@ export class DatabaseStorage implements IStorage {
     
     // Also update the partner_codes table
     await this.updatePartnerCodeStats(data.code, 'clickCount');
+  }
+
+  // Prize Probability Management Methods
+  async getAllPrizeProbabilities(): Promise<PrizeProbability[]> {
+    return db.select().from(prizeProbabilities).orderBy(prizeProbabilities.gameType, prizeProbabilities.prizeValue);
+  }
+
+  async getPrizeProbabilitiesByGame(gameType: string): Promise<PrizeProbability[]> {
+    return db.select()
+      .from(prizeProbabilities)
+      .where(eq(prizeProbabilities.gameType, gameType))
+      .orderBy(prizeProbabilities.prizeValue);
+  }
+
+  async updatePrizeProbabilities(gameType: string, probabilities: { prizeValue: number; probability: number }[], updatedBy: string): Promise<void> {
+    // Use a transaction to ensure all updates succeed or none do
+    await db.transaction(async (tx) => {
+      for (const prob of probabilities) {
+        await tx.update(prizeProbabilities)
+          .set({ 
+            probability: prob.probability.toString(),
+            updatedAt: new Date(),
+            updatedBy: updatedBy
+          })
+          .where(and(
+            eq(prizeProbabilities.gameType, gameType),
+            eq(prizeProbabilities.prizeValue, prob.prizeValue.toString())
+          ));
+      }
+    });
+  }
+
+  async validateProbabilitySum(gameType: string): Promise<boolean> {
+    const probs = await this.getPrizeProbabilitiesByGame(gameType);
+    const sum = probs.reduce((acc, p) => acc + parseFloat(p.probability), 0);
+    return Math.abs(sum - 100) < 0.01; // Allow for small floating point errors
   }
 }
 

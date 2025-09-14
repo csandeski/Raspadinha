@@ -267,15 +267,11 @@ export default function Home() {
                   }`}>
                     {/* Image */}
                     <div className="flex items-center justify-center h-[75%] p-2">
-                      <div className="relative w-full h-full rounded-lg overflow-hidden">
-                        <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-blue-600" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <div className="absolute top-2 right-2 bg-cyan-500 text-white text-[8px] md:text-[10px] px-2 py-0.5 rounded-full font-bold">
-                            BREVE
-                          </div>
-                          <Package className="w-10 h-10 md:w-12 md:h-12 text-white/90" />
-                        </div>
-                      </div>
+                      <img 
+                        src="/images/baus-selector.png" 
+                        alt="Baús"
+                        className="w-full h-full object-contain"
+                      />
                     </div>
                     {/* Text */}
                     <div className="absolute bottom-0 left-0 right-0 h-[25%] flex items-center justify-center bg-black/40">

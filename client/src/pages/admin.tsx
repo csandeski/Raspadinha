@@ -47,7 +47,6 @@ import { MarketingLinksManagement } from "@/components/admin/marketing-links-man
 import { ChatManagement } from "@/components/admin/chat-management";
 import { ReferralConfig } from "@/components/admin/referral-config";
 import { AffiliatesPartnersManagement } from "@/components/admin/affiliates-partners-management";
-import { ProbabilityManagement } from "@/components/admin/probability-management";
 
 // Custom apiRequest for admin routes that includes session ID
 const apiRequest = async (url: string, method: string = "GET", data?: any) => {
@@ -146,7 +145,6 @@ export default function AdminPanel() {
     dashboard: "Dashboard",
     users: "Usuários",
     games: "Jogos",
-    probabilities: "Probabilidades",
     deposits: "Depósitos",
     transactions: "Transações",
     "bonus-codes": "Códigos Bônus",
@@ -301,7 +299,6 @@ export default function AdminPanel() {
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="games">Jogos</TabsTrigger>
-            <TabsTrigger value="probabilities">Probabilidades</TabsTrigger>
             <TabsTrigger value="deposits">Depósitos</TabsTrigger>
             <TabsTrigger value="transactions">Transações</TabsTrigger>
             <TabsTrigger value="bonus-codes">Códigos</TabsTrigger>
@@ -822,10 +819,6 @@ export default function AdminPanel() {
             </Card>
           </TabsContent>
 
-          {/* Probabilities Tab */}
-          <TabsContent value="probabilities" className="space-y-6">
-            <ProbabilityManagement />
-          </TabsContent>
 
           {/* Deposits Tab */}
           <TabsContent value="deposits" className="space-y-6">

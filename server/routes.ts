@@ -84,6 +84,234 @@ const JWT_EXPIRY = '24h'; // Tokens expire after 24 hours
 const JWT_REFRESH_EXPIRY = '7d'; // Refresh tokens expire after 7 days
 // OrinPay is now the only payment provider
 
+// ==================== MANIA FLY GAME SYSTEM ====================
+// Authoritative server-side game round manager for Mania Fly
+
+interface ManiaFlyRound {
+  roundId: string;
+  startTime: number;
+  crashPoint: number;
+  state: 'waiting' | 'playing' | 'crashed';
+  nextRoundTime?: number;
+  bets: Map<number, { amount: number; cashedOut: boolean; cashoutMultiplier?: number }>;
+}
+
+class ManiaFlyManager {
+  private currentRound: ManiaFlyRound | null = null;
+  private roundHistory: number[] = [];
+  private roundTimer: NodeJS.Timeout | null = null;
+  private readonly ROUND_INTERVAL = 10000; // 10 seconds between rounds
+  private readonly MULTIPLIER_SPEED = 0.05; // Multiplier increases by 0.05 per 100ms
+  
+  constructor() {
+    this.startNewRound();
+  }
+  
+  private generateCrashPoint(): number {
+    // Generate crash point with house edge
+    // 50% chance to crash before 2x
+    // 25% chance to crash between 2x-5x  
+    // 25% chance to crash above 5x
+    const rand = Math.random();
+    
+    if (rand < 0.5) {
+      // 50% chance: 1.00 - 2.00
+      return 1.00 + Math.random();
+    } else if (rand < 0.75) {
+      // 25% chance: 2.00 - 5.00
+      return 2.00 + Math.random() * 3;
+    } else {
+      // 25% chance: 5.00 - 20.00 (with exponential decay)
+      return 5.00 + Math.random() * Math.random() * 15;
+    }
+  }
+  
+  private startNewRound() {
+    // Clear any existing timer
+    if (this.roundTimer) {
+      clearTimeout(this.roundTimer);
+    }
+    
+    // Create new round
+    const roundId = `round-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const crashPoint = this.generateCrashPoint();
+    
+    this.currentRound = {
+      roundId,
+      startTime: Date.now() + this.ROUND_INTERVAL, // Round starts after waiting period
+      crashPoint,
+      state: 'waiting',
+      nextRoundTime: Date.now() + this.ROUND_INTERVAL,
+      bets: new Map()
+    };
+    
+    console.log(`[ManiaFly] New round ${roundId} - Crash at ${crashPoint.toFixed(2)}x`);
+    
+    // Start waiting phase (10 seconds)
+    this.roundTimer = setTimeout(() => {
+      this.startPlaying();
+    }, this.ROUND_INTERVAL);
+  }
+  
+  private startPlaying() {
+    if (!this.currentRound) return;
+    
+    this.currentRound.state = 'playing';
+    this.currentRound.startTime = Date.now();
+    
+    console.log(`[ManiaFly] Round ${this.currentRound.roundId} started playing`);
+    
+    // Check for crash every 100ms
+    const checkCrash = () => {
+      if (!this.currentRound || this.currentRound.state !== 'playing') return;
+      
+      const currentMultiplier = this.getCurrentMultiplier();
+      
+      if (currentMultiplier >= this.currentRound.crashPoint) {
+        this.crashRound();
+      } else {
+        this.roundTimer = setTimeout(checkCrash, 100);
+      }
+    };
+    
+    checkCrash();
+  }
+  
+  private crashRound() {
+    if (!this.currentRound) return;
+    
+    this.currentRound.state = 'crashed';
+    
+    // Add to history (keep last 10)
+    this.roundHistory.unshift(this.currentRound.crashPoint);
+    if (this.roundHistory.length > 10) {
+      this.roundHistory.pop();
+    }
+    
+    console.log(`[ManiaFly] Round ${this.currentRound.roundId} crashed at ${this.currentRound.crashPoint.toFixed(2)}x`);
+    
+    // Process all active bets as losses
+    for (const [userId, bet] of this.currentRound.bets) {
+      if (!bet.cashedOut) {
+        console.log(`[ManiaFly] User ${userId} lost ${bet.amount}`);
+      }
+    }
+    
+    // Start new round after 3 seconds to show crash
+    this.roundTimer = setTimeout(() => {
+      this.startNewRound();
+    }, 3000);
+  }
+  
+  getCurrentMultiplier(): number {
+    if (!this.currentRound || this.currentRound.state !== 'playing') {
+      return 0;
+    }
+    
+    const elapsed = Date.now() - this.currentRound.startTime;
+    const multiplier = 1.00 + (elapsed / 100) * this.MULTIPLIER_SPEED;
+    
+    return Math.min(multiplier, this.currentRound.crashPoint);
+  }
+  
+  getStatus() {
+    if (!this.currentRound) {
+      return {
+        roundId: null,
+        state: 'waiting',
+        multiplier: 0,
+        history: this.roundHistory,
+        countdown: 0
+      };
+    }
+    
+    let countdown = 0;
+    if (this.currentRound.state === 'waiting') {
+      countdown = Math.max(0, Math.ceil((this.currentRound.nextRoundTime! - Date.now()) / 1000));
+    }
+    
+    return {
+      roundId: this.currentRound.roundId,
+      state: this.currentRound.state,
+      multiplier: this.currentRound.state === 'playing' ? this.getCurrentMultiplier() : 
+                  this.currentRound.state === 'crashed' ? this.currentRound.crashPoint : 0,
+      history: this.roundHistory,
+      countdown,
+      activeBets: this.currentRound.bets.size
+    };
+  }
+  
+  placeBet(userId: number, amount: number): { success: boolean; message: string; roundId?: string } {
+    if (!this.currentRound) {
+      return { success: false, message: "Nenhum round ativo" };
+    }
+    
+    if (this.currentRound.state !== 'waiting') {
+      return { success: false, message: "Apostas só podem ser feitas antes do avião decolar" };
+    }
+    
+    if (this.currentRound.bets.has(userId)) {
+      return { success: false, message: "Você já apostou neste round" };
+    }
+    
+    this.currentRound.bets.set(userId, {
+      amount,
+      cashedOut: false
+    });
+    
+    console.log(`[ManiaFly] User ${userId} placed bet of ${amount} on round ${this.currentRound.roundId}`);
+    
+    return { 
+      success: true, 
+      message: "Aposta realizada com sucesso",
+      roundId: this.currentRound.roundId 
+    };
+  }
+  
+  cashOut(userId: number, roundId: string): { success: boolean; message: string; multiplier?: number; profit?: number } {
+    if (!this.currentRound || this.currentRound.roundId !== roundId) {
+      return { success: false, message: "Round inválido" };
+    }
+    
+    if (this.currentRound.state !== 'playing') {
+      return { success: false, message: "Só é possível sacar durante o voo" };
+    }
+    
+    const bet = this.currentRound.bets.get(userId);
+    if (!bet) {
+      return { success: false, message: "Você não tem aposta ativa neste round" };
+    }
+    
+    if (bet.cashedOut) {
+      return { success: false, message: "Você já sacou neste round" };
+    }
+    
+    const multiplier = this.getCurrentMultiplier();
+    const profit = bet.amount * multiplier;
+    
+    bet.cashedOut = true;
+    bet.cashoutMultiplier = multiplier;
+    
+    console.log(`[ManiaFly] User ${userId} cashed out at ${multiplier.toFixed(2)}x for profit of ${profit.toFixed(2)}`);
+    
+    return {
+      success: true,
+      message: "Sacou com sucesso",
+      multiplier,
+      profit
+    };
+  }
+  
+  getUserBet(userId: number): { amount: number; cashedOut: boolean; cashoutMultiplier?: number } | null {
+    if (!this.currentRound) return null;
+    return this.currentRound.bets.get(userId) || null;
+  }
+}
+
+// Initialize the game manager
+const maniaFlyManager = new ManiaFlyManager();
+
+// ==================== END MANIA FLY SYSTEM ====================
 
 // Twilio configuration
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID;
@@ -18789,80 +19017,121 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Mania Fly Game Routes
+  // ==================== MANIA FLY ENDPOINTS ====================
+  
+  // Get current game status (public endpoint)
+  app.get("/api/games/mania-fly/status", (req, res) => {
+    const status = maniaFlyManager.getStatus();
+    res.json(status);
+  });
+  
+  // Place a bet - SECURE VERSION
   app.post("/api/games/mania-fly/bet", authenticateToken, async (req: any, res) => {
     try {
-      const { amount, roundId } = req.body;
+      const { amount } = req.body;
+      const userId = req.userId;
       
       if (!amount || amount <= 0) {
         return res.status(400).json({ message: "Valor de aposta inválido" });
       }
       
-      // Get user wallet
-      const wallet = await storage.getWallet(req.userId);
+      // Check user balance
+      const wallet = await storage.getWallet(userId);
       if (!wallet || parseFloat(wallet.balance) < amount) {
         return res.status(400).json({ message: "Saldo insuficiente" });
       }
       
-      // Deduct bet amount
-      const newBalance = (parseFloat(wallet.balance) - amount).toFixed(2);
-      await storage.updateWalletBalance(req.userId, newBalance);
-      await storage.incrementTotalWagered(req.userId, amount.toString());
+      // Place bet in game manager
+      const result = maniaFlyManager.placeBet(userId, amount);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+      
+      // Deduct from wallet
+      const newBalance = parseFloat(wallet.balance) - amount;
+      await storage.updateWalletBalance(userId, newBalance.toFixed(2));
+      await storage.incrementTotalWagered(userId, amount.toString());
+      
+      // Record game in database
+      await storage.createGame({
+        userId,
+        gameType: 'mania_fly',
+        betAmount: amount.toFixed(2),
+        result: 'pending',
+        prizeAmount: '0.00',
+        completed: false,
+        gameData: { roundId: result.roundId }
+      });
       
       res.json({ 
         success: true, 
-        message: "Aposta realizada",
-        betId: `bet_${Date.now()}`,
-        roundId,
-        amount
+        message: result.message,
+        roundId: result.roundId,
+        balance: newBalance.toFixed(2)
       });
     } catch (error) {
       console.error("Mania Fly bet error:", error);
-      res.status(500).json({ message: "Erro ao fazer aposta" });
+      res.status(500).json({ message: "Erro ao processar aposta" });
     }
   });
-
+  
+  // Cash out - SECURE VERSION
   app.post("/api/games/mania-fly/cashout", authenticateToken, async (req: any, res) => {
     try {
-      const { multiplier, profit, roundId } = req.body;
+      const { roundId } = req.body;
+      const userId = req.userId;
       
-      if (!multiplier || !profit || multiplier < 1) {
-        return res.status(400).json({ message: "Dados inválidos" });
+      if (!roundId) {
+        return res.status(400).json({ message: "Round ID é obrigatório" });
       }
       
-      // Get current wallet and add prize to user balance
-      const wallet = await storage.getWallet(req.userId);
+      // Process cashout in game manager - SERVER CALCULATES EVERYTHING
+      const result = maniaFlyManager.cashOut(userId, roundId);
+      
+      if (!result.success) {
+        return res.status(400).json({ message: result.message });
+      }
+      
+      // Update wallet with winnings
+      const wallet = await storage.getWallet(userId);
       if (!wallet) {
         return res.status(400).json({ message: "Carteira não encontrada" });
       }
-      const newBalance = (parseFloat(wallet.balance) + profit).toFixed(2);
-      await storage.updateWalletBalance(req.userId, newBalance);
       
-      // Record game in history (optional)
-      const displayId = Math.floor(10000 + Math.random() * 90000);
-      await storage.createGamePremio({
-        userId: req.userId,
-        gameType: 'pix', // Using premio game type
-        cost: (profit / multiplier).toFixed(2),
-        prize: profit.toFixed(2),
-        won: true,
-        displayId,
-        revealedCards: [],
-        cards: [],
-        multiplier
-      });
+      const newBalance = parseFloat(wallet.balance) + result.profit!;
+      await storage.updateWalletBalance(userId, newBalance.toFixed(2));
       
-      res.json({ 
-        success: true, 
-        message: "Prêmio coletado",
-        prize: profit,
-        multiplier
+      // Update game record
+      await db
+        .update(games)
+        .set({
+          result: 'won',
+          prizeAmount: result.profit!.toFixed(2),
+          completed: true,
+          gameData: sql`jsonb_set(game_data, '{multiplier}', '${result.multiplier}'::jsonb)`
+        })
+        .where(
+          and(
+            eq(games.userId, userId),
+            sql`game_data->>'roundId' = ${roundId}`
+          )
+        );
+      
+      res.json({
+        success: true,
+        message: result.message,
+        multiplier: result.multiplier,
+        profit: result.profit,
+        balance: newBalance.toFixed(2)
       });
     } catch (error) {
       console.error("Mania Fly cashout error:", error);
-      res.status(500).json({ message: "Erro ao coletar prêmio" });
+      res.status(500).json({ message: "Erro ao processar saque" });
     }
   });
+  
+  // ==================== END MANIA FLY ENDPOINTS ====================
 
   const httpServer = createServer(app);
   return httpServer;

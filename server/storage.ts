@@ -1901,7 +1901,7 @@ export class DatabaseStorage implements IStorage {
       if (result.rows.length > 0) {
         const probabilities = result.rows.map((row: any) => ({
           value: row.prize_value,
-          name: row.prize_type || row.prize_name || `R$ ${parseFloat(row.prize_value).toFixed(2).replace('.', ',')}`,
+          name: row.prize_name || `R$ ${parseFloat(row.prize_value).toFixed(2).replace('.', ',')}`,
           probability: parseFloat(row.probability),
           order: row["order"] || 0
         }));
@@ -1937,7 +1937,7 @@ export class DatabaseStorage implements IStorage {
       // Insert new probabilities
       for (const [index, p] of probabilities.entries()) {
         await client.query(
-          `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, "order", updated_at, updated_by)
+          `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at, updated_by)
            VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
           [gameKey, p.value, p.name, p.probability, p.order || index, 'admin']
         );

@@ -1008,7 +1008,7 @@ export default function GamePremioMeMimei() {
                                 </div>
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                           
                           {/* Result Text with gradient */}
                           <motion.div

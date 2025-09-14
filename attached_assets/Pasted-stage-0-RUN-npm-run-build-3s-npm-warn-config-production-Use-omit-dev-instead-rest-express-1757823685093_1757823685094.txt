@@ -1,0 +1,43 @@
+stage-0
+RUN npm run build
+3s
+npm warn config production Use `--omit=dev` instead.
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+vite v5.4.19 building for production...
+transforming...
+/grid.svg referenced in /grid.svg didn't resolve at build time, it will remain unchanged to be resolved at runtime
+✓ 64 modules transformed.
+x Build failed in 2.59s
+error during build:
+[31m[vite:esbuild] Transform failed with 1 error:
+
+/app/client/src/pages/game-premio-me-mimei.tsx:1011:28: ERROR: Unexpected closing "motion.div" tag does not match opening "div" tag
+file: /app/client/src/pages/game-premio-me-mimei.tsx:1011:28
+Unexpected closing "motion.div" tag does not match opening "div" tag
+1009|                                </div>
+1010|                              )}
+1011|                            </motion.div>
+   |                              ^
+1012|                            
+1013|                            {/* Result Text with gradient */}
+    at failureErrorWithLog (/app/node_modules/vite/node_modules/esbuild/lib/main.js:1472:15)
+    at /app/node_modules/vite/node_modules/esbuild/lib/main.js:755:50
+    at responseCallbacks.<computed> (/app/node_modules/vite/node_modules/esbuild/lib/main.js:622:9)
+    at handleIncomingPacket (/app/node_modules/vite/node_modules/esbuild/lib/main.js:677:12)
+    at Socket.readFromStdout (/app/node_modules/vite/node_modules/esbuild/lib/main.js:600:7)
+    at Socket.emit (node:events:518:28)
+    at addChunk (node:internal/streams/readable:561:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+    at Readable.push (node:internal/streams/readable:392:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:191:23)
+Dockerfile:30
+-------------------
+28 |     # build phase
+29 |     COPY . /app/.
+30 | >>> RUN --mount=type=cache,id=s/2324ca25-c944-444c-99ea-4f4956a40ee1-node_modules/cache,target=/app/node_modules/.cache npm run build
+31 |
+32 |
+-------------------
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm run build" did not complete successfully: exit code: 1
+Error: Docker build failed

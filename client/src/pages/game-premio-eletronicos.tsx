@@ -985,7 +985,7 @@ export default function GamePremioEletronicos() {
                                 </div>
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                           
                           {/* Result Text with gradient */}
                           <motion.div

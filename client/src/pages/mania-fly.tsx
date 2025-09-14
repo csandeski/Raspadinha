@@ -843,40 +843,6 @@ export default function ManiaFly() {
             </div>
           </div>
 
-          {/* Game Info */}
-          <div className="mt-4 bg-gradient-to-r from-[#00E880]/10 to-[#00FFB3]/10 rounded-xl p-4 border border-[#00E880]/20">
-            <div className="flex items-center gap-2 mb-2">
-              <Zap className="w-4 h-4 text-[#00E880]" />
-              <span className="text-sm font-bold text-[#00E880]">ESTATÍSTICAS DO JOGO</span>
-            </div>
-            <div className="grid grid-cols-3 gap-3 text-center">
-              <div>
-                <div className="text-xs text-gray-500">Último Crash</div>
-                <div className="text-lg font-bold text-white">
-                  {gameStatus.history.length > 0 ? gameStatus.history[0].toFixed(2) : '0.00'}x
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">Média (10)</div>
-                <div className="text-lg font-bold text-white">
-                  {gameStatus.history.length > 0 
-                    ? (gameStatus.history.reduce((sum, h) => sum + h, 0) / gameStatus.history.length).toFixed(2)
-                    : '0.00'}x
-                </div>
-              </div>
-              <div>
-                <div className="text-xs text-gray-500">Maior (10)</div>
-                <div className="text-lg font-bold text-[#00E880]">
-                  {gameStatus.history.length > 0 
-                    ? Math.max(...gameStatus.history).toFixed(2)
-                    : '0.00'}x
-                </div>
-              </div>
-            </div>
-            <div className="mt-3 text-center text-xs text-gray-500">
-              RTP: 97% • Min: 1.00x • Max: 500.00x • Rounds automáticos
-            </div>
-          </div>
         </div>
       </div>
     </MobileLayout>

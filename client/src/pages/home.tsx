@@ -812,11 +812,7 @@ export default function Home() {
 
               {/* Mania Fly - Novo Jogo */}
               <div
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setLocation("/game/mania-fly");
-                }}
-                className="cursor-pointer transform hover:scale-[1.02] transition-all duration-300 overflow-hidden rounded-2xl shadow-2xl w-full md:max-w-md"
+                className="overflow-hidden rounded-2xl shadow-2xl w-full md:max-w-md opacity-75"
               >
                 {/* Banner Section */}
                 <div
@@ -849,25 +845,18 @@ export default function Home() {
                 {/* Info Section */}
                 <div className="p-1 md:p-2 bg-gray-900 -mt-4 md:-mt-6 relative z-10">
                   <div>
-                    <button className="animate-gentle-pulse w-full bg-gradient-to-r from-gray-900 to-gray-800 hover:from-gray-800 hover:to-gray-700 text-white px-3 py-3 md:px-4 md:py-4 rounded-2xl font-bold transition-all hover:shadow-xl hover:scale-[1.02] text-sm md:text-base flex items-center justify-between border border-gray-700 relative overflow-hidden group">
-                      {/* Sky texture overlay */}
-                      <div className="absolute inset-0 opacity-30 bg-gradient-to-br from-sky-900 via-sky-800 to-blue-950"></div>
-                      <div className="absolute inset-0 bg-gradient-to-r from-sky-600/20 to-sky-700/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <button className="w-full bg-gradient-to-r from-gray-900 to-gray-800 text-white px-3 py-3 md:px-4 md:py-4 rounded-2xl font-bold text-sm md:text-base flex items-center justify-between border border-gray-700 relative overflow-hidden cursor-not-allowed" disabled>
+                      {/* Disabled overlay */}
+                      <div className="absolute inset-0 opacity-50 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-950"></div>
                       
-                      {/* Cloud effect */}
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-900/30 to-transparent transform skew-y-12"></div>
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-800/20 to-transparent transform -skew-y-12"></div>
-                      </div>
-                      
-                      <span className="bg-gradient-to-r from-sky-700 to-sky-600 px-4 py-2 md:px-6 md:py-3 rounded-xl flex items-center gap-3 shadow-lg relative z-10 border border-sky-800">
-                        {/* Inner sky texture */}
-                        <div className="absolute inset-0 rounded-xl opacity-40 bg-gradient-to-tr from-sky-900 via-sky-700 to-sky-800"></div>
-                        <span className="text-white text-sm md:text-base font-black uppercase tracking-wider relative drop-shadow-lg">
-                          Jogar
+                      <span className="bg-gradient-to-r from-gray-700 to-gray-600 px-4 py-2 md:px-6 md:py-3 rounded-xl flex items-center gap-3 shadow-lg relative z-10 border border-gray-800">
+                        {/* Inner gray texture for disabled state */}
+                        <div className="absolute inset-0 rounded-xl opacity-40 bg-gradient-to-tr from-gray-900 via-gray-700 to-gray-800"></div>
+                        <span className="text-gray-400 text-sm md:text-base font-black uppercase tracking-wider relative drop-shadow-lg">
+                          Em Breve
                         </span>
-                        <span className="bg-black/40 px-3 py-1 md:px-4 md:py-2 rounded-lg text-white font-bold shadow-inner relative">
-                          R$ 1,00
+                        <span className="bg-black/40 px-3 py-1 md:px-4 md:py-2 rounded-lg text-gray-500 font-bold shadow-inner relative">
+                          R$ -,--
                         </span>
                       </span>
                       <span className="flex items-center gap-1 text-[10px] md:text-xs text-sky-200 pr-2 md:pr-4 relative z-10">

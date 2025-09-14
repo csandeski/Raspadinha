@@ -205,7 +205,8 @@ function Router() {
             <Route path="/game/premio-eletronicos" component={GamePremioEletronicos} />
             <Route path="/game/premio-super-premios" component={GamePremioSuperPremios} />
             <Route path="/game/jogo-esquilo" component={JogoEsquilo} />
-            <Route path="/game/mania-fly" component={ManiaFly} />
+            {/* Mania Fly desabilitado - Em breve */}
+            {/* <Route path="/game/mania-fly" component={ManiaFly} /> */}
             <Route path="/game/:type" component={Game} />
             <Route path="/ajuda" component={Ajuda} />
             <Route path="/macaco123" component={SupportAgentLogin} />
@@ -357,7 +358,8 @@ function Router() {
           <Route path="/game/bau-eletronicos" component={GameBauEletronicos} />
           <Route path="/game/bau-super-premios" component={GameBauSuperPremios} />
           <Route path="/game/jogo-esquilo" component={JogoEsquilo} />
-          <Route path="/game/mania-fly" component={ManiaFly} />
+          {/* Mania Fly desabilitado - Em breve */}
+          {/* <Route path="/game/mania-fly" component={ManiaFly} /> */}
           <Route path="/game/:type" component={Game} />
           <Route path="/profile" component={Profile} />
           <Route path="/deposit" component={Deposit} />

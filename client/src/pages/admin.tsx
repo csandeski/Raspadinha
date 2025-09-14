@@ -143,16 +143,13 @@ export default function AdminPanel() {
   // Tab route mapping
   const tabRoutes: Record<string, string> = {
     dashboard: "Dashboard",
-    probabilidades: "Probabilidades",
     users: "Usuários",
-    games: "Jogos",
+    games: "Jogos", 
     deposits: "Depósitos",
     transactions: "Transações",
     "bonus-codes": "Códigos Bônus",
     coupons: "Cupons",
     marketing: "Marketing",
-    referrals: "Indicação",
-    affiliates: "Afiliados",
     chat: "Chat Suporte"
   };
 
@@ -296,9 +293,8 @@ export default function AdminPanel() {
 
       <div className="p-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid grid-cols-12 w-full max-w-7xl">
+          <TabsList className="grid grid-cols-10 w-full max-w-6xl">
             <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-            <TabsTrigger value="probabilidades">Probabilidades</TabsTrigger>
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="games">Jogos</TabsTrigger>
             <TabsTrigger value="deposits">Depósitos</TabsTrigger>
@@ -509,24 +505,6 @@ export default function AdminPanel() {
                 </CardContent>
               </Card>
             </div>
-          </TabsContent>
-
-          {/* Probabilidades Tab */}
-          <TabsContent value="probabilidades" className="space-y-6">
-            <Card className="bg-gradient-to-br from-zinc-900 to-black border-zinc-800">
-              <CardHeader>
-                <CardTitle className="text-xl text-white">Gerenciamento de Probabilidades</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-center h-64">
-                  <div className="text-center">
-                    <PercentIcon className="w-16 h-16 text-zinc-600 mx-auto mb-4" />
-                    <p className="text-zinc-400 text-lg">Sistema de Probabilidades</p>
-                    <p className="text-zinc-500 text-sm mt-2">Configuração de probabilidades dos jogos</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </TabsContent>
 
           {/* Users Tab */}
@@ -838,7 +816,6 @@ export default function AdminPanel() {
               </CardContent>
             </Card>
           </TabsContent>
-
 
           {/* Deposits Tab */}
           <TabsContent value="deposits" className="space-y-6">

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
-import { Loader2, Save, AlertCircle, Sparkles, Trash2, TestTube, Gift, FlaskConical } from "lucide-react";
+import { Loader2, Save, AlertCircle, Sparkles, Trash2, TestTube, Package, FlaskConical } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import {
@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 
-interface PrizeProbability {
+interface ChestProbability {
   id: number;
   game_type: string;
   prize_value: string;
@@ -31,28 +31,28 @@ interface PrizeProbability {
 }
 
 const gameNames: Record<string, string> = {
-  'pix': 'PIX',
-  'me_mimei': 'Me Mimei',
-  'eletronicos': 'Eletrônicos',
-  'super': 'Super Prêmios'
+  'bau_pix': 'Baú PIX',
+  'bau_me_mimei': 'Baú Me Mimei',
+  'bau_eletronicos': 'Baú Eletrônicos',
+  'bau_super': 'Baú Super Prêmios'
 };
 
 const gameColors: Record<string, string> = {
-  'pix': 'border-blue-500',
-  'me_mimei': 'border-pink-500',
-  'eletronicos': 'border-orange-500',
-  'super': 'border-green-500'
+  'bau_pix': 'border-blue-500',
+  'bau_me_mimei': 'border-pink-500',
+  'bau_eletronicos': 'border-orange-500',
+  'bau_super': 'border-green-500'
 };
 
-export function PrizeProbabilityManagement() {
+export function ChestProbabilityManagement() {
   const { toast } = useToast();
-  const [selectedGame, setSelectedGame] = useState<string>('pix');
-  const [editedProbabilities, setEditedProbabilities] = useState<PrizeProbability[]>([]);
+  const [selectedGame, setSelectedGame] = useState<string>('bau_pix');
+  const [editedProbabilities, setEditedProbabilities] = useState<ChestProbability[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
   const [isDemoMode, setIsDemoMode] = useState(false);
   const [targetWinRate, setTargetWinRate] = useState<number>(() => {
     // Load saved target win rate for current game from localStorage
-    const savedRates = localStorage.getItem('prizeProbabilityWinRates');
+    const savedRates = localStorage.getItem('chestProbabilityWinRates');
     if (savedRates) {
       const rates = JSON.parse(savedRates);
       return rates[selectedGame] || 30;
@@ -60,12 +60,12 @@ export function PrizeProbabilityManagement() {
     return 30;
   });
 
-  const { data: probabilities, isLoading } = useQuery<PrizeProbability[]>({
-    queryKey: ['/api/admin/prize-probabilities', selectedGame, isDemoMode],
+  const { data: probabilities, isLoading } = useQuery<ChestProbability[]>({
+    queryKey: ['/api/admin/chest-probabilities', selectedGame, isDemoMode],
     queryFn: async () => {
       const url = isDemoMode 
-        ? `/api/admin/prize-probabilities/${selectedGame}?demo=true`
-        : `/api/admin/prize-probabilities/${selectedGame}`;
+        ? `/api/admin/chest-probabilities/${selectedGame}?demo=true`
+        : `/api/admin/chest-probabilities/${selectedGame}`;
       
       const response = await fetch(url, {
         headers: {
@@ -87,17 +87,17 @@ export function PrizeProbabilityManagement() {
       if (currentTotal > 0 && currentTotal <= 100) {
         setTargetWinRate(currentTotal);
         // Save this rate for the current game
-        const savedRates = localStorage.getItem('prizeProbabilityWinRates');
+        const savedRates = localStorage.getItem('chestProbabilityWinRates');
         const rates = savedRates ? JSON.parse(savedRates) : {};
         rates[selectedGame] = currentTotal;
-        localStorage.setItem('prizeProbabilityWinRates', JSON.stringify(rates));
+        localStorage.setItem('chestProbabilityWinRates', JSON.stringify(rates));
       }
     }
   }, [probabilities, selectedGame]);
 
   const updateMutation = useMutation({
-    mutationFn: async (prizes: PrizeProbability[]) => {
-      const response = await fetch(`/api/admin/prize-probabilities/${selectedGame}`, {
+    mutationFn: async (prizes: ChestProbability[]) => {
+      const response = await fetch(`/api/admin/chest-probabilities/${selectedGame}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,11 +122,11 @@ export function PrizeProbabilityManagement() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/prize-probabilities', selectedGame, isDemoMode] });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/chest-probabilities', selectedGame, isDemoMode] });
       toast({
         description: isDemoMode 
-          ? "Probabilidades DEMO atualizadas com sucesso"
-          : "Probabilidades de prêmios atualizadas com sucesso",
+          ? "Probabilidades DEMO dos baús atualizadas com sucesso"
+          : "Probabilidades dos baús atualizadas com sucesso",
       });
       setHasChanges(false);
     },
@@ -232,11 +232,11 @@ export function PrizeProbabilityManagement() {
               animate={{ rotate: 360 }}
               transition={{ duration: 1, delay: 0.5 }}
             >
-              <Gift className="w-8 h-8 text-[#00E880]" />
+              <Package className="w-8 h-8 text-[#00E880]" />
             </motion.div>
-            Probabilidades Individuais de Prêmios
+            Probabilidades dos Baús
           </motion.h2>
-          <p className="text-zinc-400">Configure a probabilidade de cada prêmio individual</p>
+          <p className="text-zinc-400">Configure a probabilidade de cada prêmio dos jogos de baú</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -275,7 +275,7 @@ export function PrizeProbabilityManagement() {
           <Select value={selectedGame} onValueChange={(game) => {
             setSelectedGame(game);
             // Load saved win rate for the selected game
-            const savedRates = localStorage.getItem('prizeProbabilityWinRates');
+            const savedRates = localStorage.getItem('chestProbabilityWinRates');
             if (savedRates) {
               const rates = JSON.parse(savedRates);
               setTargetWinRate(rates[game] || 30);
@@ -294,15 +294,6 @@ export function PrizeProbabilityManagement() {
               ))}
             </SelectContent>
           </Select>
-          <Link to="/admin/probability-test">
-            <Button
-              variant="outline"
-              className="bg-zinc-800 hover:bg-zinc-700 text-white border-zinc-700"
-            >
-              <TestTube className="h-4 w-4 mr-2" />
-              Testar
-            </Button>
-          </Link>
           <Button
             onClick={handleSave}
             disabled={!hasChanges || updateMutation.isPending || !isValidTotal}
@@ -335,7 +326,7 @@ export function PrizeProbabilityManagement() {
             <div>
               <h3 className="text-yellow-500 font-semibold mb-1">Modo Demo Ativado</h3>
               <p className="text-yellow-400/80 text-sm">
-                Você está editando as probabilidades DEMO que são usadas apenas para contas de teste com CPF 99999999999.
+                Você está editando as probabilidades DEMO dos baús que são usadas apenas para contas de teste com CPF 99999999999.
                 Essas configurações não afetam usuários reais e permitem testes seguros do sistema.
               </p>
             </div>
@@ -359,10 +350,10 @@ export function PrizeProbabilityManagement() {
                     const value = parseFloat(e.target.value) || 0;
                     setTargetWinRate(value);
                     // Save to localStorage
-                    const savedRates = localStorage.getItem('prizeProbabilityWinRates');
+                    const savedRates = localStorage.getItem('chestProbabilityWinRates');
                     const rates = savedRates ? JSON.parse(savedRates) : {};
                     rates[selectedGame] = value;
-                    localStorage.setItem('prizeProbabilityWinRates', JSON.stringify(rates));
+                    localStorage.setItem('chestProbabilityWinRates', JSON.stringify(rates));
                   }}
                   className="w-24 mt-1 bg-zinc-800 border-zinc-700 text-white"
                 />

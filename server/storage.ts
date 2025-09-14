@@ -90,8 +90,6 @@ import {
   type InsertPartnerConversion,
   type PartnersWithdrawal,
   type InsertPartnersWithdrawal,
-  type PrizeProbability,
-  type InsertPrizeProbability,
   esquiloGames,
   esquiloGameStates,
   type EsquiloGame,
@@ -103,15 +101,7 @@ import { db, pool } from "./db";
 import { eq, desc, and, sql, gte, lt, count, asc, inArray } from "drizzle-orm";
 
 export interface IStorage {
-  // Prize Probability Management
-  listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]>;
-  getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }>;
-  updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void>;
-  distributeEqually(gameKey: string): Promise<void>;
-  resetToDefaults(gameKey: string): Promise<void>;
-  
   // User operations
-  getUsers(): Promise<User[]>;
   getUser(id: number): Promise<User | undefined>;
   getUserById(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
@@ -310,195 +300,7 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Default probabilities for each game
-  private readonly DEFAULT_PROBABILITIES: Record<string, { value: string; name: string; probability: number; order: number }[]> = {
-    'premio_pix_conta': [
-      { value: '0.5', name: 'R$ 0,50', probability: 35, order: 1 },
-      { value: '1', name: 'R$ 1,00', probability: 25, order: 2 },
-      { value: '2', name: 'R$ 2,00', probability: 15, order: 3 },
-      { value: '3', name: 'R$ 3,00', probability: 10, order: 4 },
-      { value: '4', name: 'R$ 4,00', probability: 5, order: 5 },
-      { value: '5', name: 'R$ 5,00', probability: 4, order: 6 },
-      { value: '10', name: 'R$ 10,00', probability: 3, order: 7 },
-      { value: '15', name: 'R$ 15,00', probability: 1.5, order: 8 },
-      { value: '20', name: 'R$ 20,00', probability: 1, order: 9 },
-      { value: '50', name: 'R$ 50,00', probability: 0.4, order: 10 },
-      { value: '100', name: 'R$ 100,00', probability: 0.1, order: 11 }
-    ],
-    'premio_me_mimei': [
-      { value: '0.5', name: 'Perfume', probability: 20, order: 1 },
-      { value: '1', name: 'Batom', probability: 18, order: 2 },
-      { value: '2', name: 'Esmalte', probability: 15, order: 3 },
-      { value: '3', name: 'Creme', probability: 12, order: 4 },
-      { value: '4', name: 'Maquiagem', probability: 10, order: 5 },
-      { value: '5', name: 'Shampoo', probability: 8, order: 6 },
-      { value: '10', name: 'Condicionador', probability: 6, order: 7 },
-      { value: '15', name: 'Hidratante', probability: 5, order: 8 },
-      { value: '20', name: 'Protetor Solar', probability: 3, order: 9 },
-      { value: '50', name: 'Kit Skincare', probability: 2, order: 10 },
-      { value: '100', name: 'Vale Presente', probability: 1, order: 11 }
-    ],
-    'premio_eletronicos': [
-      { value: '0.5', name: 'Fone Bluetooth', probability: 25, order: 1 },
-      { value: '1', name: 'Carregador', probability: 20, order: 2 },
-      { value: '2', name: 'Caixa de Som', probability: 15, order: 3 },
-      { value: '3', name: 'Smartwatch', probability: 12, order: 4 },
-      { value: '4', name: 'Tablet', probability: 10, order: 5 },
-      { value: '5', name: 'Console', probability: 8, order: 6 },
-      { value: '10', name: 'Notebook', probability: 5, order: 7 },
-      { value: '15', name: 'iPhone', probability: 3, order: 8 },
-      { value: '20', name: 'TV 55"', probability: 1.5, order: 9 },
-      { value: '50', name: 'PS5', probability: 0.4, order: 10 },
-      { value: '100', name: 'MacBook', probability: 0.1, order: 11 }
-    ],
-    'premio_super_premios': [
-      { value: '10', name: 'Vale Compras R$100', probability: 25, order: 1 },
-      { value: '20', name: 'Vale Combustível', probability: 20, order: 2 },
-      { value: '40', name: 'Jantar Romântico', probability: 15, order: 3 },
-      { value: '60', name: 'Dia no Spa', probability: 12, order: 4 },
-      { value: '80', name: 'Ingresso Cinema', probability: 10, order: 5 },
-      { value: '100', name: 'Assinatura Streaming', probability: 8, order: 6 },
-      { value: '200', name: 'Viagem Nacional', probability: 5, order: 7 },
-      { value: '500', name: 'Cruzeiro', probability: 3, order: 8 },
-      { value: '1000', name: 'Carro 0KM', probability: 1.5, order: 9 },
-      { value: '10000', name: 'Casa Própria', probability: 0.4, order: 10 },
-      { value: '100000', name: 'R$ 1 Milhão', probability: 0.1, order: 11 }
-    ]
-  };
-  
-  // Game configurations
-  private readonly SCRATCH_GAMES = [
-    {
-      game_key: 'premio_pix_conta',
-      name: 'PIX na Conta',
-      cost: '0.50',
-      image_url: '/premios/banner-pix.webp',
-      is_active: true
-    },
-    {
-      game_key: 'premio_me_mimei',
-      name: 'Me Mimei',
-      cost: '0.50', 
-      image_url: '/premios/banner-me-mimei.webp',
-      is_active: true
-    },
-    {
-      game_key: 'premio_eletronicos',
-      name: 'Eletrônicos',
-      cost: '0.50',
-      image_url: '/premios/banner-eletronicos.webp',
-      is_active: true
-    },
-    {
-      game_key: 'premio_super_premios',
-      name: 'Super Prêmios',
-      cost: '0.50',
-      image_url: '/premios/banner-super-premios.webp',
-      is_active: true
-    }
-  ];
-  
-  // Prize Probability Management Methods
-  async listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]> {
-    const games = this.SCRATCH_GAMES.map(async (game) => {
-      const { probabilities } = await this.getGameProbabilities(game.game_key);
-      return {
-        ...game,
-        probabilities
-      };
-    });
-    return Promise.all(games);
-  }
-
-  async getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }> {
-    try {
-      // Map game key to proper format
-      const mappedKey = gameKey.replace(/-/g, '_');
-      
-      // Try to get from database first
-      const dbProbabilities = await db
-        .select()
-        .from(prizeProbabilities)
-        .where(eq(prizeProbabilities.gameType, mappedKey))
-        .orderBy(asc(prizeProbabilities.gameType), asc(prizeProbabilities.prizeValue));
-      
-      if (dbProbabilities.length > 0) {
-        return {
-          probabilities: dbProbabilities.map(p => ({
-            value: p.prizeValue || p.amount?.toString() || '',
-            name: p.prizeName || '',
-            probability: parseFloat(p.probability?.toString() || '0'),
-            order: p.order || 0
-          }))
-        };
-      }
-      
-      // Return defaults if none in database
-      const defaults = this.DEFAULT_PROBABILITIES[mappedKey] || [];
-      return { probabilities: defaults };
-    } catch (error) {
-      console.error('Error getting game probabilities:', error);
-      const defaults = this.DEFAULT_PROBABILITIES[gameKey] || [];
-      return { probabilities: defaults };
-    }
-  }
-
-  async updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void> {
-    try {
-      const mappedKey = gameKey.replace(/-/g, '_');
-      
-      // Delete existing probabilities
-      await db
-        .delete(prizeProbabilities)
-        .where(eq(prizeProbabilities.gameType, mappedKey));
-      
-      // Insert new probabilities
-      for (const prob of probabilities) {
-        await db.insert(prizeProbabilities).values({
-          gameType: mappedKey,
-          prizeValue: prob.value,
-          prizeName: prob.name,
-          probability: prob.probability.toString(),
-          order: prob.order,
-          updatedAt: new Date(),
-          updatedBy: 'admin'
-        });
-      }
-    } catch (error) {
-      console.error('Error updating game probabilities:', error);
-      throw error;
-    }
-  }
-
-  async distributeEqually(gameKey: string): Promise<void> {
-    const { probabilities } = await this.getGameProbabilities(gameKey);
-    if (probabilities.length === 0) return;
-    
-    const equalProb = 100 / probabilities.length;
-    const updatedProbs = probabilities.map((p, index) => ({
-      ...p,
-      probability: equalProb,
-      order: index
-    }));
-    
-    await this.updateGameProbabilities(gameKey, updatedProbs);
-  }
-
-  async resetToDefaults(gameKey: string): Promise<void> {
-    const mappedKey = gameKey.replace(/-/g, '_');
-    const defaults = this.DEFAULT_PROBABILITIES[mappedKey] || [];
-    await this.updateGameProbabilities(gameKey, defaults);
-  }
-  
   // User operations
-  async getUsers(): Promise<User[]> {
-    // Use raw SQL to get all users from app_users table
-    const result = await pool.query(
-      `SELECT * FROM app_users ORDER BY created_at DESC`
-    );
-    return result.rows as User[];
-  }
-
   async getUser(id: number): Promise<User | undefined> {
     // Use raw SQL to avoid Drizzle issue with app_users table
     const result = await pool.query(
@@ -1060,9 +862,9 @@ export class DatabaseStorage implements IStorage {
     );
     
     const [activeResult] = await db
-      .select({ count: sql<number>`count(distinct user_id)` })
+      .select({ count: sql<number>`count(distinct ${gamePremios.userId})` })
       .from(gamePremios)
-      .where(sql`played_at > NOW() - INTERVAL '30 days'`);
+      .where(sql`${gamePremios.playedAt} > NOW() - INTERVAL '30 days'`);
     
     return {
       totalUsers: parseInt(totalResult.rows[0].count),
@@ -1072,13 +874,13 @@ export class DatabaseStorage implements IStorage {
 
   async getRevenueStats(): Promise<{ totalRevenue: string; todayRevenue: string }> {
     const [totalResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(cost), 0)` })
+      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
       .from(gamePremios);
     
     const [todayResult] = await db
-      .select({ sum: sql<string>`COALESCE(SUM(cost), 0)` })
+      .select({ sum: sql<string>`COALESCE(SUM(${gamePremios.cost}), 0)` })
       .from(gamePremios)
-      .where(sql`DATE(played_at) = CURRENT_DATE`);
+      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
     
     return {
       totalRevenue: totalResult.sum || "0.00",
@@ -1094,7 +896,7 @@ export class DatabaseStorage implements IStorage {
     const [todayResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(gamePremios)
-      .where(sql`DATE(played_at) = CURRENT_DATE`);
+      .where(sql`DATE(${gamePremios.playedAt}) = CURRENT_DATE`);
     
     return {
       totalGames: totalResult.count,
@@ -1898,7 +1700,7 @@ export class DatabaseStorage implements IStorage {
       const probabilities = await db.execute(sql`
         SELECT * FROM demo_prize_probabilities 
         WHERE game_type = ${demoGameType}
-        ORDER BY game_type, prize_value
+        ORDER BY "order"
       `);
       
       // Map to expected format for game creation endpoints
@@ -1912,7 +1714,7 @@ export class DatabaseStorage implements IStorage {
     const probabilities = await db.select()
       .from(prizeProbabilities)
       .where(eq(prizeProbabilities.gameType, gameType))
-      .orderBy(prizeProbabilities.gameType, prizeProbabilities.prizeValue);
+      .orderBy(prizeProbabilities.order);
     
     // Map to expected format for game creation endpoints
     return probabilities.map(p => ({
@@ -1931,52 +1733,23 @@ export class DatabaseStorage implements IStorage {
           id,
           game_type,
           prize_value,
-          prize_type as prize_name,
-          probability,
-          0 as "order"
+          prize_type,
+          amount,
+          probability
         FROM prize_probabilities
         WHERE game_type = $1
-        ORDER BY probability DESC, prize_value`,
+        ORDER BY CAST(COALESCE(prize_value, amount) AS DECIMAL)`,
         [gameType]
       );
       
       // Return full objects for admin panel, mapping to expected format
-      return result.rows.map((p: any) => ({
+      return result.rows.map((p: any, index) => ({
         id: p.id,
         game_type: p.game_type,
-        prize_value: p.prize_value || '0',
-        prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value || '0').toFixed(2).replace('.', ',')}`,
+        prize_value: p.prize_value || p.amount || '0',
+        prize_name: p.prize_type || `R$ ${parseFloat(p.prize_value || p.amount || '0').toFixed(2)}`,
         probability: parseFloat(p.probability || '0'),
-        order: p.order || 0
-      }));
-    } finally {
-      client.release();
-    }
-  }
-
-  // Get all prize probabilities from all games
-  async getAllPrizeProbabilities(): Promise<any[]> {
-    const client = await pool.connect();
-    try {
-      const result = await client.query(
-        `SELECT 
-          id,
-          game_type,
-          prize_value,
-          prize_type as prize_name,
-          probability,
-          0 as "order"
-        FROM prize_probabilities
-        ORDER BY game_type, probability DESC, prize_value`
-      );
-      
-      return result.rows.map((p: any) => ({
-        id: p.id,
-        game_type: p.game_type,
-        prize_value: p.prize_value || '0',
-        prize_name: p.prize_name || `R$ ${parseFloat(p.prize_value || '0').toFixed(2).replace('.', ',')}`,
-        probability: parseFloat(p.probability || '0'),
-        order: p.order || 0
+        order: index
       }));
     } finally {
       client.release();
@@ -1984,111 +1757,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Get demo prize probabilities for admin panel
-  // List all scratch games
-  async listScratchGames(): Promise<{ game_key: string; name: string; cost: string; image_url: string; is_active: boolean; probabilities?: any[] }[]> {
-    return this.SCRATCH_GAMES.map(game => ({ ...game }));
-  }
-
-  // Get game probabilities from database or defaults
-  async getGameProbabilities(gameKey: string): Promise<{ probabilities: any[] }> {
-    const client = await pool.connect();
-    try {
-      // Try to get from database first
-      const result = await client.query(
-        'SELECT id, game_type, prize_value, prize_name, probability, "order", updated_at, updated_by ' +
-        'FROM prize_probabilities ' +
-        'WHERE game_type = $1 ' +
-        'ORDER BY game_type, prize_value ASC',
-        [gameKey]
-      );
-      
-      if (result.rows.length > 0) {
-        const probabilities = result.rows.map((row: any) => ({
-          value: row.prize_value,
-          name: row.prize_name || `R$ ${parseFloat(row.prize_value).toFixed(2).replace('.', ',')}`,
-          probability: parseFloat(row.probability),
-          order: row["order"] || 0
-        }));
-        return { probabilities };
-      }
-      
-      // Return defaults if no data in database
-      const defaults = this.DEFAULT_PROBABILITIES[gameKey] || [];
-      return { probabilities: defaults };
-    } finally {
-      client.release();
-    }
-  }
-
-  // Update game probabilities with validation
-  async updateGameProbabilities(gameKey: string, probabilities: { value: string; name: string; probability: number; order: number }[]): Promise<void> {
-    // Validate that sum is approximately 100%
-    const sum = probabilities.reduce((acc, p) => acc + p.probability, 0);
-    if (Math.abs(sum - 100) > 0.01) {
-      throw new Error(`A soma das probabilidades deve ser 100%. Soma atual: ${sum.toFixed(2)}%`);
-    }
-    
-    const client = await pool.connect();
-    try {
-      await client.query('BEGIN');
-      
-      // Delete existing probabilities
-      await client.query(
-        'DELETE FROM prize_probabilities WHERE game_type = $1',
-        [gameKey]
-      );
-      
-      // Insert new probabilities
-      for (const [index, p] of probabilities.entries()) {
-        await client.query(
-          `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, updated_at, updated_by)
-           VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
-          [gameKey, p.value, p.name, p.probability, p.order || index, 'admin']
-        );
-      }
-      
-      await client.query('COMMIT');
-    } catch (error) {
-      await client.query('ROLLBACK');
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-
-  // Distribute probability equally among all prizes
-  async distributeEqually(gameKey: string): Promise<void> {
-    const defaults = this.DEFAULT_PROBABILITIES[gameKey];
-    if (!defaults) {
-      throw new Error(`Jogo não encontrado: ${gameKey}`);
-    }
-    
-    const equalProbability = 100 / defaults.length;
-    const equallyDistributed = defaults.map((p, index) => ({
-      ...p,
-      probability: equalProbability,
-      order: index + 1
-    }));
-    
-    await this.updateGameProbabilities(gameKey, equallyDistributed);
-  }
-
-  // Reset to default probabilities
-  async resetToDefaults(gameKey: string): Promise<void> {
-    const defaults = this.DEFAULT_PROBABILITIES[gameKey];
-    if (!defaults) {
-      throw new Error(`Jogo não encontrado: ${gameKey}`);
-    }
-    
-    await this.updateGameProbabilities(gameKey, defaults);
-  }
-
   async getDemoPrizeProbabilities(gameType: string): Promise<any[]> {
     const demoGameType = `demo_${gameType}`;
     const probabilities = await db.execute(sql`
       SELECT * FROM demo_prize_probabilities 
       WHERE game_type = ${demoGameType}
-      ORDER BY game_type, prize_value
+      ORDER BY "order"
     `);
     
     // Return full objects for admin panel
@@ -2157,9 +1831,9 @@ export class DatabaseStorage implements IStorage {
           const amount = parseFloat(prizeValue);
           
           await client.query(
-            `INSERT INTO prize_probabilities (game_type, prize_value, prize_type, probability, updated_at, updated_by)
-             VALUES ($1, $2, $3, $4, NOW(), $5)`,
-            [gameType, prizeValue, prizeName, probabilityValue, 'admin']
+            `INSERT INTO prize_probabilities (game_type, prize_value, prize_name, probability, "order", updated_at, updated_by)
+             VALUES ($1, $2, $3, $4, $5, NOW(), $6)`,
+            [gameType, prizeValue, prizeName, probabilityValue, index, 'admin']
           );
         }
       }
@@ -3585,42 +3259,6 @@ export class DatabaseStorage implements IStorage {
     
     // Also update the partner_codes table
     await this.updatePartnerCodeStats(data.code, 'clickCount');
-  }
-
-  // Prize Probability Management Methods
-  async getAllPrizeProbabilities(): Promise<PrizeProbability[]> {
-    return db.select().from(prizeProbabilities).orderBy(prizeProbabilities.gameType, prizeProbabilities.prizeValue);
-  }
-
-  async getPrizeProbabilitiesByGame(gameType: string): Promise<PrizeProbability[]> {
-    return db.select()
-      .from(prizeProbabilities)
-      .where(eq(prizeProbabilities.gameType, gameType))
-      .orderBy(prizeProbabilities.prizeValue);
-  }
-
-  async updatePrizeProbabilities(gameType: string, probabilities: { prizeValue: number; probability: number }[], updatedBy: string): Promise<void> {
-    // Use a transaction to ensure all updates succeed or none do
-    await db.transaction(async (tx) => {
-      for (const prob of probabilities) {
-        await tx.update(prizeProbabilities)
-          .set({ 
-            probability: prob.probability.toString(),
-            updatedAt: new Date(),
-            updatedBy: updatedBy
-          })
-          .where(and(
-            eq(prizeProbabilities.gameType, gameType),
-            eq(prizeProbabilities.prizeValue, prob.prizeValue.toString())
-          ));
-      }
-    });
-  }
-
-  async validateProbabilitySum(gameType: string): Promise<boolean> {
-    const probs = await this.getPrizeProbabilitiesByGame(gameType);
-    const sum = probs.reduce((acc, p) => acc + parseFloat(p.probability), 0);
-    return Math.abs(sum - 100) < 0.01; // Allow for small floating point errors
   }
 }
 

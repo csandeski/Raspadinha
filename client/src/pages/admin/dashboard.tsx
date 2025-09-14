@@ -56,6 +56,10 @@ import SupportManagement from "@/components/admin/support-management";
 import GamesManagement from "@/components/admin/games-management";
 import DepositsManagement from "@/components/admin/deposits-management";
 import EnhancedDashboard from "@/components/admin/enhanced-dashboard";
+import { PrizeProbabilityEnhanced } from "@/components/admin/prize-probability-enhanced";
+import { ChestProbabilityManagement } from "@/components/admin/chest-probability-management";
+import { EsquiloProbabilityManagement } from "@/components/admin/esquilo-probability-management";
+import { EsquiloBonusManagement } from "@/components/admin/esquilo-bonus-management";
 import { CouponsManagement } from "@/components/admin/coupons-management";
 import ReferralsManagement from "@/components/admin/referrals-management";
 import AffiliatesManagementPremium from "@/components/admin/affiliates-management-premium";
@@ -64,7 +68,6 @@ import { ChatManagement } from "@/components/admin/chat-management";
 import { MarketingLinksManagement } from "@/components/admin/marketing-links-management";
 import CashbackManagement from "@/components/admin/cashback-management";
 import ApiManagement from "@/components/admin/api-management";
-import PrizeProbabilityManagement from "@/components/admin/prize-probability-management";
 import { 
   LineChart, 
   Line, 
@@ -166,7 +169,6 @@ function AdminDashboardContent() {
 
   const menuItems = [
     { id: "overview", label: "Dashboard", icon: Home, badge: null },
-    { id: "probabilidades", label: "Probabilidades", icon: Activity, badge: null },
     { id: "api", label: "API", icon: Server, badge: null },
     { id: "users", label: "Usuários", icon: Users, badge: stats?.totalUsers },
     { id: "deposits", label: "Depósitos", icon: DollarSign, badge: stats?.todayDeposits },
@@ -174,6 +176,7 @@ function AdminDashboardContent() {
     { id: "withdrawals", label: "Saques", icon: CreditCard, badge: stats?.pendingWithdrawals },
     { id: "games", label: "Jogos", icon: Trophy, badge: null },
     { id: "support", label: "Suporte", icon: MessageSquare, badge: stats?.activeChats },
+    { id: "probabilities", label: "Probabilidades", icon: Settings, badge: null },
     { id: "coupons", label: "Cupons", icon: Gift, badge: null },
     { id: "referrals", label: "Indique e Ganhe", icon: UserPlus, badge: null },
     { id: "affiliates", label: "Afiliados", icon: Zap, badge: stats?.activeAffiliates },
@@ -657,7 +660,6 @@ function AdminDashboardContent() {
                 transition={{ duration: 0.3 }}
               >
                 {activeSection === "overview" && <EnhancedDashboard stats={stats} />}
-                {activeSection === "probabilidades" && <PrizeProbabilityManagement />}
                 {activeSection === "api" && <ApiManagement />}
                 {activeSection === "users" && <UsersManagement />}
                 {activeSection === "deposits" && <DepositsManagement />}
@@ -665,6 +667,14 @@ function AdminDashboardContent() {
                 {activeSection === "withdrawals" && <WithdrawalsManagement />}
                 {activeSection === "games" && <GamesManagement />}
                 {activeSection === "support" && <SupportManagement />}
+                {activeSection === "probabilities" && (
+                  <div className="space-y-6">
+                    <PrizeProbabilityEnhanced />
+                    <ChestProbabilityManagement />
+                    <EsquiloProbabilityManagement />
+                    <EsquiloBonusManagement />
+                  </div>
+                )}
                 {activeSection === "coupons" && <CouponsManagement />}
                 {activeSection === "referrals" && <ReferralsManagement />}
                 {activeSection === "affiliates" && <AffiliatesManagementPremium />}

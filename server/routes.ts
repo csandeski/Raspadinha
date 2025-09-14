@@ -4511,6 +4511,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.json({ hasActiveGame: false });
     }
     try {
+      // Ensure table exists before querying
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS esquilo_game_states (
+          id SERIAL PRIMARY KEY,
+          game_id VARCHAR(20) NOT NULL UNIQUE,
+          user_id INTEGER NOT NULL REFERENCES users(id),
+          bet_amount DECIMAL(10, 2) NOT NULL,
+          current_multiplier DECIMAL(10, 2) DEFAULT 0.00,
+          used_bonus BOOLEAN DEFAULT false,
+          is_active BOOLEAN DEFAULT true,
+          boxes JSONB NOT NULL,
+          opened_boxes JSONB NOT NULL,
+          bonus_activated BOOLEAN DEFAULT false,
+          bonus_used BOOLEAN DEFAULT false,
+          bonus_multipliers JSONB,
+          bonus_winner_multiplier DECIMAL(10, 2),
+          active_bonus_multiplier DECIMAL(10, 2),
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        )
+      `).catch(() => {}); // Ignore error if table already exists
+      
       // Check if user has an active game in database
       const activeGame = await db.execute(sql`
         SELECT 
@@ -4583,26 +4605,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { betAmount = 1, useBonus = false } = req.body;
       
-      // Security validations
-      if (betAmount < 0.5 || betAmount > 1000) {
-        return res.status(400).json({ error: "Valor de aposta inválido (mínimo R$ 0,50, máximo R$ 1000)" });
-      }
-      
-      // Rate limiting check - prevent creating multiple games too quickly
-      const recentGames = await db.execute(sql`
-        SELECT COUNT(*) as count 
-        FROM esquilo_games 
-        WHERE user_id = ${req.userId} 
-          AND started_at > NOW() - INTERVAL '5 seconds'
-      `);
-      
-      if (recentGames.rows[0] && parseInt(recentGames.rows[0].count) > 3) {
-        return res.status(429).json({ error: "Muitas tentativas, aguarde alguns segundos" });
-      }
-      
-      const wallet = await storage.getWallet(req.userId);
-      
-      // First, create tables if they don't exist
+      // First, create tables if they don't exist (MUST be done before any queries)
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS esquilo_games (
           id SERIAL PRIMARY KEY,
@@ -4651,6 +4654,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           updated_at TIMESTAMP DEFAULT NOW()
         )
       `);
+      
+      // Security validations
+      if (betAmount < 0.5 || betAmount > 1000) {
+        return res.status(400).json({ error: "Valor de aposta inválido (mínimo R$ 0,50, máximo R$ 1000)" });
+      }
+      
+      // Rate limiting check - prevent creating multiple games too quickly
+      const recentGames = await db.execute(sql`
+        SELECT COUNT(*) as count 
+        FROM esquilo_games 
+        WHERE user_id = ${req.userId} 
+          AND started_at > NOW() - INTERVAL '5 seconds'
+      `);
+      
+      if (recentGames.rows[0] && parseInt(recentGames.rows[0].count) > 3) {
+        return res.status(429).json({ error: "Muitas tentativas, aguarde alguns segundos" });
+      }
+      
+      const wallet = await storage.getWallet(req.userId);
       
       if (!wallet) {
         return res.status(400).json({ error: "Carteira não encontrada" });
@@ -4833,11 +4855,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const isDemo = false; // Public access doesn't have demo status
       
+      // Ensure table exists before querying
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS esquilo_probabilities (
+          id SERIAL PRIMARY KEY,
+          prize_type TEXT NOT NULL,
+          multiplier DECIMAL(5, 2) NOT NULL,
+          probability DECIMAL(5, 2) NOT NULL,
+          for_demo BOOLEAN NOT NULL DEFAULT false,
+          bonus_cost_multiplier DECIMAL(5,2) DEFAULT 20.00,
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_by TEXT NOT NULL DEFAULT 'admin'
+        )
+      `).catch(() => {});
+      
       // Check if column exists, if not add it
       await db.execute(sql`
         ALTER TABLE esquilo_probabilities 
         ADD COLUMN IF NOT EXISTS bonus_cost_multiplier DECIMAL(5,2) DEFAULT 20.00
-      `);
+      `).catch(() => {});
       
       // Get bonus cost multiplier from database
       const result = await db.execute(sql`
@@ -4869,11 +4905,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ error: "Valor de aposta inválido (mínimo R$ 0,50, máximo R$ 1000)" });
       }
       
+      // Ensure table exists before querying
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS esquilo_probabilities (
+          id SERIAL PRIMARY KEY,
+          prize_type TEXT NOT NULL,
+          multiplier DECIMAL(5, 2) NOT NULL,
+          probability DECIMAL(5, 2) NOT NULL,
+          for_demo BOOLEAN NOT NULL DEFAULT false,
+          bonus_cost_multiplier DECIMAL(5,2) DEFAULT 20.00,
+          updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+          updated_by TEXT NOT NULL DEFAULT 'admin'
+        )
+      `).catch(() => {});
+      
       // Check if column exists, if not add it
       await db.execute(sql`
         ALTER TABLE esquilo_probabilities 
         ADD COLUMN IF NOT EXISTS bonus_cost_multiplier DECIMAL(5,2) DEFAULT 20.00
-      `);
+      `).catch(() => {});
       
       // Get bonus cost multiplier
       const configResult = await db.execute(sql`

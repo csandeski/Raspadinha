@@ -7694,6 +7694,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const sessionId = randomUUID();
       const session = await storage.createAdminSession(sessionId, username);
 
+      // Set session flag for probability routes
+      req.session.isAdminAuthenticated = true;
+      req.session.adminUsername = username;
+      req.session.adminSessionId = sessionId;
+
       res.json({
         sessionId,
         message: "Login de admin realizado com sucesso",

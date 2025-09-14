@@ -1009,14 +1009,6 @@ export default function GamePremioSuperPremios() {
                                   </div>
                                 )}
                               </div>
-                                      left: `${[0, 100, 0, 100][i]}%`,
-                                      transform: 'translate(-50%, -50%)'
-                                    }}
-                                  >
-                                    ⭐
-                                  </motion.div>
-                                ))}
-                              </div>
                             ) : (
                               <div className="relative w-24 h-24 mx-auto">
                                 <div className="absolute inset-0 bg-gradient-to-br from-gray-600/30 to-gray-700/30 rounded-full blur-xl" />
@@ -1025,7 +1017,7 @@ export default function GamePremioSuperPremios() {
                                 </div>
                               </div>
                             )}
-                          </motion.div>
+                          </div>
                           
                           {/* Result Text with gradient */}
                           <motion.div

@@ -60,7 +60,7 @@ export async function createPixPayment(
       items: [
         {
           id: '1',
-          title: 'Depósito',
+          title: 'Brasil Mania',
           description: `Depósito PIX de R$ ${amount.toFixed(2)}`,
           price: amount,
           quantity: 1,

@@ -4,7 +4,7 @@ import { deposits, withdrawals } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
 // LiraPay API Configuration
-const LIRAPAY_API_SECRET = process.env.LIRAPAY_API_SECRET || 'sk_915265fb1da6a6ebe1fc7658766c6c0c58e61342be276379f4528d76c14d8e421594edbf6086dffe01fbb1f73f772d0023240fc1da1056b694ad9ee6ecdf7832';
+const LIRAPAY_API_SECRET = process.env.LIRAPAY_API_SECRET;
 const LIRAPAY_BASE_URL = 'https://api.lirapaybr.com';
 const WEBHOOK_BASE_URL = process.env.PUBLIC_URL || 'https://mania-brasil.com';
 
